@@ -1,0 +1,3782 @@
+[
+  {
+    "operation_name": "matrix_solve_neumann",
+    "algorithm": "neumann",
+    "domain": "linear_systems",
+    "problem_size": 10000,
+    "duration_seconds": 0.21579933166503906,
+    "snapshots": [
+      {
+        "timestamp": 1758317722.269119,
+        "current_memory_mb": 31.69921875,
+        "peak_memory_mb": 31.69921875,
+        "system_memory_percent": 0.3990003112349932,
+        "gc_objects": 24025,
+        "operation": "matrix_solve_neumann_start",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317722.2731817,
+        "current_memory_mb": 31.69921875,
+        "peak_memory_mb": 31.69921875,
+        "system_memory_percent": 0.3990003112349932,
+        "gc_objects": 24049,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317722.3745897,
+        "current_memory_mb": 39.32421875,
+        "peak_memory_mb": 39.32421875,
+        "system_memory_percent": 0.49497672621105077,
+        "gc_objects": 24967,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317722.4811594,
+        "current_memory_mb": 39.296875,
+        "peak_memory_mb": 39.296875,
+        "system_memory_percent": 0.49463254849341126,
+        "gc_objects": 24963,
+        "operation": "matrix_solve_neumann_end",
+        "problem_size": 10000
+      }
+    ],
+    "peak_memory_mb": 1.113016128540039,
+    "final_memory_mb": 39.296875,
+    "memory_efficiency": 0.00011130161285400391,
+    "gc_collections": 939,
+    "memory_leaks_detected": true,
+    "error_message": ""
+  },
+  {
+    "operation_name": "matrix_solve_random-walk",
+    "algorithm": "random-walk",
+    "domain": "linear_systems",
+    "problem_size": 10000,
+    "duration_seconds": 0.2131352424621582,
+    "snapshots": [
+      {
+        "timestamp": 1758317722.4988847,
+        "current_memory_mb": 39.171875,
+        "peak_memory_mb": 39.171875,
+        "system_memory_percent": 0.4930591646413447,
+        "gc_objects": 24568,
+        "operation": "matrix_solve_random-walk_start",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317722.5000696,
+        "current_memory_mb": 39.171875,
+        "peak_memory_mb": 39.171875,
+        "system_memory_percent": 0.4930591646413447,
+        "gc_objects": 24589,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317722.601291,
+        "current_memory_mb": 39.171875,
+        "peak_memory_mb": 39.171875,
+        "system_memory_percent": 0.4930591646413447,
+        "gc_objects": 24590,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317722.707238,
+        "current_memory_mb": 39.171875,
+        "peak_memory_mb": 39.171875,
+        "system_memory_percent": 0.4930591646413447,
+        "gc_objects": 24586,
+        "operation": "matrix_solve_random-walk_end",
+        "problem_size": 10000
+      }
+    ],
+    "peak_memory_mb": 0.29325103759765625,
+    "final_memory_mb": 39.171875,
+    "memory_efficiency": 2.9325103759765626e-05,
+    "gc_collections": 19,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "matrix_solve_forward-push",
+    "algorithm": "forward-push",
+    "domain": "linear_systems",
+    "problem_size": 10000,
+    "duration_seconds": 0.21721887588500977,
+    "snapshots": [
+      {
+        "timestamp": 1758317722.7236326,
+        "current_memory_mb": 39.171875,
+        "peak_memory_mb": 39.171875,
+        "system_memory_percent": 0.4930591646413447,
+        "gc_objects": 24574,
+        "operation": "matrix_solve_forward-push_start",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317722.7249563,
+        "current_memory_mb": 39.171875,
+        "peak_memory_mb": 39.171875,
+        "system_memory_percent": 0.4930591646413447,
+        "gc_objects": 24598,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317722.8314948,
+        "current_memory_mb": 39.171875,
+        "peak_memory_mb": 39.171875,
+        "system_memory_percent": 0.4930591646413447,
+        "gc_objects": 24596,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317722.9374168,
+        "current_memory_mb": 39.171875,
+        "peak_memory_mb": 39.171875,
+        "system_memory_percent": 0.4930591646413447,
+        "gc_objects": 24592,
+        "operation": "matrix_solve_forward-push_end",
+        "problem_size": 10000
+      }
+    ],
+    "peak_memory_mb": 0.29246044158935547,
+    "final_memory_mb": 39.171875,
+    "memory_efficiency": 2.9246044158935546e-05,
+    "gc_collections": 19,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "matrix_solve_neumann",
+    "algorithm": "neumann",
+    "domain": "linear_systems",
+    "problem_size": 250000,
+    "duration_seconds": 0.20975446701049805,
+    "snapshots": [
+      {
+        "timestamp": 1758317722.951324,
+        "current_memory_mb": 39.171875,
+        "peak_memory_mb": 39.171875,
+        "system_memory_percent": 0.4930591646413447,
+        "gc_objects": 24580,
+        "operation": "matrix_solve_neumann_start",
+        "problem_size": 250000
+      },
+      {
+        "timestamp": 1758317722.9532714,
+        "current_memory_mb": 39.171875,
+        "peak_memory_mb": 39.171875,
+        "system_memory_percent": 0.4930591646413447,
+        "gc_objects": 24604,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 250000
+      },
+      {
+        "timestamp": 1758317723.054891,
+        "current_memory_mb": 47.16015625,
+        "peak_memory_mb": 47.16015625,
+        "system_memory_percent": 0.5936082264374705,
+        "gc_objects": 24602,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 250000
+      },
+      {
+        "timestamp": 1758317723.1592076,
+        "current_memory_mb": 41.5625,
+        "peak_memory_mb": 41.5625,
+        "system_memory_percent": 0.5231501308121168,
+        "gc_objects": 24598,
+        "operation": "matrix_solve_neumann_end",
+        "problem_size": 250000
+      }
+    ],
+    "peak_memory_mb": 5.730532646179199,
+    "final_memory_mb": 41.5625,
+    "memory_efficiency": 2.29221305847168e-05,
+    "gc_collections": 19,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "matrix_solve_random-walk",
+    "algorithm": "random-walk",
+    "domain": "linear_systems",
+    "problem_size": 250000,
+    "duration_seconds": 0.22757196426391602,
+    "snapshots": [
+      {
+        "timestamp": 1758317723.1783385,
+        "current_memory_mb": 41.5625,
+        "peak_memory_mb": 41.5625,
+        "system_memory_percent": 0.5231501308121168,
+        "gc_objects": 24586,
+        "operation": "matrix_solve_random-walk_start",
+        "problem_size": 250000
+      },
+      {
+        "timestamp": 1758317723.1850493,
+        "current_memory_mb": 41.5625,
+        "peak_memory_mb": 41.5625,
+        "system_memory_percent": 0.5231501308121168,
+        "gc_objects": 24610,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 250000
+      },
+      {
+        "timestamp": 1758317723.2859533,
+        "current_memory_mb": 45.1875,
+        "peak_memory_mb": 45.1875,
+        "system_memory_percent": 0.5687782625220459,
+        "gc_objects": 24608,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 250000
+      },
+      {
+        "timestamp": 1758317723.4039497,
+        "current_memory_mb": 41.55859375,
+        "peak_memory_mb": 41.55859375,
+        "system_memory_percent": 0.5231009625667398,
+        "gc_objects": 24604,
+        "operation": "matrix_solve_random-walk_end",
+        "problem_size": 250000
+      }
+    ],
+    "peak_memory_mb": 3.881289482116699,
+    "final_memory_mb": 41.55859375,
+    "memory_efficiency": 1.5525157928466797e-05,
+    "gc_collections": 19,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "matrix_solve_forward-push",
+    "algorithm": "forward-push",
+    "domain": "linear_systems",
+    "problem_size": 250000,
+    "duration_seconds": 0.2289566993713379,
+    "snapshots": [
+      {
+        "timestamp": 1758317723.4489112,
+        "current_memory_mb": 41.55859375,
+        "peak_memory_mb": 41.55859375,
+        "system_memory_percent": 0.5231009625667398,
+        "gc_objects": 24592,
+        "operation": "matrix_solve_forward-push_start",
+        "problem_size": 250000
+      },
+      {
+        "timestamp": 1758317723.4611871,
+        "current_memory_mb": 41.55859375,
+        "peak_memory_mb": 41.55859375,
+        "system_memory_percent": 0.5231009625667398,
+        "gc_objects": 24616,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 250000
+      },
+      {
+        "timestamp": 1758317723.5684197,
+        "current_memory_mb": 45.18359375,
+        "peak_memory_mb": 45.18359375,
+        "system_memory_percent": 0.5687290942766687,
+        "gc_objects": 24614,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 250000
+      },
+      {
+        "timestamp": 1758317723.6724067,
+        "current_memory_mb": 41.4921875,
+        "peak_memory_mb": 41.4921875,
+        "system_memory_percent": 0.5222651023953294,
+        "gc_objects": 24610,
+        "operation": "matrix_solve_forward-push_end",
+        "problem_size": 250000
+      }
+    ],
+    "peak_memory_mb": 3.8810853958129883,
+    "final_memory_mb": 41.4921875,
+    "memory_efficiency": 1.5524341583251955e-05,
+    "gc_collections": 19,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "matrix_solve_neumann",
+    "algorithm": "neumann",
+    "domain": "linear_systems",
+    "problem_size": 1000000,
+    "duration_seconds": 0.32527828216552734,
+    "snapshots": [
+      {
+        "timestamp": 1758317723.6999495,
+        "current_memory_mb": 41.4921875,
+        "peak_memory_mb": 41.4921875,
+        "system_memory_percent": 0.5222651023953294,
+        "gc_objects": 24598,
+        "operation": "matrix_solve_neumann_start",
+        "problem_size": 1000000
+      },
+      {
+        "timestamp": 1758317723.70576,
+        "current_memory_mb": 41.7421875,
+        "peak_memory_mb": 41.7421875,
+        "system_memory_percent": 0.5254118700994624,
+        "gc_objects": 24623,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 1000000
+      },
+      {
+        "timestamp": 1758317723.8082364,
+        "current_memory_mb": 66.3828125,
+        "peak_memory_mb": 66.3828125,
+        "system_memory_percent": 0.8355651619380745,
+        "gc_objects": 24620,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 1000000
+      },
+      {
+        "timestamp": 1758317723.9121437,
+        "current_memory_mb": 66.3828125,
+        "peak_memory_mb": 66.3828125,
+        "system_memory_percent": 0.8355651619380745,
+        "gc_objects": 24621,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 1000000
+      },
+      {
+        "timestamp": 1758317724.0184207,
+        "current_memory_mb": 43.703125,
+        "peak_memory_mb": 43.703125,
+        "system_memory_percent": 0.5500943292787559,
+        "gc_objects": 24617,
+        "operation": "matrix_solve_neumann_end",
+        "problem_size": 1000000
+      }
+    ],
+    "peak_memory_mb": 22.900668144226074,
+    "final_memory_mb": 43.703125,
+    "memory_efficiency": 2.2900668144226074e-05,
+    "gc_collections": 20,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "matrix_solve_random-walk",
+    "algorithm": "random-walk",
+    "domain": "linear_systems",
+    "problem_size": 1000000,
+    "duration_seconds": 0.21453523635864258,
+    "snapshots": [
+      {
+        "timestamp": 1758317724.0438106,
+        "current_memory_mb": 43.703125,
+        "peak_memory_mb": 43.703125,
+        "system_memory_percent": 0.5500943292787559,
+        "gc_objects": 24605,
+        "operation": "matrix_solve_random-walk_start",
+        "problem_size": 1000000
+      },
+      {
+        "timestamp": 1758317724.0456698,
+        "current_memory_mb": 43.703125,
+        "peak_memory_mb": 43.703125,
+        "system_memory_percent": 0.5500943292787559,
+        "gc_objects": 24630,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 1000000
+      },
+      {
+        "timestamp": 1758317724.1471977,
+        "current_memory_mb": 58.78125,
+        "peak_memory_mb": 58.78125,
+        "system_memory_percent": 0.7398837564342795,
+        "gc_objects": 24627,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 1000000
+      },
+      {
+        "timestamp": 1758317724.2511988,
+        "current_memory_mb": 43.765625,
+        "peak_memory_mb": 43.765625,
+        "system_memory_percent": 0.5508810212047892,
+        "gc_objects": 24623,
+        "operation": "matrix_solve_random-walk_end",
+        "problem_size": 1000000
+      }
+    ],
+    "peak_memory_mb": 15.325114250183105,
+    "final_memory_mb": 43.765625,
+    "memory_efficiency": 1.5325114250183105e-05,
+    "gc_collections": 19,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "matrix_solve_forward-push",
+    "algorithm": "forward-push",
+    "domain": "linear_systems",
+    "problem_size": 1000000,
+    "duration_seconds": 0.3146677017211914,
+    "snapshots": [
+      {
+        "timestamp": 1758317724.281481,
+        "current_memory_mb": 43.765625,
+        "peak_memory_mb": 43.765625,
+        "system_memory_percent": 0.5508810212047892,
+        "gc_objects": 24611,
+        "operation": "matrix_solve_forward-push_start",
+        "problem_size": 1000000
+      },
+      {
+        "timestamp": 1758317724.2828906,
+        "current_memory_mb": 43.765625,
+        "peak_memory_mb": 43.765625,
+        "system_memory_percent": 0.5508810212047892,
+        "gc_objects": 24635,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 1000000
+      },
+      {
+        "timestamp": 1758317724.386158,
+        "current_memory_mb": 58.78125,
+        "peak_memory_mb": 58.78125,
+        "system_memory_percent": 0.7398837564342795,
+        "gc_objects": 24634,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 1000000
+      },
+      {
+        "timestamp": 1758317724.4889479,
+        "current_memory_mb": 58.78125,
+        "peak_memory_mb": 58.78125,
+        "system_memory_percent": 0.7398837564342795,
+        "gc_objects": 24634,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 1000000
+      },
+      {
+        "timestamp": 1758317724.59406,
+        "current_memory_mb": 43.65234375,
+        "peak_memory_mb": 43.65234375,
+        "system_memory_percent": 0.5494551420888538,
+        "gc_objects": 24630,
+        "operation": "matrix_solve_forward-push_end",
+        "problem_size": 1000000
+      }
+    ],
+    "peak_memory_mb": 15.324933052062988,
+    "final_memory_mb": 43.65234375,
+    "memory_efficiency": 1.532493305206299e-05,
+    "gc_collections": 20,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "matrix_solve_neumann",
+    "algorithm": "neumann",
+    "domain": "linear_systems",
+    "problem_size": 4000000,
+    "duration_seconds": 0.5692873001098633,
+    "snapshots": [
+      {
+        "timestamp": 1758317724.6247861,
+        "current_memory_mb": 43.65234375,
+        "peak_memory_mb": 43.65234375,
+        "system_memory_percent": 0.5494551420888538,
+        "gc_objects": 24618,
+        "operation": "matrix_solve_neumann_start",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317724.626137,
+        "current_memory_mb": 43.65234375,
+        "peak_memory_mb": 43.65234375,
+        "system_memory_percent": 0.5494551420888538,
+        "gc_objects": 24642,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317724.7283812,
+        "current_memory_mb": 70.17578125,
+        "peak_memory_mb": 70.17578125,
+        "system_memory_percent": 0.8833075281992179,
+        "gc_objects": 24644,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317724.8361952,
+        "current_memory_mb": 133.4765625,
+        "peak_memory_mb": 133.4765625,
+        "system_memory_percent": 1.6800789445347777,
+        "gc_objects": 24643,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317724.954205,
+        "current_memory_mb": 134.9765625,
+        "peak_memory_mb": 134.9765625,
+        "system_memory_percent": 1.6989595507595756,
+        "gc_objects": 24643,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317725.078269,
+        "current_memory_mb": 134.9765625,
+        "peak_memory_mb": 134.9765625,
+        "system_memory_percent": 1.6989595507595756,
+        "gc_objects": 24643,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317725.1850276,
+        "current_memory_mb": 43.68359375,
+        "peak_memory_mb": 91.78250694274902,
+        "system_memory_percent": 0.5498484880518706,
+        "gc_objects": 24639,
+        "operation": "matrix_solve_neumann_end",
+        "problem_size": 4000000
+      }
+    ],
+    "peak_memory_mb": 91.78250694274902,
+    "final_memory_mb": 43.68359375,
+    "memory_efficiency": 2.2945626735687255e-05,
+    "gc_collections": 22,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "matrix_solve_random-walk",
+    "algorithm": "random-walk",
+    "domain": "linear_systems",
+    "problem_size": 4000000,
+    "duration_seconds": 0.32322192192077637,
+    "snapshots": [
+      {
+        "timestamp": 1758317725.2105389,
+        "current_memory_mb": 43.68359375,
+        "peak_memory_mb": 43.68359375,
+        "system_memory_percent": 0.5498484880518706,
+        "gc_objects": 24627,
+        "operation": "matrix_solve_random-walk_start",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317725.2169163,
+        "current_memory_mb": 43.68359375,
+        "peak_memory_mb": 43.68359375,
+        "system_memory_percent": 0.5498484880518706,
+        "gc_objects": 24651,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317725.320015,
+        "current_memory_mb": 67.09765625,
+        "peak_memory_mb": 67.09765625,
+        "system_memory_percent": 0.84456295084208,
+        "gc_objects": 24653,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317725.4251654,
+        "current_memory_mb": 104.66015625,
+        "peak_memory_mb": 104.66015625,
+        "system_memory_percent": 1.317364798388068,
+        "gc_objects": 24650,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317725.5307066,
+        "current_memory_mb": 43.7734375,
+        "peak_memory_mb": 61.10190677642822,
+        "system_memory_percent": 0.5509793576955434,
+        "gc_objects": 24646,
+        "operation": "matrix_solve_random-walk_end",
+        "problem_size": 4000000
+      }
+    ],
+    "peak_memory_mb": 61.10190677642822,
+    "final_memory_mb": 43.7734375,
+    "memory_efficiency": 1.5275476694107055e-05,
+    "gc_collections": 20,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "matrix_solve_forward-push",
+    "algorithm": "forward-push",
+    "domain": "linear_systems",
+    "problem_size": 4000000,
+    "duration_seconds": 0.43581414222717285,
+    "snapshots": [
+      {
+        "timestamp": 1758317725.5500376,
+        "current_memory_mb": 43.7734375,
+        "peak_memory_mb": 43.7734375,
+        "system_memory_percent": 0.5509793576955434,
+        "gc_objects": 24634,
+        "operation": "matrix_solve_forward-push_start",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317725.5525155,
+        "current_memory_mb": 43.7734375,
+        "peak_memory_mb": 43.7734375,
+        "system_memory_percent": 0.5509793576955434,
+        "gc_objects": 24658,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317725.6561618,
+        "current_memory_mb": 69.125,
+        "peak_memory_mb": 69.125,
+        "system_memory_percent": 0.8700812701927838,
+        "gc_objects": 24660,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317725.7614756,
+        "current_memory_mb": 104.6875,
+        "peak_memory_mb": 104.6875,
+        "system_memory_percent": 1.3177089761057077,
+        "gc_objects": 24658,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317725.8699956,
+        "current_memory_mb": 104.6875,
+        "peak_memory_mb": 104.6875,
+        "system_memory_percent": 1.3177089761057077,
+        "gc_objects": 24659,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 4000000
+      },
+      {
+        "timestamp": 1758317725.9754186,
+        "current_memory_mb": 43.796875,
+        "peak_memory_mb": 61.10172653198242,
+        "system_memory_percent": 0.5512743671678059,
+        "gc_objects": 24654,
+        "operation": "matrix_solve_forward-push_end",
+        "problem_size": 4000000
+      }
+    ],
+    "peak_memory_mb": 61.10172653198242,
+    "final_memory_mb": 43.796875,
+    "memory_efficiency": 1.5275431632995607e-05,
+    "gc_collections": 21,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "matrix_solve_neumann",
+    "algorithm": "neumann",
+    "domain": "linear_systems",
+    "problem_size": 25000000,
+    "duration_seconds": 2.5790905952453613,
+    "snapshots": [
+      {
+        "timestamp": 1758317726.0111167,
+        "current_memory_mb": 43.796875,
+        "peak_memory_mb": 43.796875,
+        "system_memory_percent": 0.5512743671678059,
+        "gc_objects": 24642,
+        "operation": "matrix_solve_neumann_start",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317726.0160835,
+        "current_memory_mb": 43.796875,
+        "peak_memory_mb": 43.796875,
+        "system_memory_percent": 0.5512743671678059,
+        "gc_objects": 24666,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317726.1169777,
+        "current_memory_mb": 66.546875,
+        "peak_memory_mb": 190.77934169769287,
+        "system_memory_percent": 0.837630228243912,
+        "gc_objects": 24668,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317726.2252526,
+        "current_memory_mb": 100.546875,
+        "peak_memory_mb": 190.94878101348877,
+        "system_memory_percent": 1.2655906360060043,
+        "gc_objects": 24669,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317726.33328,
+        "current_memory_mb": 134.546875,
+        "peak_memory_mb": 190.94914054870605,
+        "system_memory_percent": 1.693551043768097,
+        "gc_objects": 24670,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317726.4363706,
+        "current_memory_mb": 168.546875,
+        "peak_memory_mb": 190.94950008392334,
+        "system_memory_percent": 2.1215114515301896,
+        "gc_objects": 24671,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317726.5431314,
+        "current_memory_mb": 196.546875,
+        "peak_memory_mb": 196.546875,
+        "system_memory_percent": 2.4739494343930892,
+        "gc_objects": 24672,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317726.645892,
+        "current_memory_mb": 218.5546875,
+        "peak_memory_mb": 218.5546875,
+        "system_memory_percent": 2.75096332884755,
+        "gc_objects": 24673,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317726.7618954,
+        "current_memory_mb": 248.03125,
+        "peak_memory_mb": 381.5174379348755,
+        "system_memory_percent": 3.121986908462986,
+        "gc_objects": 24671,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317726.88115,
+        "current_memory_mb": 296.03125,
+        "peak_memory_mb": 381.68681621551514,
+        "system_memory_percent": 3.7261663076565283,
+        "gc_objects": 24672,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317726.9887395,
+        "current_memory_mb": 353.90625,
+        "peak_memory_mb": 381.6872367858887,
+        "system_memory_percent": 4.454643031163326,
+        "gc_objects": 24673,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317727.0951622,
+        "current_memory_mb": 406.90625,
+        "peak_memory_mb": 406.90625,
+        "system_memory_percent": 5.121757784439529,
+        "gc_objects": 24674,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317727.1981668,
+        "current_memory_mb": 420.65625,
+        "peak_memory_mb": 420.65625,
+        "system_memory_percent": 5.294830008166845,
+        "gc_objects": 24675,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317727.303848,
+        "current_memory_mb": 425.2578125,
+        "peak_memory_mb": 425.2578125,
+        "system_memory_percent": 5.352750201221044,
+        "gc_objects": 24677,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317727.5288923,
+        "current_memory_mb": 358.203125,
+        "peak_memory_mb": 381.68826961517334,
+        "system_memory_percent": 4.508728101078112,
+        "gc_objects": 24676,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317727.630783,
+        "current_memory_mb": 391.296875,
+        "peak_memory_mb": 572.2922554016113,
+        "system_memory_percent": 4.925281475912723,
+        "gc_objects": 24678,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317727.7397199,
+        "current_memory_mb": 459.296875,
+        "peak_memory_mb": 572.461633682251,
+        "system_memory_percent": 5.781202291436908,
+        "gc_objects": 24679,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317727.8441901,
+        "current_memory_mb": 484.90625,
+        "peak_memory_mb": 572.4619932174683,
+        "system_memory_percent": 6.103549308129035,
+        "gc_objects": 24680,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317727.949164,
+        "current_memory_mb": 520.40625,
+        "peak_memory_mb": 572.4624137878418,
+        "system_memory_percent": 6.550390322115926,
+        "gc_objects": 24681,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317728.0541556,
+        "current_memory_mb": 550.15625,
+        "peak_memory_mb": 572.4627733230591,
+        "system_memory_percent": 6.924855678907757,
+        "gc_objects": 24683,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317728.163403,
+        "current_memory_mb": 595.65625,
+        "peak_memory_mb": 595.65625,
+        "system_memory_percent": 7.497567401059969,
+        "gc_objects": 24684,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317728.2698154,
+        "current_memory_mb": 425.28125,
+        "peak_memory_mb": 572.4633474349976,
+        "system_memory_percent": 5.353045210693306,
+        "gc_objects": 24684,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317728.375436,
+        "current_memory_mb": 425.28125,
+        "peak_memory_mb": 572.4633474349976,
+        "system_memory_percent": 5.353045210693306,
+        "gc_objects": 24685,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317728.482381,
+        "current_memory_mb": 425.28125,
+        "peak_memory_mb": 572.4633474349976,
+        "system_memory_percent": 5.353045210693306,
+        "gc_objects": 24686,
+        "operation": "matrix_solve_neumann_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317728.5881367,
+        "current_memory_mb": 43.8046875,
+        "peak_memory_mb": 572.4633474349976,
+        "system_memory_percent": 0.55137270365856,
+        "gc_objects": 24681,
+        "operation": "matrix_solve_neumann_end",
+        "problem_size": 25000000
+      }
+    ],
+    "peak_memory_mb": 572.4633474349976,
+    "final_memory_mb": 43.8046875,
+    "memory_efficiency": 2.2898533897399903e-05,
+    "gc_collections": 40,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "matrix_solve_random-walk",
+    "algorithm": "random-walk",
+    "domain": "linear_systems",
+    "problem_size": 25000000,
+    "duration_seconds": 1.5115067958831787,
+    "snapshots": [
+      {
+        "timestamp": 1758317728.6126094,
+        "current_memory_mb": 43.8046875,
+        "peak_memory_mb": 43.8046875,
+        "system_memory_percent": 0.55137270365856,
+        "gc_objects": 24669,
+        "operation": "matrix_solve_random-walk_start",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317728.6148417,
+        "current_memory_mb": 43.8046875,
+        "peak_memory_mb": 43.8046875,
+        "system_memory_percent": 0.55137270365856,
+        "gc_objects": 24693,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317728.7167537,
+        "current_memory_mb": 76.55078125,
+        "peak_memory_mb": 190.7796049118042,
+        "system_memory_percent": 0.9635501046546103,
+        "gc_objects": 24695,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317728.8211958,
+        "current_memory_mb": 112.55078125,
+        "peak_memory_mb": 190.9490442276001,
+        "system_memory_percent": 1.416684654049767,
+        "gc_objects": 24696,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317728.9263194,
+        "current_memory_mb": 144.55078125,
+        "peak_memory_mb": 190.94940757751465,
+        "system_memory_percent": 1.8194709201787955,
+        "gc_objects": 24697,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317729.031097,
+        "current_memory_mb": 174.55078125,
+        "peak_memory_mb": 190.9497709274292,
+        "system_memory_percent": 2.2222571863078238,
+        "gc_objects": 24698,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317729.140577,
+        "current_memory_mb": 210.55078125,
+        "peak_memory_mb": 210.55078125,
+        "system_memory_percent": 2.6502175940699164,
+        "gc_objects": 24699,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317729.251175,
+        "current_memory_mb": 260.02734375,
+        "peak_memory_mb": 381.51738357543945,
+        "system_memory_percent": 3.2981567316490588,
+        "gc_objects": 24697,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317729.3701735,
+        "current_memory_mb": 372.02734375,
+        "peak_memory_mb": 381.6867618560791,
+        "system_memory_percent": 4.6827345214675935,
+        "gc_objects": 24698,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317729.4754155,
+        "current_memory_mb": 404.05859375,
+        "peak_memory_mb": 404.05859375,
+        "system_memory_percent": 5.085914133559638,
+        "gc_objects": 24699,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317729.5842762,
+        "current_memory_mb": 406.05859375,
+        "peak_memory_mb": 406.05859375,
+        "system_memory_percent": 5.111088275192702,
+        "gc_objects": 24700,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317729.6923206,
+        "current_memory_mb": 408.05859375,
+        "peak_memory_mb": 408.05859375,
+        "system_memory_percent": 5.136262416825767,
+        "gc_objects": 24701,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317729.800147,
+        "current_memory_mb": 418.05859375,
+        "peak_memory_mb": 418.05859375,
+        "system_memory_percent": 5.262133124991088,
+        "gc_objects": 24702,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317729.904298,
+        "current_memory_mb": 425.28515625,
+        "peak_memory_mb": 425.28515625,
+        "system_memory_percent": 5.353094378938684,
+        "gc_objects": 24704,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317730.009175,
+        "current_memory_mb": 234.58203125,
+        "peak_memory_mb": 381.68854808807373,
+        "system_memory_percent": 2.952700639629704,
+        "gc_objects": 24703,
+        "operation": "matrix_solve_random-walk_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317730.1209838,
+        "current_memory_mb": 43.84375,
+        "peak_memory_mb": 381.68854808807373,
+        "system_memory_percent": 0.5518643861123307,
+        "gc_objects": 24699,
+        "operation": "matrix_solve_random-walk_end",
+        "problem_size": 25000000
+      }
+    ],
+    "peak_memory_mb": 381.68854808807373,
+    "final_memory_mb": 43.84375,
+    "memory_efficiency": 1.5267541923522948e-05,
+    "gc_collections": 31,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "matrix_solve_forward-push",
+    "algorithm": "forward-push",
+    "domain": "linear_systems",
+    "problem_size": 25000000,
+    "duration_seconds": 1.7541816234588623,
+    "snapshots": [
+      {
+        "timestamp": 1758317730.1859035,
+        "current_memory_mb": 43.84375,
+        "peak_memory_mb": 43.84375,
+        "system_memory_percent": 0.5518643861123307,
+        "gc_objects": 24687,
+        "operation": "matrix_solve_forward-push_start",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317730.1869872,
+        "current_memory_mb": 43.84375,
+        "peak_memory_mb": 43.84375,
+        "system_memory_percent": 0.5518643861123307,
+        "gc_objects": 24711,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317730.2893212,
+        "current_memory_mb": 68.578125,
+        "peak_memory_mb": 190.7793025970459,
+        "system_memory_percent": 0.8631977158399927,
+        "gc_objects": 24713,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317730.3957686,
+        "current_memory_mb": 92.578125,
+        "peak_memory_mb": 190.9487419128418,
+        "system_memory_percent": 1.1652874154367638,
+        "gc_objects": 24714,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317730.5008183,
+        "current_memory_mb": 124.578125,
+        "peak_memory_mb": 190.94910621643066,
+        "system_memory_percent": 1.5680736815657923,
+        "gc_objects": 24715,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317730.60715,
+        "current_memory_mb": 156.578125,
+        "peak_memory_mb": 190.94947052001953,
+        "system_memory_percent": 1.9708599476948208,
+        "gc_objects": 24716,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317730.7100885,
+        "current_memory_mb": 174.578125,
+        "peak_memory_mb": 190.94986534118652,
+        "system_memory_percent": 2.197427222392399,
+        "gc_objects": 24717,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317730.81921,
+        "current_memory_mb": 192.578125,
+        "peak_memory_mb": 192.578125,
+        "system_memory_percent": 2.423994497089977,
+        "gc_objects": 24718,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317730.9255958,
+        "current_memory_mb": 212.578125,
+        "peak_memory_mb": 212.578125,
+        "system_memory_percent": 2.67573591342062,
+        "gc_objects": 24719,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317731.037263,
+        "current_memory_mb": 252.0546875,
+        "peak_memory_mb": 381.5178527832031,
+        "system_memory_percent": 3.172630201201377,
+        "gc_objects": 24717,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317731.1513903,
+        "current_memory_mb": 352.0546875,
+        "peak_memory_mb": 381.6872310638428,
+        "system_memory_percent": 4.4313372828545905,
+        "gc_objects": 24718,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317731.2731347,
+        "current_memory_mb": 424.65625,
+        "peak_memory_mb": 424.65625,
+        "system_memory_percent": 5.345178291432974,
+        "gc_objects": 24720,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317731.3791962,
+        "current_memory_mb": 234.578125,
+        "peak_memory_mb": 381.68759536743164,
+        "system_memory_percent": 2.952651471384327,
+        "gc_objects": 24720,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317731.4862645,
+        "current_memory_mb": 234.578125,
+        "peak_memory_mb": 381.68759536743164,
+        "system_memory_percent": 2.952651471384327,
+        "gc_objects": 24720,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317731.5934958,
+        "current_memory_mb": 234.578125,
+        "peak_memory_mb": 381.68759536743164,
+        "system_memory_percent": 2.952651471384327,
+        "gc_objects": 24722,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317731.7066598,
+        "current_memory_mb": 234.578125,
+        "peak_memory_mb": 381.68759536743164,
+        "system_memory_percent": 2.952651471384327,
+        "gc_objects": 24723,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317731.8150966,
+        "current_memory_mb": 234.578125,
+        "peak_memory_mb": 381.68759536743164,
+        "system_memory_percent": 2.952651471384327,
+        "gc_objects": 24724,
+        "operation": "matrix_solve_forward-push_monitor",
+        "problem_size": 25000000
+      },
+      {
+        "timestamp": 1758317731.9262364,
+        "current_memory_mb": 43.83984375,
+        "peak_memory_mb": 381.68759536743164,
+        "system_memory_percent": 0.5518152178669536,
+        "gc_objects": 24719,
+        "operation": "matrix_solve_forward-push_end",
+        "problem_size": 25000000
+      }
+    ],
+    "peak_memory_mb": 381.68759536743164,
+    "final_memory_mb": 43.83984375,
+    "memory_efficiency": 1.5267503814697265e-05,
+    "gc_collections": 33,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "graph_pagerank",
+    "algorithm": "pagerank",
+    "domain": "graph_algorithms",
+    "problem_size": 100,
+    "duration_seconds": 0.5315530300140381,
+    "snapshots": [
+      {
+        "timestamp": 1758317731.9542103,
+        "current_memory_mb": 43.83984375,
+        "peak_memory_mb": 43.83984375,
+        "system_memory_percent": 0.5518152178669536,
+        "gc_objects": 24705,
+        "operation": "graph_pagerank_start",
+        "problem_size": 100
+      },
+      {
+        "timestamp": 1758317731.9551637,
+        "current_memory_mb": 43.83984375,
+        "peak_memory_mb": 43.83984375,
+        "system_memory_percent": 0.5518152178669536,
+        "gc_objects": 24729,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 100
+      },
+      {
+        "timestamp": 1758317732.0571723,
+        "current_memory_mb": 44.08984375,
+        "peak_memory_mb": 44.08984375,
+        "system_memory_percent": 0.5549619855710867,
+        "gc_objects": 24727,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 100
+      },
+      {
+        "timestamp": 1758317732.160212,
+        "current_memory_mb": 44.08984375,
+        "peak_memory_mb": 44.08984375,
+        "system_memory_percent": 0.5549619855710867,
+        "gc_objects": 24728,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 100
+      },
+      {
+        "timestamp": 1758317732.2679625,
+        "current_memory_mb": 44.08984375,
+        "peak_memory_mb": 44.08984375,
+        "system_memory_percent": 0.5549619855710867,
+        "gc_objects": 24729,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 100
+      },
+      {
+        "timestamp": 1758317732.377414,
+        "current_memory_mb": 44.08984375,
+        "peak_memory_mb": 44.08984375,
+        "system_memory_percent": 0.5549619855710867,
+        "gc_objects": 24730,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 100
+      },
+      {
+        "timestamp": 1758317732.4816136,
+        "current_memory_mb": 44.08984375,
+        "peak_memory_mb": 44.08984375,
+        "system_memory_percent": 0.5549619855710867,
+        "gc_objects": 24726,
+        "operation": "graph_pagerank_end",
+        "problem_size": 100
+      }
+    ],
+    "peak_memory_mb": 0.29494571685791016,
+    "final_memory_mb": 44.08984375,
+    "memory_efficiency": 0.0029494571685791016,
+    "gc_collections": 22,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "graph_pagerank",
+    "algorithm": "pagerank",
+    "domain": "graph_algorithms",
+    "problem_size": 500,
+    "duration_seconds": 0.9828405380249023,
+    "snapshots": [
+      {
+        "timestamp": 1758317732.5073571,
+        "current_memory_mb": 44.08984375,
+        "peak_memory_mb": 44.08984375,
+        "system_memory_percent": 0.5549619855710867,
+        "gc_objects": 24714,
+        "operation": "graph_pagerank_start",
+        "problem_size": 500
+      },
+      {
+        "timestamp": 1758317732.5097334,
+        "current_memory_mb": 44.08984375,
+        "peak_memory_mb": 44.08984375,
+        "system_memory_percent": 0.5549619855710867,
+        "gc_objects": 24738,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 500
+      },
+      {
+        "timestamp": 1758317732.6222444,
+        "current_memory_mb": 45.21484375,
+        "peak_memory_mb": 45.21484375,
+        "system_memory_percent": 0.5691224402396854,
+        "gc_objects": 24737,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 500
+      },
+      {
+        "timestamp": 1758317732.7274132,
+        "current_memory_mb": 45.58984375,
+        "peak_memory_mb": 45.58984375,
+        "system_memory_percent": 0.5738425917958849,
+        "gc_objects": 24738,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 500
+      },
+      {
+        "timestamp": 1758317732.8399267,
+        "current_memory_mb": 45.71484375,
+        "peak_memory_mb": 45.71484375,
+        "system_memory_percent": 0.5754159756479514,
+        "gc_objects": 24739,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 500
+      },
+      {
+        "timestamp": 1758317732.9464836,
+        "current_memory_mb": 45.71484375,
+        "peak_memory_mb": 45.71484375,
+        "system_memory_percent": 0.5754159756479514,
+        "gc_objects": 24740,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 500
+      },
+      {
+        "timestamp": 1758317733.0592098,
+        "current_memory_mb": 45.71484375,
+        "peak_memory_mb": 45.71484375,
+        "system_memory_percent": 0.5754159756479514,
+        "gc_objects": 24741,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 500
+      },
+      {
+        "timestamp": 1758317733.1612856,
+        "current_memory_mb": 47.71484375,
+        "peak_memory_mb": 47.71484375,
+        "system_memory_percent": 0.6005901172810157,
+        "gc_objects": 24741,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 500
+      },
+      {
+        "timestamp": 1758317733.2668297,
+        "current_memory_mb": 47.71484375,
+        "peak_memory_mb": 47.71484375,
+        "system_memory_percent": 0.6005901172810157,
+        "gc_objects": 24742,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 500
+      },
+      {
+        "timestamp": 1758317733.3763993,
+        "current_memory_mb": 47.71484375,
+        "peak_memory_mb": 47.71484375,
+        "system_memory_percent": 0.6005901172810157,
+        "gc_objects": 24743,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 500
+      },
+      {
+        "timestamp": 1758317733.4828227,
+        "current_memory_mb": 47.71484375,
+        "peak_memory_mb": 47.71484375,
+        "system_memory_percent": 0.6005901172810157,
+        "gc_objects": 24739,
+        "operation": "graph_pagerank_end",
+        "problem_size": 500
+      }
+    ],
+    "peak_memory_mb": 3.8863210678100586,
+    "final_memory_mb": 47.71484375,
+    "memory_efficiency": 0.007772642135620117,
+    "gc_collections": 26,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "graph_pagerank",
+    "algorithm": "pagerank",
+    "domain": "graph_algorithms",
+    "problem_size": 1000,
+    "duration_seconds": 1.9799656867980957,
+    "snapshots": [
+      {
+        "timestamp": 1758317733.5178652,
+        "current_memory_mb": 47.71484375,
+        "peak_memory_mb": 47.71484375,
+        "system_memory_percent": 0.6005901172810157,
+        "gc_objects": 24727,
+        "operation": "graph_pagerank_start",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317733.532038,
+        "current_memory_mb": 49.84375,
+        "peak_memory_mb": 49.84375,
+        "system_memory_percent": 0.6273868110115236,
+        "gc_objects": 24749,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317733.6403248,
+        "current_memory_mb": 50.21875,
+        "peak_memory_mb": 50.21875,
+        "system_memory_percent": 0.6321069625677231,
+        "gc_objects": 24750,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317733.7476585,
+        "current_memory_mb": 50.46875,
+        "peak_memory_mb": 50.46875,
+        "system_memory_percent": 0.6352537302718562,
+        "gc_objects": 24751,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317733.8573294,
+        "current_memory_mb": 50.59375,
+        "peak_memory_mb": 50.59375,
+        "system_memory_percent": 0.6368271141239227,
+        "gc_objects": 24752,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317733.9672735,
+        "current_memory_mb": 50.84375,
+        "peak_memory_mb": 50.84375,
+        "system_memory_percent": 0.6399738818280557,
+        "gc_objects": 24753,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317734.0967462,
+        "current_memory_mb": 50.96875,
+        "peak_memory_mb": 50.96875,
+        "system_memory_percent": 0.6415472656801222,
+        "gc_objects": 24755,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317734.2412288,
+        "current_memory_mb": 50.96875,
+        "peak_memory_mb": 50.96875,
+        "system_memory_percent": 0.6415472656801222,
+        "gc_objects": 24755,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317734.485035,
+        "current_memory_mb": 51.09375,
+        "peak_memory_mb": 51.09375,
+        "system_memory_percent": 0.6431206495321887,
+        "gc_objects": 24756,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317734.601038,
+        "current_memory_mb": 51.09375,
+        "peak_memory_mb": 51.09375,
+        "system_memory_percent": 0.6431206495321887,
+        "gc_objects": 24756,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317734.7271578,
+        "current_memory_mb": 51.21875,
+        "peak_memory_mb": 51.21875,
+        "system_memory_percent": 0.6446940333842552,
+        "gc_objects": 24758,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317734.830334,
+        "current_memory_mb": 51.21875,
+        "peak_memory_mb": 51.21875,
+        "system_memory_percent": 0.6446940333842552,
+        "gc_objects": 24759,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317734.9392743,
+        "current_memory_mb": 51.21875,
+        "peak_memory_mb": 51.21875,
+        "system_memory_percent": 0.6446940333842552,
+        "gc_objects": 24759,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317735.0551906,
+        "current_memory_mb": 51.34375,
+        "peak_memory_mb": 51.34375,
+        "system_memory_percent": 0.6462674172363218,
+        "gc_objects": 24762,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317735.169232,
+        "current_memory_mb": 51.34375,
+        "peak_memory_mb": 51.34375,
+        "system_memory_percent": 0.6462674172363218,
+        "gc_objects": 24762,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317735.2709553,
+        "current_memory_mb": 59.10546875,
+        "peak_memory_mb": 59.10546875,
+        "system_memory_percent": 0.7439647208005771,
+        "gc_objects": 24763,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317735.3831332,
+        "current_memory_mb": 59.10546875,
+        "peak_memory_mb": 59.10546875,
+        "system_memory_percent": 0.7439647208005771,
+        "gc_objects": 24763,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 1000
+      },
+      {
+        "timestamp": 1758317735.4855876,
+        "current_memory_mb": 59.10546875,
+        "peak_memory_mb": 59.10546875,
+        "system_memory_percent": 0.7439647208005771,
+        "gc_objects": 24759,
+        "operation": "graph_pagerank_end",
+        "problem_size": 1000
+      }
+    ],
+    "peak_memory_mb": 15.508729934692383,
+    "final_memory_mb": 59.10546875,
+    "memory_efficiency": 0.015508729934692383,
+    "gc_collections": 33,
+    "memory_leaks_detected": true,
+    "error_message": ""
+  },
+  {
+    "operation_name": "graph_pagerank",
+    "algorithm": "pagerank",
+    "domain": "graph_algorithms",
+    "problem_size": 2000,
+    "duration_seconds": 2.9726881980895996,
+    "snapshots": [
+      {
+        "timestamp": 1758317735.5100784,
+        "current_memory_mb": 59.10546875,
+        "peak_memory_mb": 59.10546875,
+        "system_memory_percent": 0.7439647208005771,
+        "gc_objects": 24747,
+        "operation": "graph_pagerank_start",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317735.5125484,
+        "current_memory_mb": 59.10546875,
+        "peak_memory_mb": 59.10546875,
+        "system_memory_percent": 0.7439647208005771,
+        "gc_objects": 24771,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317735.637078,
+        "current_memory_mb": 73.29296875,
+        "peak_memory_mb": 73.29296875,
+        "system_memory_percent": 0.9225437880101267,
+        "gc_objects": 24770,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317735.7572472,
+        "current_memory_mb": 73.41796875,
+        "peak_memory_mb": 73.41796875,
+        "system_memory_percent": 0.9241171718621932,
+        "gc_objects": 24772,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317735.8662293,
+        "current_memory_mb": 73.54296875,
+        "peak_memory_mb": 73.54296875,
+        "system_memory_percent": 0.9256905557142597,
+        "gc_objects": 24772,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317735.9752014,
+        "current_memory_mb": 73.54296875,
+        "peak_memory_mb": 73.54296875,
+        "system_memory_percent": 0.9256905557142597,
+        "gc_objects": 24773,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317736.0811722,
+        "current_memory_mb": 73.66796875,
+        "peak_memory_mb": 73.66796875,
+        "system_memory_percent": 0.9272639395663261,
+        "gc_objects": 24774,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317736.1861992,
+        "current_memory_mb": 73.66796875,
+        "peak_memory_mb": 73.66796875,
+        "system_memory_percent": 0.9272639395663261,
+        "gc_objects": 24775,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317736.3001623,
+        "current_memory_mb": 73.79296875,
+        "peak_memory_mb": 73.79296875,
+        "system_memory_percent": 0.9288373234183929,
+        "gc_objects": 24776,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317736.411217,
+        "current_memory_mb": 73.79296875,
+        "peak_memory_mb": 73.79296875,
+        "system_memory_percent": 0.9288373234183929,
+        "gc_objects": 24777,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317736.5282385,
+        "current_memory_mb": 73.79296875,
+        "peak_memory_mb": 73.79296875,
+        "system_memory_percent": 0.9288373234183929,
+        "gc_objects": 24778,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317736.6431875,
+        "current_memory_mb": 73.91796875,
+        "peak_memory_mb": 73.91796875,
+        "system_memory_percent": 0.9304107072704593,
+        "gc_objects": 24779,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317736.7533088,
+        "current_memory_mb": 73.91796875,
+        "peak_memory_mb": 73.91796875,
+        "system_memory_percent": 0.9304107072704593,
+        "gc_objects": 24780,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317736.8742669,
+        "current_memory_mb": 73.91796875,
+        "peak_memory_mb": 73.91796875,
+        "system_memory_percent": 0.9304107072704593,
+        "gc_objects": 24781,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317736.9922194,
+        "current_memory_mb": 73.91796875,
+        "peak_memory_mb": 73.91796875,
+        "system_memory_percent": 0.9304107072704593,
+        "gc_objects": 24783,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317737.1111562,
+        "current_memory_mb": 73.91796875,
+        "peak_memory_mb": 73.91796875,
+        "system_memory_percent": 0.9304107072704593,
+        "gc_objects": 24784,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317737.215146,
+        "current_memory_mb": 73.91796875,
+        "peak_memory_mb": 73.91796875,
+        "system_memory_percent": 0.9304107072704593,
+        "gc_objects": 24784,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317737.3254056,
+        "current_memory_mb": 73.91796875,
+        "peak_memory_mb": 73.91796875,
+        "system_memory_percent": 0.9304107072704593,
+        "gc_objects": 24785,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317737.4433155,
+        "current_memory_mb": 73.91796875,
+        "peak_memory_mb": 73.91796875,
+        "system_memory_percent": 0.9304107072704593,
+        "gc_objects": 24786,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317737.6182945,
+        "current_memory_mb": 74.04296875,
+        "peak_memory_mb": 74.04296875,
+        "system_memory_percent": 0.9319840911225258,
+        "gc_objects": 24787,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317737.723824,
+        "current_memory_mb": 74.04296875,
+        "peak_memory_mb": 74.04296875,
+        "system_memory_percent": 0.9319840911225258,
+        "gc_objects": 24788,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317737.835298,
+        "current_memory_mb": 74.16796875,
+        "peak_memory_mb": 74.16796875,
+        "system_memory_percent": 0.9335574749745923,
+        "gc_objects": 24789,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317737.9390943,
+        "current_memory_mb": 74.16796875,
+        "peak_memory_mb": 74.16796875,
+        "system_memory_percent": 0.9335574749745923,
+        "gc_objects": 24790,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317738.0409105,
+        "current_memory_mb": 74.16796875,
+        "peak_memory_mb": 74.16796875,
+        "system_memory_percent": 0.9335574749745923,
+        "gc_objects": 24791,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317738.1547797,
+        "current_memory_mb": 74.16796875,
+        "peak_memory_mb": 74.16796875,
+        "system_memory_percent": 0.9335574749745923,
+        "gc_objects": 24792,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317738.2621553,
+        "current_memory_mb": 135.41015625,
+        "peak_memory_mb": 135.41015625,
+        "system_memory_percent": 1.7044172259964314,
+        "gc_objects": 24793,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317738.3661454,
+        "current_memory_mb": 135.41015625,
+        "peak_memory_mb": 135.41015625,
+        "system_memory_percent": 1.7044172259964314,
+        "gc_objects": 24793,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 2000
+      },
+      {
+        "timestamp": 1758317738.4726677,
+        "current_memory_mb": 44.109375,
+        "peak_memory_mb": 61.31891632080078,
+        "system_memory_percent": 0.5552078267979721,
+        "gc_objects": 24789,
+        "operation": "graph_pagerank_end",
+        "problem_size": 2000
+      }
+    ],
+    "peak_memory_mb": 61.31891632080078,
+    "final_memory_mb": 44.109375,
+    "memory_efficiency": 0.03065945816040039,
+    "gc_collections": 43,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "graph_pagerank",
+    "algorithm": "pagerank",
+    "domain": "graph_algorithms",
+    "problem_size": 5000,
+    "duration_seconds": 7.601219892501831,
+    "snapshots": [
+      {
+        "timestamp": 1758317738.496136,
+        "current_memory_mb": 44.109375,
+        "peak_memory_mb": 44.109375,
+        "system_memory_percent": 0.5552078267979721,
+        "gc_objects": 24777,
+        "operation": "graph_pagerank_start",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317738.4990592,
+        "current_memory_mb": 44.109375,
+        "peak_memory_mb": 44.109375,
+        "system_memory_percent": 0.5552078267979721,
+        "gc_objects": 24801,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317738.6172557,
+        "current_memory_mb": 232.12890625,
+        "peak_memory_mb": 232.12890625,
+        "system_memory_percent": 2.9218229815328987,
+        "gc_objects": 24800,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317738.8101585,
+        "current_memory_mb": 234.12890625,
+        "peak_memory_mb": 234.12890625,
+        "system_memory_percent": 2.946997123165963,
+        "gc_objects": 24801,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317738.922057,
+        "current_memory_mb": 234.12890625,
+        "peak_memory_mb": 234.12890625,
+        "system_memory_percent": 2.946997123165963,
+        "gc_objects": 24802,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317739.0561228,
+        "current_memory_mb": 234.12890625,
+        "peak_memory_mb": 234.12890625,
+        "system_memory_percent": 2.946997123165963,
+        "gc_objects": 24803,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317739.1576374,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24804,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317739.2595263,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24805,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317739.3621142,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24806,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317739.5020857,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24807,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317739.6030626,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24808,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317739.7051418,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24809,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317739.8063898,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24810,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317739.9101493,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24811,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317740.012781,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24812,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317740.1147692,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24813,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317740.219178,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24814,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317740.330195,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24815,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317740.4382017,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24816,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317740.552207,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24817,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317740.7142465,
+        "current_memory_mb": 234.25390625,
+        "peak_memory_mb": 234.25390625,
+        "system_memory_percent": 2.9485705070180295,
+        "gc_objects": 24818,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317740.8197207,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24819,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317740.921471,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24820,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317741.0262578,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24821,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317741.130566,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24822,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317741.2370315,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24823,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317741.3435597,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24824,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317741.4476328,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24825,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317741.5544937,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24826,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317741.6585824,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24827,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317741.7631867,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24828,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317741.8682103,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24829,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317741.9750628,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24830,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317742.0864532,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24831,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317742.4444242,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24832,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317742.5491714,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24833,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317742.6672428,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24835,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317742.7801917,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24835,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317742.8852563,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24836,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317742.9945455,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24837,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317743.2371058,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24838,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317743.3414361,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24839,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317743.4461198,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24840,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317743.5494225,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24841,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317743.6547186,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24842,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317743.7578137,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24843,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317743.8700721,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24845,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317743.9748805,
+        "current_memory_mb": 234.37890625,
+        "peak_memory_mb": 234.37890625,
+        "system_memory_percent": 2.950143890870096,
+        "gc_objects": 24845,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317744.0830967,
+        "current_memory_mb": 234.50390625,
+        "peak_memory_mb": 234.50390625,
+        "system_memory_percent": 2.9517172747221627,
+        "gc_objects": 24846,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317744.1881497,
+        "current_memory_mb": 234.50390625,
+        "peak_memory_mb": 234.50390625,
+        "system_memory_percent": 2.9517172747221627,
+        "gc_objects": 24847,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317744.2922585,
+        "current_memory_mb": 234.50390625,
+        "peak_memory_mb": 234.50390625,
+        "system_memory_percent": 2.9517172747221627,
+        "gc_objects": 24848,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317744.3966734,
+        "current_memory_mb": 234.50390625,
+        "peak_memory_mb": 234.50390625,
+        "system_memory_percent": 2.9517172747221627,
+        "gc_objects": 24849,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317744.5638316,
+        "current_memory_mb": 234.50390625,
+        "peak_memory_mb": 234.50390625,
+        "system_memory_percent": 2.9517172747221627,
+        "gc_objects": 24851,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317744.6882114,
+        "current_memory_mb": 234.50390625,
+        "peak_memory_mb": 234.50390625,
+        "system_memory_percent": 2.9517172747221627,
+        "gc_objects": 24852,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317744.809596,
+        "current_memory_mb": 234.50390625,
+        "peak_memory_mb": 234.50390625,
+        "system_memory_percent": 2.9517172747221627,
+        "gc_objects": 24851,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317744.9281385,
+        "current_memory_mb": 234.50390625,
+        "peak_memory_mb": 234.50390625,
+        "system_memory_percent": 2.9517172747221627,
+        "gc_objects": 24853,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317745.0323942,
+        "current_memory_mb": 276.1015625,
+        "peak_memory_mb": 381.57194423675537,
+        "system_memory_percent": 3.475309919742673,
+        "gc_objects": 24854,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317745.1351945,
+        "current_memory_mb": 329.62890625,
+        "peak_memory_mb": 381.741322517395,
+        "system_memory_percent": 4.149062386144782,
+        "gc_objects": 24855,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317745.242285,
+        "current_memory_mb": 425.6328125,
+        "peak_memory_mb": 425.6328125,
+        "system_memory_percent": 5.357470352777244,
+        "gc_objects": 24856,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317745.3480556,
+        "current_memory_mb": 234.8984375,
+        "peak_memory_mb": 381.8561735153198,
+        "system_memory_percent": 2.9566832675052472,
+        "gc_objects": 24856,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317745.4569058,
+        "current_memory_mb": 234.9453125,
+        "peak_memory_mb": 381.8561735153198,
+        "system_memory_percent": 2.9572732864497726,
+        "gc_objects": 24857,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317745.5592492,
+        "current_memory_mb": 234.94921875,
+        "peak_memory_mb": 381.8561735153198,
+        "system_memory_percent": 2.9573224546951495,
+        "gc_objects": 24858,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317745.668147,
+        "current_memory_mb": 409.6875,
+        "peak_memory_mb": 409.6875,
+        "system_memory_percent": 5.156765575148009,
+        "gc_objects": 24860,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317745.771797,
+        "current_memory_mb": 323.6875,
+        "peak_memory_mb": 381.8561735153198,
+        "system_memory_percent": 4.074277484926245,
+        "gc_objects": 24861,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317745.8791685,
+        "current_memory_mb": 309.6875,
+        "peak_memory_mb": 381.8561735153198,
+        "system_memory_percent": 3.898058493494795,
+        "gc_objects": 24862,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317745.9851673,
+        "current_memory_mb": 319.6875,
+        "peak_memory_mb": 381.8561735153198,
+        "system_memory_percent": 4.023929201660117,
+        "gc_objects": 24863,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 5000
+      },
+      {
+        "timestamp": 1758317746.090262,
+        "current_memory_mb": 44.2109375,
+        "peak_memory_mb": 381.8561735153198,
+        "system_memory_percent": 0.5564862011777761,
+        "gc_objects": 24858,
+        "operation": "graph_pagerank_end",
+        "problem_size": 5000
+      }
+    ],
+    "peak_memory_mb": 381.8561735153198,
+    "final_memory_mb": 44.2109375,
+    "memory_efficiency": 0.07637123470306396,
+    "gc_collections": 82,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  },
+  {
+    "operation_name": "graph_pagerank",
+    "algorithm": "pagerank",
+    "domain": "graph_algorithms",
+    "problem_size": 10000,
+    "duration_seconds": 16.998795747756958,
+    "snapshots": [
+      {
+        "timestamp": 1758317746.1179645,
+        "current_memory_mb": 44.2109375,
+        "peak_memory_mb": 44.2109375,
+        "system_memory_percent": 0.5564862011777761,
+        "gc_objects": 24846,
+        "operation": "graph_pagerank_start",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317746.1220767,
+        "current_memory_mb": 44.2109375,
+        "peak_memory_mb": 44.2109375,
+        "system_memory_percent": 0.5564862011777761,
+        "gc_objects": 24870,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317746.2273176,
+        "current_memory_mb": 334.21875,
+        "peak_memory_mb": 762.9841356277466,
+        "system_memory_percent": 4.206835074462849,
+        "gc_objects": 24869,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317746.3441353,
+        "current_memory_mb": 578.2265625,
+        "peak_memory_mb": 763.1535139083862,
+        "system_memory_percent": 7.278178690187444,
+        "gc_objects": 24869,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317746.5458717,
+        "current_memory_mb": 580.45703125,
+        "peak_memory_mb": 763.1535139083862,
+        "system_memory_percent": 7.306253758297757,
+        "gc_objects": 24870,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317746.6677094,
+        "current_memory_mb": 596.46484375,
+        "peak_memory_mb": 763.153847694397,
+        "system_memory_percent": 7.507745227853024,
+        "gc_objects": 24871,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317746.8151839,
+        "current_memory_mb": 600.4921875,
+        "peak_memory_mb": 763.1542320251465,
+        "system_memory_percent": 7.558437688836793,
+        "gc_objects": 24872,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317746.9229,
+        "current_memory_mb": 600.8671875,
+        "peak_memory_mb": 763.1547689437866,
+        "system_memory_percent": 7.563157840392992,
+        "gc_objects": 24874,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317747.1242225,
+        "current_memory_mb": 603.1171875,
+        "peak_memory_mb": 763.1555271148682,
+        "system_memory_percent": 7.591478749730189,
+        "gc_objects": 24874,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317747.230261,
+        "current_memory_mb": 611.58203125,
+        "peak_memory_mb": 763.1555271148682,
+        "system_memory_percent": 7.698026337462319,
+        "gc_objects": 24876,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317747.3404996,
+        "current_memory_mb": 611.95703125,
+        "peak_memory_mb": 763.1562957763672,
+        "system_memory_percent": 7.7027464890185176,
+        "gc_objects": 24877,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317747.4464774,
+        "current_memory_mb": 612.20703125,
+        "peak_memory_mb": 763.1566495895386,
+        "system_memory_percent": 7.705893256722652,
+        "gc_objects": 24878,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317747.5712283,
+        "current_memory_mb": 612.70703125,
+        "peak_memory_mb": 763.15700340271,
+        "system_memory_percent": 7.712186792130918,
+        "gc_objects": 24879,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317747.6730828,
+        "current_memory_mb": 613.45703125,
+        "peak_memory_mb": 763.1573572158813,
+        "system_memory_percent": 7.721627095243316,
+        "gc_objects": 24880,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317747.7994027,
+        "current_memory_mb": 614.58203125,
+        "peak_memory_mb": 763.1577110290527,
+        "system_memory_percent": 7.735787549911915,
+        "gc_objects": 24881,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317747.909231,
+        "current_memory_mb": 615.20703125,
+        "peak_memory_mb": 763.1580648422241,
+        "system_memory_percent": 7.743654469172248,
+        "gc_objects": 24882,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317748.0119035,
+        "current_memory_mb": 616.20703125,
+        "peak_memory_mb": 763.1584186553955,
+        "system_memory_percent": 7.75624153998878,
+        "gc_objects": 24883,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317748.1464508,
+        "current_memory_mb": 617.08203125,
+        "peak_memory_mb": 763.1587724685669,
+        "system_memory_percent": 7.767255226953246,
+        "gc_objects": 24884,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317748.3100321,
+        "current_memory_mb": 618.20703125,
+        "peak_memory_mb": 763.1591873168945,
+        "system_memory_percent": 7.781415681621843,
+        "gc_objects": 24885,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317748.4166195,
+        "current_memory_mb": 619.33203125,
+        "peak_memory_mb": 763.1595411300659,
+        "system_memory_percent": 7.7955761362904425,
+        "gc_objects": 24886,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317748.5201435,
+        "current_memory_mb": 620.08203125,
+        "peak_memory_mb": 763.1598949432373,
+        "system_memory_percent": 7.805016439402841,
+        "gc_objects": 24887,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317748.6239357,
+        "current_memory_mb": 621.33203125,
+        "peak_memory_mb": 763.1602487564087,
+        "system_memory_percent": 7.820750277923507,
+        "gc_objects": 24888,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317748.7450457,
+        "current_memory_mb": 622.45703125,
+        "peak_memory_mb": 763.1606025695801,
+        "system_memory_percent": 7.834910732592106,
+        "gc_objects": 24889,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317748.8468957,
+        "current_memory_mb": 623.08203125,
+        "peak_memory_mb": 763.1609563827515,
+        "system_memory_percent": 7.842777651852438,
+        "gc_objects": 24890,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317748.9534576,
+        "current_memory_mb": 623.70703125,
+        "peak_memory_mb": 763.1613101959229,
+        "system_memory_percent": 7.85064457111277,
+        "gc_objects": 24891,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317749.0620003,
+        "current_memory_mb": 624.45703125,
+        "peak_memory_mb": 763.1616640090942,
+        "system_memory_percent": 7.860084874225171,
+        "gc_objects": 24892,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317749.171103,
+        "current_memory_mb": 625.08203125,
+        "peak_memory_mb": 763.1620788574219,
+        "system_memory_percent": 7.867951793485503,
+        "gc_objects": 24893,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317749.272229,
+        "current_memory_mb": 626.45703125,
+        "peak_memory_mb": 763.1624326705933,
+        "system_memory_percent": 7.885259015858234,
+        "gc_objects": 24894,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317749.3771996,
+        "current_memory_mb": 627.45703125,
+        "peak_memory_mb": 763.1627864837646,
+        "system_memory_percent": 7.897846086674766,
+        "gc_objects": 24895,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317749.540105,
+        "current_memory_mb": 628.45703125,
+        "peak_memory_mb": 763.163140296936,
+        "system_memory_percent": 7.910433157491298,
+        "gc_objects": 24896,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317749.641354,
+        "current_memory_mb": 629.58203125,
+        "peak_memory_mb": 763.1634941101074,
+        "system_memory_percent": 7.924593612159897,
+        "gc_objects": 24897,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317749.746213,
+        "current_memory_mb": 630.83203125,
+        "peak_memory_mb": 763.1638479232788,
+        "system_memory_percent": 7.940327450680562,
+        "gc_objects": 24898,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317749.8481786,
+        "current_memory_mb": 631.45703125,
+        "peak_memory_mb": 763.1642017364502,
+        "system_memory_percent": 7.948194369940895,
+        "gc_objects": 24899,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317749.9512486,
+        "current_memory_mb": 632.08203125,
+        "peak_memory_mb": 763.1645555496216,
+        "system_memory_percent": 7.9560612892012275,
+        "gc_objects": 24900,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317750.0541277,
+        "current_memory_mb": 632.83203125,
+        "peak_memory_mb": 763.1649703979492,
+        "system_memory_percent": 7.965501592313627,
+        "gc_objects": 24901,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317750.1560702,
+        "current_memory_mb": 634.20703125,
+        "peak_memory_mb": 763.1653242111206,
+        "system_memory_percent": 7.982808814686358,
+        "gc_objects": 24902,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317750.260501,
+        "current_memory_mb": 635.08203125,
+        "peak_memory_mb": 763.1658535003662,
+        "system_memory_percent": 7.993822501650824,
+        "gc_objects": 24903,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317750.3655968,
+        "current_memory_mb": 635.83203125,
+        "peak_memory_mb": 763.1662073135376,
+        "system_memory_percent": 8.003262804763223,
+        "gc_objects": 24904,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317750.4700818,
+        "current_memory_mb": 636.58203125,
+        "peak_memory_mb": 763.166561126709,
+        "system_memory_percent": 8.012703107875623,
+        "gc_objects": 24905,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317750.5741045,
+        "current_memory_mb": 637.83203125,
+        "peak_memory_mb": 763.1669149398804,
+        "system_memory_percent": 8.028436946396287,
+        "gc_objects": 24906,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317750.681151,
+        "current_memory_mb": 639.20703125,
+        "peak_memory_mb": 763.1672687530518,
+        "system_memory_percent": 8.04574416876902,
+        "gc_objects": 24907,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317750.849021,
+        "current_memory_mb": 640.20703125,
+        "peak_memory_mb": 763.1676225662231,
+        "system_memory_percent": 8.05833123958555,
+        "gc_objects": 24908,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317750.9537857,
+        "current_memory_mb": 640.70703125,
+        "peak_memory_mb": 763.1680679321289,
+        "system_memory_percent": 8.064624774993817,
+        "gc_objects": 24909,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317751.478939,
+        "current_memory_mb": 644.95703125,
+        "peak_memory_mb": 763.1684217453003,
+        "system_memory_percent": 8.11811982596408,
+        "gc_objects": 24910,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317751.5972705,
+        "current_memory_mb": 645.70703125,
+        "peak_memory_mb": 763.1687755584717,
+        "system_memory_percent": 8.127560129076478,
+        "gc_objects": 24911,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317751.705306,
+        "current_memory_mb": 646.08203125,
+        "peak_memory_mb": 763.1691904067993,
+        "system_memory_percent": 8.132280280632678,
+        "gc_objects": 24912,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317751.908187,
+        "current_memory_mb": 646.70703125,
+        "peak_memory_mb": 763.1695442199707,
+        "system_memory_percent": 8.14014719989301,
+        "gc_objects": 24913,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317752.3238313,
+        "current_memory_mb": 647.08203125,
+        "peak_memory_mb": 763.1698980331421,
+        "system_memory_percent": 8.14486735144921,
+        "gc_objects": 24914,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317752.428148,
+        "current_memory_mb": 650.45703125,
+        "peak_memory_mb": 763.1702518463135,
+        "system_memory_percent": 8.187348715455006,
+        "gc_objects": 24915,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317752.704129,
+        "current_memory_mb": 652.45703125,
+        "peak_memory_mb": 763.1706056594849,
+        "system_memory_percent": 8.21252285708807,
+        "gc_objects": 24916,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317752.8081014,
+        "current_memory_mb": 653.33203125,
+        "peak_memory_mb": 763.1709594726562,
+        "system_memory_percent": 8.223536544052536,
+        "gc_objects": 24917,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317752.9121656,
+        "current_memory_mb": 653.95703125,
+        "peak_memory_mb": 763.1713132858276,
+        "system_memory_percent": 8.231403463312867,
+        "gc_objects": 24918,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317753.0181777,
+        "current_memory_mb": 654.70703125,
+        "peak_memory_mb": 763.171667098999,
+        "system_memory_percent": 8.240843766425266,
+        "gc_objects": 24919,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317753.1221588,
+        "current_memory_mb": 655.33203125,
+        "peak_memory_mb": 763.1720209121704,
+        "system_memory_percent": 8.2487106856856,
+        "gc_objects": 24920,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317753.2372487,
+        "current_memory_mb": 656.45703125,
+        "peak_memory_mb": 763.1724662780762,
+        "system_memory_percent": 8.262871140354198,
+        "gc_objects": 24921,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317753.3451946,
+        "current_memory_mb": 657.58203125,
+        "peak_memory_mb": 763.1728200912476,
+        "system_memory_percent": 8.277031595022796,
+        "gc_objects": 24922,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317753.4491153,
+        "current_memory_mb": 658.70703125,
+        "peak_memory_mb": 763.173173904419,
+        "system_memory_percent": 8.291192049691395,
+        "gc_objects": 24923,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317753.5572944,
+        "current_memory_mb": 659.20703125,
+        "peak_memory_mb": 763.1735277175903,
+        "system_memory_percent": 8.297485585099661,
+        "gc_objects": 24924,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317753.6593714,
+        "current_memory_mb": 659.70703125,
+        "peak_memory_mb": 763.1738815307617,
+        "system_memory_percent": 8.303779120507928,
+        "gc_objects": 24925,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317753.7662525,
+        "current_memory_mb": 660.70703125,
+        "peak_memory_mb": 763.1742353439331,
+        "system_memory_percent": 8.316366191324459,
+        "gc_objects": 24926,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317753.8702161,
+        "current_memory_mb": 661.45703125,
+        "peak_memory_mb": 763.1745891571045,
+        "system_memory_percent": 8.32580649443686,
+        "gc_objects": 24927,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317753.9751022,
+        "current_memory_mb": 662.08203125,
+        "peak_memory_mb": 763.1749429702759,
+        "system_memory_percent": 8.333673413697191,
+        "gc_objects": 24928,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317754.0801964,
+        "current_memory_mb": 662.58203125,
+        "peak_memory_mb": 763.1752967834473,
+        "system_memory_percent": 8.339966949105458,
+        "gc_objects": 24929,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317754.1831675,
+        "current_memory_mb": 663.08203125,
+        "peak_memory_mb": 763.1756505966187,
+        "system_memory_percent": 8.346260484513724,
+        "gc_objects": 24930,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317754.2872334,
+        "current_memory_mb": 663.95703125,
+        "peak_memory_mb": 763.17600440979,
+        "system_memory_percent": 8.357274171478188,
+        "gc_objects": 24931,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317754.4642112,
+        "current_memory_mb": 664.95703125,
+        "peak_memory_mb": 763.1763582229614,
+        "system_memory_percent": 8.369861242294721,
+        "gc_objects": 24932,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317754.5660744,
+        "current_memory_mb": 665.83203125,
+        "peak_memory_mb": 763.1768035888672,
+        "system_memory_percent": 8.380874929259187,
+        "gc_objects": 24933,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317754.675234,
+        "current_memory_mb": 666.45703125,
+        "peak_memory_mb": 763.1771574020386,
+        "system_memory_percent": 8.388741848519519,
+        "gc_objects": 24934,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317754.7798781,
+        "current_memory_mb": 666.83203125,
+        "peak_memory_mb": 763.17751121521,
+        "system_memory_percent": 8.393462000075719,
+        "gc_objects": 24935,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317754.8873918,
+        "current_memory_mb": 667.20703125,
+        "peak_memory_mb": 763.1778650283813,
+        "system_memory_percent": 8.398182151631918,
+        "gc_objects": 24936,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317755.2101438,
+        "current_memory_mb": 668.83203125,
+        "peak_memory_mb": 763.1782188415527,
+        "system_memory_percent": 8.418636141708784,
+        "gc_objects": 24937,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317755.3308156,
+        "current_memory_mb": 669.20703125,
+        "peak_memory_mb": 763.1785726547241,
+        "system_memory_percent": 8.423356293264984,
+        "gc_objects": 24938,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317755.435942,
+        "current_memory_mb": 669.58203125,
+        "peak_memory_mb": 763.1789264678955,
+        "system_memory_percent": 8.428076444821182,
+        "gc_objects": 24939,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317755.539225,
+        "current_memory_mb": 670.58203125,
+        "peak_memory_mb": 763.1792802810669,
+        "system_memory_percent": 8.440663515637715,
+        "gc_objects": 24940,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317755.6451912,
+        "current_memory_mb": 671.58203125,
+        "peak_memory_mb": 763.1796340942383,
+        "system_memory_percent": 8.453250586454248,
+        "gc_objects": 24941,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317755.7572334,
+        "current_memory_mb": 672.58203125,
+        "peak_memory_mb": 763.1799879074097,
+        "system_memory_percent": 8.465837657270779,
+        "gc_objects": 24942,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317755.876224,
+        "current_memory_mb": 673.08203125,
+        "peak_memory_mb": 763.180341720581,
+        "system_memory_percent": 8.472131192679043,
+        "gc_objects": 24943,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317755.982229,
+        "current_memory_mb": 673.58203125,
+        "peak_memory_mb": 763.1806955337524,
+        "system_memory_percent": 8.478424728087312,
+        "gc_objects": 24944,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317756.0932944,
+        "current_memory_mb": 673.83203125,
+        "peak_memory_mb": 763.1811714172363,
+        "system_memory_percent": 8.481571495791444,
+        "gc_objects": 24945,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317756.2092574,
+        "current_memory_mb": 674.20703125,
+        "peak_memory_mb": 763.181471824646,
+        "system_memory_percent": 8.486291647347644,
+        "gc_objects": 24946,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317756.323229,
+        "current_memory_mb": 674.83203125,
+        "peak_memory_mb": 763.1817722320557,
+        "system_memory_percent": 8.494158566607975,
+        "gc_objects": 24947,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317756.4660225,
+        "current_memory_mb": 675.58203125,
+        "peak_memory_mb": 763.1820726394653,
+        "system_memory_percent": 8.503598869720374,
+        "gc_objects": 24948,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317756.571829,
+        "current_memory_mb": 676.08203125,
+        "peak_memory_mb": 763.182373046875,
+        "system_memory_percent": 8.50989240512864,
+        "gc_objects": 24949,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317756.743152,
+        "current_memory_mb": 676.33203125,
+        "peak_memory_mb": 763.1826734542847,
+        "system_memory_percent": 8.516185940536907,
+        "gc_objects": 24950,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317756.8499143,
+        "current_memory_mb": 676.95703125,
+        "peak_memory_mb": 763.1829738616943,
+        "system_memory_percent": 8.520906092093107,
+        "gc_objects": 24951,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317756.980504,
+        "current_memory_mb": 677.33203125,
+        "peak_memory_mb": 763.183274269104,
+        "system_memory_percent": 8.525626243649306,
+        "gc_objects": 24952,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317757.089203,
+        "current_memory_mb": 678.20703125,
+        "peak_memory_mb": 763.1835746765137,
+        "system_memory_percent": 8.536639930613772,
+        "gc_objects": 24953,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317757.1908088,
+        "current_memory_mb": 678.95703125,
+        "peak_memory_mb": 763.1838750839233,
+        "system_memory_percent": 8.54608023372617,
+        "gc_objects": 24954,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317757.2961154,
+        "current_memory_mb": 679.95703125,
+        "peak_memory_mb": 763.184175491333,
+        "system_memory_percent": 8.558667304542704,
+        "gc_objects": 24955,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317757.4685824,
+        "current_memory_mb": 680.70703125,
+        "peak_memory_mb": 763.1844758987427,
+        "system_memory_percent": 8.568107607655103,
+        "gc_objects": 24956,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317757.9936132,
+        "current_memory_mb": 683.58203125,
+        "peak_memory_mb": 763.1847763061523,
+        "system_memory_percent": 8.604295436252633,
+        "gc_objects": 24956,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317758.0970616,
+        "current_memory_mb": 683.58203125,
+        "peak_memory_mb": 763.1847763061523,
+        "system_memory_percent": 8.604295436252633,
+        "gc_objects": 24958,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317758.2018542,
+        "current_memory_mb": 697.35546875,
+        "peak_memory_mb": 1526.0328931808472,
+        "system_memory_percent": 8.777662669452212,
+        "gc_objects": 24959,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317758.310006,
+        "current_memory_mb": 746.60546875,
+        "peak_memory_mb": 1526.202218055725,
+        "system_memory_percent": 9.400722674870552,
+        "gc_objects": 24960,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317758.412634,
+        "current_memory_mb": 817.23046875,
+        "peak_memory_mb": 1526.2026405334473,
+        "system_memory_percent": 10.286537783584002,
+        "gc_objects": 24961,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317758.518941,
+        "current_memory_mb": 888.98046875,
+        "peak_memory_mb": 1526.202940940857,
+        "system_memory_percent": 11.18966011467018,
+        "gc_objects": 24962,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317758.6221988,
+        "current_memory_mb": 936.60546875,
+        "peak_memory_mb": 1526.2032413482666,
+        "system_memory_percent": 11.789119362307526,
+        "gc_objects": 24963,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317758.7258823,
+        "current_memory_mb": 962.98046875,
+        "peak_memory_mb": 1526.2035417556763,
+        "system_memory_percent": 12.122676738945625,
+        "gc_objects": 24964,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317758.8291118,
+        "current_memory_mb": 1027.48046875,
+        "peak_memory_mb": 1526.203842163086,
+        "system_memory_percent": 12.932969422759882,
+        "gc_objects": 24965,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317758.9335225,
+        "current_memory_mb": 1080.60546875,
+        "peak_memory_mb": 1526.2041425704956,
+        "system_memory_percent": 13.601657559888153,
+        "gc_objects": 24966,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317759.0376534,
+        "current_memory_mb": 1118.73046875,
+        "peak_memory_mb": 1526.2044429779053,
+        "system_memory_percent": 14.08153963476844,
+        "gc_objects": 24967,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317759.1427407,
+        "current_memory_mb": 1177.73046875,
+        "peak_memory_mb": 1526.204743385315,
+        "system_memory_percent": 14.824176812943834,
+        "gc_objects": 24968,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317759.246749,
+        "current_memory_mb": 1225.35546875,
+        "peak_memory_mb": 1526.2050437927246,
+        "system_memory_percent": 15.426782828285312,
+        "gc_objects": 24969,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317759.3509076,
+        "current_memory_mb": 1294.98046875,
+        "peak_memory_mb": 1526.2053442001343,
+        "system_memory_percent": 16.30001086618223,
+        "gc_objects": 24970,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317759.4539297,
+        "current_memory_mb": 1333.60546875,
+        "peak_memory_mb": 1526.205644607544,
+        "system_memory_percent": 16.78618647647078,
+        "gc_objects": 24971,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317759.5593643,
+        "current_memory_mb": 1363.484375,
+        "peak_memory_mb": 1526.2059450149536,
+        "system_memory_percent": 17.162274385360057,
+        "gc_objects": 24972,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317759.6671839,
+        "current_memory_mb": 1422.734375,
+        "peak_memory_mb": 1526.2062454223633,
+        "system_memory_percent": 17.908058331239584,
+        "gc_objects": 24973,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317759.7772856,
+        "current_memory_mb": 814.2109375,
+        "peak_memory_mb": 1526.206545829773,
+        "system_memory_percent": 10.24853072990752,
+        "gc_objects": 24974,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317759.8800316,
+        "current_memory_mb": 1224.2265625,
+        "peak_memory_mb": 1526.3588619232178,
+        "system_memory_percent": 15.409426437667204,
+        "gc_objects": 24975,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317759.9977667,
+        "current_memory_mb": 1404.2421875,
+        "peak_memory_mb": 1526.3591623306274,
+        "system_memory_percent": 17.675295857624494,
+        "gc_objects": 24976,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317760.1032114,
+        "current_memory_mb": 1406.2421875,
+        "peak_memory_mb": 1526.3596153259277,
+        "system_memory_percent": 17.70046999925756,
+        "gc_objects": 24977,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317760.206513,
+        "current_memory_mb": 1408.2421875,
+        "peak_memory_mb": 1526.3599157333374,
+        "system_memory_percent": 17.725644140890623,
+        "gc_objects": 24978,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317760.3131795,
+        "current_memory_mb": 1438.6171875,
+        "peak_memory_mb": 1526.360216140747,
+        "system_memory_percent": 18.109549800794856,
+        "gc_objects": 24979,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317760.4171836,
+        "current_memory_mb": 1506.2421875,
+        "peak_memory_mb": 1526.3605165481567,
+        "system_memory_percent": 18.95917708091077,
+        "gc_objects": 24980,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317760.521201,
+        "current_memory_mb": 1570.2421875,
+        "peak_memory_mb": 1570.2421875,
+        "system_memory_percent": 19.76474961316883,
+        "gc_objects": 24981,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317760.6252325,
+        "current_memory_mb": 830.39453125,
+        "peak_memory_mb": 1526.4376859664917,
+        "system_memory_percent": 10.452234770504756,
+        "gc_objects": 24982,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317760.7311857,
+        "current_memory_mb": 1395.51953125,
+        "peak_memory_mb": 1526.4376859664917,
+        "system_memory_percent": 17.568649933401613,
+        "gc_objects": 24983,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317760.8353567,
+        "current_memory_mb": 1447.26953125,
+        "peak_memory_mb": 1526.4376859664917,
+        "system_memory_percent": 18.218457464305082,
+        "gc_objects": 24984,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317760.9417665,
+        "current_memory_mb": 1517.39453125,
+        "peak_memory_mb": 1526.4376859664917,
+        "system_memory_percent": 19.101125805314396,
+        "gc_objects": 24985,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317761.052141,
+        "current_memory_mb": 1570.39453125,
+        "peak_memory_mb": 1570.39453125,
+        "system_memory_percent": 19.766667174738537,
+        "gc_objects": 24986,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317761.1622167,
+        "current_memory_mb": 868.39453125,
+        "peak_memory_mb": 1526.4391651153564,
+        "system_memory_percent": 10.930543461532977,
+        "gc_objects": 24987,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317761.2702858,
+        "current_memory_mb": 1152.3984375,
+        "peak_memory_mb": 1526.4391651153564,
+        "system_memory_percent": 14.505320741673481,
+        "gc_objects": 24988,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317761.3752975,
+        "current_memory_mb": 1432.90234375,
+        "peak_memory_mb": 1526.4391651153564,
+        "system_memory_percent": 18.03604327395612,
+        "gc_objects": 24989,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317761.4816446,
+        "current_memory_mb": 1480.40234375,
+        "peak_memory_mb": 1526.4391651153564,
+        "system_memory_percent": 18.633929137741397,
+        "gc_objects": 24990,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317761.5872478,
+        "current_memory_mb": 1550.3046875,
+        "peak_memory_mb": 1550.3046875,
+        "system_memory_percent": 19.538969030397286,
+        "gc_objects": 24991,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317761.7087326,
+        "current_memory_mb": 807.36328125,
+        "peak_memory_mb": 1526.4391651153564,
+        "system_memory_percent": 10.162338795761501,
+        "gc_objects": 24992,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317761.8104289,
+        "current_memory_mb": 1232.3046875,
+        "peak_memory_mb": 1526.4391651153564,
+        "system_memory_percent": 15.511106369107,
+        "gc_objects": 24993,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317761.915178,
+        "current_memory_mb": 1516.3046875,
+        "peak_memory_mb": 1526.4391651153564,
+        "system_memory_percent": 19.085834481002127,
+        "gc_objects": 24994,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317762.0190907,
+        "current_memory_mb": 807.36328125,
+        "peak_memory_mb": 1526.4391651153564,
+        "system_memory_percent": 10.162338795761501,
+        "gc_objects": 24994,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317762.1208453,
+        "current_memory_mb": 1254.3046875,
+        "peak_memory_mb": 1526.4391651153564,
+        "system_memory_percent": 15.788021927070709,
+        "gc_objects": 24996,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317762.2271438,
+        "current_memory_mb": 1570.3046875,
+        "peak_memory_mb": 1570.3046875,
+        "system_memory_percent": 19.765536305094862,
+        "gc_objects": 24997,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317762.3331256,
+        "current_memory_mb": 1088.4140625,
+        "peak_memory_mb": 1526.4425764083862,
+        "system_memory_percent": 13.699944882396933,
+        "gc_objects": 24998,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317762.437167,
+        "current_memory_mb": 1570.4140625,
+        "peak_memory_mb": 1570.4140625,
+        "system_memory_percent": 19.76691301596542,
+        "gc_objects": 24999,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317762.542158,
+        "current_memory_mb": 1040.4140625,
+        "peak_memory_mb": 1526.443154335022,
+        "system_memory_percent": 13.095765483203389,
+        "gc_objects": 25000,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317762.6461768,
+        "current_memory_mb": 1570.4140625,
+        "peak_memory_mb": 1570.4140625,
+        "system_memory_percent": 19.76691301596542,
+        "gc_objects": 25001,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317762.7492716,
+        "current_memory_mb": 1010.41796875,
+        "peak_memory_mb": 1526.4437322616577,
+        "system_memory_percent": 12.718202526952805,
+        "gc_objects": 25002,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317762.8553855,
+        "current_memory_mb": 1570.41796875,
+        "peak_memory_mb": 1570.41796875,
+        "system_memory_percent": 19.766962184210797,
+        "gc_objects": 25003,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317763.0066593,
+        "current_memory_mb": 44.53515625,
+        "peak_memory_mb": 1526.4443101882935,
+        "system_memory_percent": 0.5605671655440737,
+        "gc_objects": 25003,
+        "operation": "graph_pagerank_monitor",
+        "problem_size": 10000
+      },
+      {
+        "timestamp": 1758317763.1108227,
+        "current_memory_mb": 44.53515625,
+        "peak_memory_mb": 1526.4443101882935,
+        "system_memory_percent": 0.5605671655440737,
+        "gc_objects": 24999,
+        "operation": "graph_pagerank_end",
+        "problem_size": 10000
+      }
+    ],
+    "peak_memory_mb": 1526.4443101882935,
+    "final_memory_mb": 44.53515625,
+    "memory_efficiency": 0.15264443101882935,
+    "gc_collections": 154,
+    "memory_leaks_detected": false,
+    "error_message": ""
+  }
+]

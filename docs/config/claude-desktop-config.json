@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "sublinear-solver": {
+      "command": "npx",
+      "args": ["sublinear-solver-mcp", "serve"],
+      "env": {
+        "SOLVER_MAX_MEMORY": "2GB",
+        "SOLVER_TIMEOUT": "30000"
+      }
+    }
+  }
+}

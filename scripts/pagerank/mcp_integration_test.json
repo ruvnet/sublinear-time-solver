@@ -1,0 +1,140 @@
+{
+  "mcp_tests": [
+    {
+      "test_case": "Small Dense (3x3)",
+      "success": true,
+      "result": {
+        "pageRankVector": [
+          0.3333333333333333,
+          0.3333333333333333,
+          0.3333333333333333
+        ],
+        "topNodes": [
+          {
+            "node": 2,
+            "score": 0.3333333333333333
+          },
+          {
+            "node": 1,
+            "score": 0.3333333333333333
+          },
+          {
+            "node": 0,
+            "score": 0.3333333333333333
+          }
+        ],
+        "totalScore": 1.0,
+        "maxScore": 0.3333333333333333,
+        "minScore": 0.3333333333333333
+      },
+      "metrics": {
+        "execution_time": 0.005516064000403276,
+        "memory_usage_mb": 0.625,
+        "peak_memory_mb": 0.05179023742675781,
+        "convergence_iterations": "MCP Internal",
+        "method": "MCP Sublinear Dense",
+        "matrix_format": "dense"
+      }
+    },
+    {
+      "test_case": "Medium (4x4)",
+      "success": true,
+      "result": {
+        "pageRankVector": [
+          0.20478728838323412,
+          0.29521271161676577,
+          0.29521271161676577,
+          0.20478728838323412
+        ],
+        "topNodes": [
+          {
+            "node": 2,
+            "score": 0.29521271161676577
+          },
+          {
+            "node": 1,
+            "score": 0.29521271161676577
+          },
+          {
+            "node": 3,
+            "score": 0.20478728838323412
+          },
+          {
+            "node": 0,
+            "score": 0.20478728838323412
+          }
+        ],
+        "totalScore": 0.9999999999999998,
+        "maxScore": 0.29521271161676577,
+        "minScore": 0.20478728838323412
+      },
+      "metrics": {
+        "execution_time": 0.011953618000006827,
+        "memory_usage_mb": 0.125,
+        "peak_memory_mb": 0.04626274108886719,
+        "convergence_iterations": "MCP Internal",
+        "method": "MCP Sublinear Dense",
+        "matrix_format": "dense"
+      }
+    },
+    {
+      "test_case": "Asymmetric (4x4)",
+      "success": true,
+      "result": {
+        "pageRankVector": [
+          0.3055408215961609,
+          0.29720960364673443,
+          0.16381428089876157,
+          0.23343529385834308
+        ],
+        "topNodes": [
+          {
+            "node": 0,
+            "score": 0.3055408215961609
+          },
+          {
+            "node": 1,
+            "score": 0.29720960364673443
+          },
+          {
+            "node": 3,
+            "score": 0.23343529385834308
+          },
+          {
+            "node": 2,
+            "score": 0.16381428089876157
+          }
+        ],
+        "totalScore": 1.0,
+        "maxScore": 0.3055408215961609,
+        "minScore": 0.16381428089876157
+      },
+      "metrics": {
+        "execution_time": 0.007010270000137098,
+        "memory_usage_mb": 0.0,
+        "peak_memory_mb": 0.04617118835449219,
+        "convergence_iterations": "MCP Internal",
+        "method": "MCP Sublinear Dense",
+        "matrix_format": "dense"
+      }
+    }
+  ],
+  "validation": {
+    "networkx_scores": [
+      0.20478693540661064,
+      0.29521306459338925,
+      0.29521306459338925,
+      0.20478693540661064
+    ],
+    "mcp_scores": [
+      0.20478728838323412,
+      0.29521271161676577,
+      0.29521271161676577,
+      0.20478728838323412
+    ],
+    "max_difference": 3.529766234855458e-07,
+    "mean_difference": 3.529766234855458e-07,
+    "correlation": 0.9999999999999999
+  },
+  "timestamp": "2025-09-19T21:17:54"
+}

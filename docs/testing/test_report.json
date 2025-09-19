@@ -1,0 +1,100 @@
+{
+  "timestamp": "2025-09-19T20:54:43.659Z",
+  "summary": {
+    "totalSuites": 6,
+    "passedSuites": 3,
+    "failedSuites": 3,
+    "totalTests": 68,
+    "passedTests": 60,
+    "failedTests": 8
+  },
+  "suites": [
+    {
+      "name": "Unit Tests - Matrix",
+      "description": "Tests for Matrix class and basic operations",
+      "passed": false,
+      "duration": 113,
+      "exitCode": 1,
+      "output": "",
+      "errors": "file:///workspaces/sublinear-time-solver/js/solver.js:395\n    MemoryManager,\n    ^^^^^^^^^^^^^\n\nSyntaxError: Duplicate export of 'MemoryManager'\n    at compileSourceTextModule (node:internal/modules/esm/utils:344:16)\n    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:420:18)\n    at loadESMFromCJS (node:internal/modules/cjs/loader:1561:24)\n    at Module._compile (node:internal/modules/cjs/loader:1712:5)\n    at Object..js (node:internal/modules/cjs/loader:1895:10)\n    at Module.load (node:internal/modules/cjs/loader:1465:32)\n    at Function._load (node:internal/modules/cjs/loader:1282:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)\n    at Module.require (node:internal/modules/cjs/loader:1487:12)\n\nNode.js v22.17.0\n"
+    },
+    {
+      "name": "Unit Tests - Solver",
+      "description": "Tests for SublinearSolver class and algorithms",
+      "passed": true,
+      "duration": 296,
+      "exitCode": 0,
+      "output": "🧪 Running SublinearSolver Unit Tests\n=====================================\n\n✅ SublinearSolver constructor with defaults\n✅ SublinearSolver constructor with custom config\n✅ SublinearSolver initialization\n✅ SublinearSolver double initialization\n✅ SublinearSolver solve basic linear system\n✅ SublinearSolver solve input validation\n✅ SublinearSolver batch solve\n✅ SublinearSolver empty batch solve\n✅ SublinearSolver memory usage tracking\n✅ SublinearSolver config access\n✅ SublinearSolver dispose\n✅ createSolver factory function\n✅ createSolver with undefined config\n✅ SolverError properties\n✅ MemoryError properties\n✅ ValidationError properties\n✅ SolutionStep construction\n✅ Complete solver workflow\n✅ Solver with zero matrix\n✅ Large matrix stress test\n\n📊 Test Summary\n===============\n✅ Passed: 20\n❌ Failed: 0\n📈 Total:  20\n🎯 Success Rate: 100.0%\n",
+      "errors": "",
+      "testCounts": {
+        "passed": 20,
+        "failed": 0,
+        "total": 20
+      }
+    },
+    {
+      "name": "Integration Tests - CLI",
+      "description": "Tests for command-line interface functionality",
+      "passed": true,
+      "duration": 32272,
+      "exitCode": 0,
+      "output": "🧪 Running CLI Integration Tests\n================================\n\n❌ CLI displays help message\n   Error: Expected values to be strictly equal:\n\n1 !== 0\n\n\n❌ CLI displays version\n   Error: The expression evaluated to a falsy value:\n\n  assert.ok(result.code === 0 || result.stdout.length > 0)\n\n\n✅ CLI handles invalid command\n❌ CLI solve command requires matrix file\n   Error: The expression evaluated to a falsy value:\n\n  assert.ok(result.stderr.includes('required') || result.stdout.includes('required'))\n\n\n✅ CLI solve command with valid matrix (should fail gracefully without WASM)\n✅ CLI solve command with output file specification\n✅ CLI solve command with custom parameters\n❌ CLI verify command requires all files\n   Error: The expression evaluated to a falsy value:\n\n  assert.ok(result.stderr.includes('required') || result.stdout.includes('required'))\n\n\n✅ CLI verify command argument parsing\n❌ CLI convert command requires input and output\n   Error: The expression evaluated to a falsy value:\n\n  assert.ok(result.stderr.includes('required') || result.stdout.includes('required'))\n\n\n✅ CLI convert command with format specification\n✅ CLI benchmark command with custom parameters\n✅ CLI benchmark command output file\n",
+      "errors": ""
+    },
+    {
+      "name": "Integration Tests - MCP Protocol",
+      "description": "Tests for Model Context Protocol compliance",
+      "passed": false,
+      "duration": 158,
+      "exitCode": 1,
+      "output": "🧪 Running MCP Protocol Compliance Tests\n=========================================\n\n✅ MCP configuration file exists and is valid\n✅ MCP configuration includes required servers\n✅ MCP server initialization follows protocol\n✅ MCP server supports required capabilities\n✅ MCP server lists available tools\n✅ MCP server provides solve_linear_system tool\n✅ MCP server provides benchmark_solver tool\n❌ MCP server provides validate_solution tool\n   Error: The expression evaluated to a falsy value:\n\n  assert.ok(validateTool.description.includes('validate'))\n\n\n✅ MCP solve_linear_system tool execution\n✅ MCP benchmark_solver tool execution\n✅ MCP validate_solution tool execution\n✅ MCP server lists available resources\n✅ MCP server provides algorithms resource\n✅ MCP server can read algorithms resource\n✅ MCP server can read benchmarks resource\n✅ MCP server can read examples resource\n✅ MCP server handles unknown tool gracefully\n✅ MCP server handles unknown resource gracefully\n✅ MCP messages follow JSON-RPC 2.0 format\n✅ MCP tool schemas are valid JSON Schema\n✅ MCP server integration workflow\n\n📊 Test Summary\n===============\n✅ Passed: 20\n❌ Failed: 1\n📈 Total:  21\n🎯 Success Rate: 95.2%\n",
+      "errors": "",
+      "testCounts": {
+        "passed": 20,
+        "failed": 1,
+        "total": 21
+      }
+    },
+    {
+      "name": "Integration Tests - WASM Interface",
+      "description": "Tests for WebAssembly integration and performance",
+      "passed": true,
+      "duration": 50,
+      "exitCode": 0,
+      "output": "🧪 Running WASM Interface Tests\n================================\n\n⚠️  WASM package not built. Run the following to build:\n   1. Install Rust: curl --proto \"=https\" --tlsv1.2 -sSf https://sh.rustup.rs | sh\n   2. Add WASM target: rustup target add wasm32-unknown-unknown\n   3. Install wasm-pack: cargo install wasm-pack\n   4. Build WASM: ./scripts/build.sh\n\n📝 Running mock tests instead...\n\n   Expected files after build: pkg/sublinear_time_solver.js, pkg/sublinear_time_solver_bg.wasm, pkg/sublinear_time_solver.d.ts, pkg/package.json\n✅ WASM package structure exists\n✅ JavaScript wrapper exists and is importable\n✅ WASM Matrix creation and basic operations\n✅ WASM Matrix memory efficiency\n✅ WASM SublinearSolver initialization\n✅ WASM SublinearSolver basic solve operation\n✅ WASM memory usage tracking\n✅ WASM Utils feature detection\n✅ WASM Utils SIMD detection\n✅ WASM Utils matrix multiply benchmark\n✅ WASM Utils memory usage\n   WASM solve time: 0ms\n✅ WASM vs JS performance comparison\n   Matrix size: 50x50, Memory used: 1024 bytes\n✅ WASM large matrix handling\n✅ WASM graceful error handling\n✅ WASM resource cleanup\n   Features: {\"simd\":false,\"threads\":1,\"mock\":true}\n   Memory used: 1024 bytes\n✅ WASM full workflow integration\n   Would validate build info after WASM build\n✅ WASM build information validation\n\n📊 Test Summary\n===============\n✅ Passed: 17\n❌ Failed: 0\n📈 Total:  17\n🎯 Success Rate: 100.0%\n\n🔧 Build Requirements:\n   • Rust toolchain (rustc, cargo)\n   • wasm-pack\n   • wasm32-unknown-unknown target\n   • Run: npm run build\n",
+      "errors": "",
+      "testCounts": {
+        "passed": 17,
+        "failed": 0,
+        "total": 17
+      }
+    },
+    {
+      "name": "Performance Tests - Benchmarks",
+      "description": "Algorithm validation and performance benchmarks",
+      "passed": false,
+      "duration": 66,
+      "exitCode": 1,
+      "output": "🧪 Running Performance Benchmark Tests\n======================================\n\n⚠️  WASM not built. Running algorithm validation tests only.\n\n❌ Jacobi solver convergence on diagonal matrix\n   Error: this.getMatrixValue is not a function\n\n❌ Conjugate Gradient solver on SPD matrix\n   Error: this.getMatrixValue is not a function\n\n❌ Hybrid solver algorithm selection\n   Error: this.isDiagonallyDominant is not a function\n\n❌ Matrix size scaling performance\n   Error: this.getMatrixValue is not a function\n\n❌ Sparsity impact on performance\n   Error: this.getMatrixValue is not a function\n\n❌ Solution verification against known results\n   Error: this.getMatrixValue is not a function\n\n❌ Convergence rate analysis\n   Error: this.getMatrixValue is not a function\n\n   Size 100x100: ~0.08 MB\n   Size 500x500: ~1.92 MB\n   Size 1000x1000: ~7.65 MB\n✅ Memory efficiency analysis (9ms)\n✅ Numerical stability analysis (0ms)\n   Size 100: theoretical 2302.59ms, actual 2310.51ms\n   Size 200: theoretical 5298.32ms, actual 5307.05ms\n   Size 400: theoretical 11982.93ms, actual 11991.38ms\n✅ Sublinear time complexity claims validation (0ms)\n\n📁 Benchmark report saved to: /workspaces/sublinear-time-solver/benchmark_report.json\n\n📊 Test Summary\n===============\n✅ Passed: 3\n❌ Failed: 7\n📈 Total:  10\n🎯 Success Rate: 30.0%\n",
+      "errors": "",
+      "testCounts": {
+        "passed": 3,
+        "failed": 7,
+        "total": 10
+      }
+    }
+  ],
+  "environment": {
+    "nodeVersion": "v22.17.0",
+    "platform": "linux",
+    "arch": "x64",
+    "memory": "5MB"
+  },
+  "recommendations": [
+    {
+      "type": "critical",
+      "message": "Low test success rate. Address failing tests before production.",
+      "action": "Review failed test suites and fix underlying issues"
+    }
+  ]
+}

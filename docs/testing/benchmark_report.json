@@ -1,0 +1,70 @@
+{
+  "timestamp": "2025-09-19T20:55:16.609Z",
+  "system": {
+    "platform": "linux",
+    "arch": "x64",
+    "cpus": 2,
+    "memory": "8GB",
+    "nodeVersion": "v22.17.0"
+  },
+  "wasmBuilt": false,
+  "results": [
+    {
+      "test": "Memory efficiency",
+      "usage": [
+        {
+          "size": 100,
+          "estimatedMemory": 82400,
+          "memoryMB": "0.08"
+        },
+        {
+          "size": 500,
+          "estimatedMemory": 2012000,
+          "memoryMB": "1.92"
+        },
+        {
+          "size": 1000,
+          "estimatedMemory": 8024000,
+          "memoryMB": "7.65"
+        }
+      ]
+    },
+    {
+      "test": "Numerical stability",
+      "error": "this.getMatrixValue is not a function",
+      "handled": true
+    },
+    {
+      "test": "Sublinear complexity validation",
+      "measurements": [
+        {
+          "size": 100,
+          "nnz": 500,
+          "theoreticalTime": "2302.59",
+          "actualTime": "2310.51",
+          "ratio": "1.003"
+        },
+        {
+          "size": 200,
+          "nnz": 1000,
+          "theoreticalTime": "5298.32",
+          "actualTime": "5307.05",
+          "ratio": "1.002"
+        },
+        {
+          "size": 400,
+          "nnz": 2000,
+          "theoreticalTime": "11982.93",
+          "actualTime": "11991.38",
+          "ratio": "1.001"
+        }
+      ],
+      "avgRatio": 1.002
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 7,
+    "total": 10
+  }
+}

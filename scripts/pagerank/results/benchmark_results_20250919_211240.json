@@ -1,0 +1,147 @@
+{
+  "timestamp": "2025-09-19T21:12:33.232259",
+  "benchmarks": [
+    {
+      "graph_name": "small_dense_10",
+      "graph_info": {
+        "num_nodes": 10,
+        "num_edges": 50,
+        "density": 0.5555555555555556,
+        "category": "small_dense"
+      },
+      "results": {
+        "networkx": {
+          "metrics": {
+            "execution_time": 0.020941464999850723,
+            "memory_usage_mb": 0.5,
+            "peak_memory_mb": 0.07527637481689453,
+            "convergence_iterations": 1000,
+            "method": "NetworkX"
+          },
+          "success": true
+        },
+        "scipy_eigenvalue": {
+          "metrics": {
+            "execution_time": 0.022400476000257186,
+            "memory_usage_mb": 3.15234375,
+            "peak_memory_mb": 0.04830646514892578,
+            "convergence_iterations": "N/A (eigenvalue)",
+            "method": "SciPy Eigenvalue"
+          },
+          "success": true
+        },
+        "power_iteration": {
+          "metrics": {
+            "execution_time": 0.003225262999876577,
+            "memory_usage_mb": 0.0,
+            "peak_memory_mb": 0.041900634765625,
+            "convergence_iterations": 11,
+            "method": "Power Iteration"
+          },
+          "success": true
+        },
+        "sparse_matrix": {
+          "metrics": {
+            "execution_time": 0.021532507999836525,
+            "memory_usage_mb": 0.125,
+            "peak_memory_mb": 0.05140972137451172,
+            "convergence_iterations": 11,
+            "method": "Sparse Matrix"
+          },
+          "success": true
+        },
+        "mcp_dense": {
+          "metrics": {
+            "execution_time": 0.008379683999919507,
+            "memory_usage_mb": 0.25,
+            "peak_memory_mb": 0.05108833312988281,
+            "convergence_iterations": "MCP Internal",
+            "method": "MCP Sublinear Dense",
+            "matrix_format": "dense"
+          },
+          "success": true
+        },
+        "mcp_sparse": {
+          "metrics": {
+            "execution_time": 0.008847987000081048,
+            "memory_usage_mb": 0.0,
+            "peak_memory_mb": 0.04900169372558594,
+            "convergence_iterations": "MCP Internal",
+            "method": "MCP Sublinear Sparse",
+            "matrix_format": "sparse"
+          },
+          "success": true
+        },
+        "mcp_actual": {
+          "metrics": {
+            "execution_time": 0.003943972999877587,
+            "memory_usage_mb": 0.0,
+            "peak_memory_mb": 0.04335594177246094,
+            "convergence_iterations": "MCP Internal",
+            "method": "MCP Sublinear Actual"
+          },
+          "success": true
+        }
+      },
+      "accuracy_comparison": {
+        "reference_method": "networkx",
+        "method_comparisons": {
+          "scipy_eigenvalue": {
+            "mse": 6.9822181156362964e-15,
+            "mae": 5.879577539419367e-08,
+            "max_error": 1.9149435477594512e-07,
+            "correlation": 0.9999999999939623,
+            "rank_correlation": 0.9999999999999999
+          },
+          "power_iteration": {
+            "mse": 1.156477815727964e-14,
+            "mae": 7.791144229218894e-08,
+            "max_error": 2.455951614716012e-07,
+            "correlation": 0.9999999999901161,
+            "rank_correlation": 0.9999999999999999
+          },
+          "sparse_matrix": {
+            "mse": 0.0004209797894348306,
+            "mae": 0.011634214127067461,
+            "max_error": 0.054087388255987356,
+            "correlation": 0.7610546329113861,
+            "rank_correlation": 0.7333333333333332
+          },
+          "mcp_dense": {
+            "mse": 1.156477815727964e-14,
+            "mae": 7.791144229218894e-08,
+            "max_error": 2.455951614716012e-07,
+            "correlation": 0.9999999999901161,
+            "rank_correlation": 0.9999999999999999
+          },
+          "mcp_sparse": {
+            "mse": 1.156477815727964e-14,
+            "mae": 7.791144229218894e-08,
+            "max_error": 2.455951614716012e-07,
+            "correlation": 0.9999999999901161,
+            "rank_correlation": 0.9999999999999999
+          },
+          "mcp_actual": {
+            "mse": 1.156477815727964e-14,
+            "mae": 7.791144229218894e-08,
+            "max_error": 2.455951614716012e-07,
+            "correlation": 0.9999999999901161,
+            "rank_correlation": 0.9999999999999999
+          }
+        }
+      },
+      "performance_analysis": {
+        "fastest_method": {
+          "method": "power_iteration",
+          "time": 0.003225262999876577
+        },
+        "most_memory_efficient": {
+          "method": "power_iteration",
+          "memory_mb": 0.0
+        },
+        "method_rankings": {},
+        "sublinear_advantage": {
+          "avg_traditional_time": 0.017024927999955253,
+          "avg_sublinear_time": 0.007057214666626048,
+          "speedup_factor": 2.412414642913877,
+          "sublinear_wins": 

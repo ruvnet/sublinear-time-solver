@@ -1,0 +1,317 @@
+[
+  {
+    "test_id": "tridiagonal_100x100_dom1.1_random",
+    "error": "'MatrixGenerators' object has no attribute 'tridiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 80, in run_single_test\n    A, matrix_props = self.matrix_generator.tridiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'tridiagonal_add'. Did you mean: 'tridiagonal_matrix'?\n",
+    "matrix_type": "tridiagonal",
+    "size": 100,
+    "dominance_factor": 1.1,
+    "success": false
+  },
+  {
+    "test_id": "tridiagonal_100x100_dom1.5_random",
+    "error": "'MatrixGenerators' object has no attribute 'tridiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 80, in run_single_test\n    A, matrix_props = self.matrix_generator.tridiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'tridiagonal_add'. Did you mean: 'tridiagonal_matrix'?\n",
+    "matrix_type": "tridiagonal",
+    "size": 100,
+    "dominance_factor": 1.5,
+    "success": false
+  },
+  {
+    "test_id": "tridiagonal_100x100_dom2.0_random",
+    "error": "'MatrixGenerators' object has no attribute 'tridiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 80, in run_single_test\n    A, matrix_props = self.matrix_generator.tridiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'tridiagonal_add'. Did you mean: 'tridiagonal_matrix'?\n",
+    "matrix_type": "tridiagonal",
+    "size": 100,
+    "dominance_factor": 2.0,
+    "success": false
+  },
+  {
+    "test_id": "tridiagonal_200x200_dom1.1_random",
+    "error": "'MatrixGenerators' object has no attribute 'tridiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 80, in run_single_test\n    A, matrix_props = self.matrix_generator.tridiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'tridiagonal_add'. Did you mean: 'tridiagonal_matrix'?\n",
+    "matrix_type": "tridiagonal",
+    "size": 200,
+    "dominance_factor": 1.1,
+    "success": false
+  },
+  {
+    "test_id": "tridiagonal_200x200_dom1.5_random",
+    "error": "'MatrixGenerators' object has no attribute 'tridiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 80, in run_single_test\n    A, matrix_props = self.matrix_generator.tridiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'tridiagonal_add'. Did you mean: 'tridiagonal_matrix'?\n",
+    "matrix_type": "tridiagonal",
+    "size": 200,
+    "dominance_factor": 1.5,
+    "success": false
+  },
+  {
+    "test_id": "tridiagonal_200x200_dom2.0_random",
+    "error": "'MatrixGenerators' object has no attribute 'tridiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 80, in run_single_test\n    A, matrix_props = self.matrix_generator.tridiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'tridiagonal_add'. Did you mean: 'tridiagonal_matrix'?\n",
+    "matrix_type": "tridiagonal",
+    "size": 200,
+    "dominance_factor": 2.0,
+    "success": false
+  },
+  {
+    "test_id": "tridiagonal_500x500_dom1.1_random",
+    "error": "'MatrixGenerators' object has no attribute 'tridiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 80, in run_single_test\n    A, matrix_props = self.matrix_generator.tridiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'tridiagonal_add'. Did you mean: 'tridiagonal_matrix'?\n",
+    "matrix_type": "tridiagonal",
+    "size": 500,
+    "dominance_factor": 1.1,
+    "success": false
+  },
+  {
+    "test_id": "tridiagonal_500x500_dom1.5_random",
+    "error": "'MatrixGenerators' object has no attribute 'tridiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 80, in run_single_test\n    A, matrix_props = self.matrix_generator.tridiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'tridiagonal_add'. Did you mean: 'tridiagonal_matrix'?\n",
+    "matrix_type": "tridiagonal",
+    "size": 500,
+    "dominance_factor": 1.5,
+    "success": false
+  },
+  {
+    "test_id": "tridiagonal_500x500_dom2.0_random",
+    "error": "'MatrixGenerators' object has no attribute 'tridiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 80, in run_single_test\n    A, matrix_props = self.matrix_generator.tridiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'tridiagonal_add'. Did you mean: 'tridiagonal_matrix'?\n",
+    "matrix_type": "tridiagonal",
+    "size": 500,
+    "dominance_factor": 2.0,
+    "success": false
+  },
+  {
+    "test_id": "tridiagonal_1000x1000_dom1.1_random",
+    "error": "'MatrixGenerators' object has no attribute 'tridiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 80, in run_single_test\n    A, matrix_props = self.matrix_generator.tridiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'tridiagonal_add'. Did you mean: 'tridiagonal_matrix'?\n",
+    "matrix_type": "tridiagonal",
+    "size": 1000,
+    "dominance_factor": 1.1,
+    "success": false
+  },
+  {
+    "test_id": "tridiagonal_1000x1000_dom1.5_random",
+    "error": "'MatrixGenerators' object has no attribute 'tridiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 80, in run_single_test\n    A, matrix_props = self.matrix_generator.tridiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'tridiagonal_add'. Did you mean: 'tridiagonal_matrix'?\n",
+    "matrix_type": "tridiagonal",
+    "size": 1000,
+    "dominance_factor": 1.5,
+    "success": false
+  },
+  {
+    "test_id": "tridiagonal_1000x1000_dom2.0_random",
+    "error": "'MatrixGenerators' object has no attribute 'tridiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 80, in run_single_test\n    A, matrix_props = self.matrix_generator.tridiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'tridiagonal_add'. Did you mean: 'tridiagonal_matrix'?\n",
+    "matrix_type": "tridiagonal",
+    "size": 1000,
+    "dominance_factor": 2.0,
+    "success": false
+  },
+  {
+    "test_id": "pentadiagonal_100x100_dom1.1_random",
+    "error": "'MatrixGenerators' object has no attribute 'pentadiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 82, in run_single_test\n    A, matrix_props = self.matrix_generator.pentadiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'pentadiagonal_add'\n",
+    "matrix_type": "pentadiagonal",
+    "size": 100,
+    "dominance_factor": 1.1,
+    "success": false
+  },
+  {
+    "test_id": "pentadiagonal_100x100_dom1.5_random",
+    "error": "'MatrixGenerators' object has no attribute 'pentadiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 82, in run_single_test\n    A, matrix_props = self.matrix_generator.pentadiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'pentadiagonal_add'\n",
+    "matrix_type": "pentadiagonal",
+    "size": 100,
+    "dominance_factor": 1.5,
+    "success": false
+  },
+  {
+    "test_id": "pentadiagonal_100x100_dom2.0_random",
+    "error": "'MatrixGenerators' object has no attribute 'pentadiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 82, in run_single_test\n    A, matrix_props = self.matrix_generator.pentadiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'pentadiagonal_add'\n",
+    "matrix_type": "pentadiagonal",
+    "size": 100,
+    "dominance_factor": 2.0,
+    "success": false
+  },
+  {
+    "test_id": "pentadiagonal_200x200_dom1.1_random",
+    "error": "'MatrixGenerators' object has no attribute 'pentadiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 82, in run_single_test\n    A, matrix_props = self.matrix_generator.pentadiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'pentadiagonal_add'\n",
+    "matrix_type": "pentadiagonal",
+    "size": 200,
+    "dominance_factor": 1.1,
+    "success": false
+  },
+  {
+    "test_id": "pentadiagonal_200x200_dom1.5_random",
+    "error": "'MatrixGenerators' object has no attribute 'pentadiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 82, in run_single_test\n    A, matrix_props = self.matrix_generator.pentadiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'pentadiagonal_add'\n",
+    "matrix_type": "pentadiagonal",
+    "size": 200,
+    "dominance_factor": 1.5,
+    "success": false
+  },
+  {
+    "test_id": "pentadiagonal_200x200_dom2.0_random",
+    "error": "'MatrixGenerators' object has no attribute 'pentadiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 82, in run_single_test\n    A, matrix_props = self.matrix_generator.pentadiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'pentadiagonal_add'\n",
+    "matrix_type": "pentadiagonal",
+    "size": 200,
+    "dominance_factor": 2.0,
+    "success": false
+  },
+  {
+    "test_id": "pentadiagonal_500x500_dom1.1_random",
+    "error": "'MatrixGenerators' object has no attribute 'pentadiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 82, in run_single_test\n    A, matrix_props = self.matrix_generator.pentadiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'pentadiagonal_add'\n",
+    "matrix_type": "pentadiagonal",
+    "size": 500,
+    "dominance_factor": 1.1,
+    "success": false
+  },
+  {
+    "test_id": "pentadiagonal_500x500_dom1.5_random",
+    "error": "'MatrixGenerators' object has no attribute 'pentadiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 82, in run_single_test\n    A, matrix_props = self.matrix_generator.pentadiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'pentadiagonal_add'\n",
+    "matrix_type": "pentadiagonal",
+    "size": 500,
+    "dominance_factor": 1.5,
+    "success": false
+  },
+  {
+    "test_id": "pentadiagonal_500x500_dom2.0_random",
+    "error": "'MatrixGenerators' object has no attribute 'pentadiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 82, in run_single_test\n    A, matrix_props = self.matrix_generator.pentadiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'pentadiagonal_add'\n",
+    "matrix_type": "pentadiagonal",
+    "size": 500,
+    "dominance_factor": 2.0,
+    "success": false
+  },
+  {
+    "test_id": "pentadiagonal_1000x1000_dom1.1_random",
+    "error": "'MatrixGenerators' object has no attribute 'pentadiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 82, in run_single_test\n    A, matrix_props = self.matrix_generator.pentadiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'pentadiagonal_add'\n",
+    "matrix_type": "pentadiagonal",
+    "size": 1000,
+    "dominance_factor": 1.1,
+    "success": false
+  },
+  {
+    "test_id": "pentadiagonal_1000x1000_dom1.5_random",
+    "error": "'MatrixGenerators' object has no attribute 'pentadiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 82, in run_single_test\n    A, matrix_props = self.matrix_generator.pentadiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'pentadiagonal_add'\n",
+    "matrix_type": "pentadiagonal",
+    "size": 1000,
+    "dominance_factor": 1.5,
+    "success": false
+  },
+  {
+    "test_id": "pentadiagonal_1000x1000_dom2.0_random",
+    "error": "'MatrixGenerators' object has no attribute 'pentadiagonal_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 82, in run_single_test\n    A, matrix_props = self.matrix_generator.pentadiagonal_add(size, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'pentadiagonal_add'\n",
+    "matrix_type": "pentadiagonal",
+    "size": 1000,
+    "dominance_factor": 2.0,
+    "success": false
+  },
+  {
+    "test_id": "random_sparse_100x100_dom1.1_random",
+    "error": "'MatrixGenerators' object has no attribute 'random_sparse_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 84, in run_single_test\n    A, matrix_props = self.matrix_generator.random_sparse_add(size, 0.1, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'random_sparse_add'\n",
+    "matrix_type": "random_sparse",
+    "size": 100,
+    "dominance_factor": 1.1,
+    "success": false
+  },
+  {
+    "test_id": "random_sparse_100x100_dom1.5_random",
+    "error": "'MatrixGenerators' object has no attribute 'random_sparse_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 84, in run_single_test\n    A, matrix_props = self.matrix_generator.random_sparse_add(size, 0.1, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'random_sparse_add'\n",
+    "matrix_type": "random_sparse",
+    "size": 100,
+    "dominance_factor": 1.5,
+    "success": false
+  },
+  {
+    "test_id": "random_sparse_100x100_dom2.0_random",
+    "error": "'MatrixGenerators' object has no attribute 'random_sparse_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 84, in run_single_test\n    A, matrix_props = self.matrix_generator.random_sparse_add(size, 0.1, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'random_sparse_add'\n",
+    "matrix_type": "random_sparse",
+    "size": 100,
+    "dominance_factor": 2.0,
+    "success": false
+  },
+  {
+    "test_id": "random_sparse_200x200_dom1.1_random",
+    "error": "'MatrixGenerators' object has no attribute 'random_sparse_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 84, in run_single_test\n    A, matrix_props = self.matrix_generator.random_sparse_add(size, 0.1, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'random_sparse_add'\n",
+    "matrix_type": "random_sparse",
+    "size": 200,
+    "dominance_factor": 1.1,
+    "success": false
+  },
+  {
+    "test_id": "random_sparse_200x200_dom1.5_random",
+    "error": "'MatrixGenerators' object has no attribute 'random_sparse_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 84, in run_single_test\n    A, matrix_props = self.matrix_generator.random_sparse_add(size, 0.1, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'random_sparse_add'\n",
+    "matrix_type": "random_sparse",
+    "size": 200,
+    "dominance_factor": 1.5,
+    "success": false
+  },
+  {
+    "test_id": "random_sparse_200x200_dom2.0_random",
+    "error": "'MatrixGenerators' object has no attribute 'random_sparse_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 84, in run_single_test\n    A, matrix_props = self.matrix_generator.random_sparse_add(size, 0.1, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'random_sparse_add'\n",
+    "matrix_type": "random_sparse",
+    "size": 200,
+    "dominance_factor": 2.0,
+    "success": false
+  },
+  {
+    "test_id": "random_sparse_500x500_dom1.1_random",
+    "error": "'MatrixGenerators' object has no attribute 'random_sparse_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 84, in run_single_test\n    A, matrix_props = self.matrix_generator.random_sparse_add(size, 0.1, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'random_sparse_add'\n",
+    "matrix_type": "random_sparse",
+    "size": 500,
+    "dominance_factor": 1.1,
+    "success": false
+  },
+  {
+    "test_id": "random_sparse_500x500_dom1.5_random",
+    "error": "'MatrixGenerators' object has no attribute 'random_sparse_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 84, in run_single_test\n    A, matrix_props = self.matrix_generator.random_sparse_add(size, 0.1, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'random_sparse_add'\n",
+    "matrix_type": "random_sparse",
+    "size": 500,
+    "dominance_factor": 1.5,
+    "success": false
+  },
+  {
+    "test_id": "random_sparse_500x500_dom2.0_random",
+    "error": "'MatrixGenerators' object has no attribute 'random_sparse_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 84, in run_single_test\n    A, matrix_props = self.matrix_generator.random_sparse_add(size, 0.1, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'random_sparse_add'\n",
+    "matrix_type": "random_sparse",
+    "size": 500,
+    "dominance_factor": 2.0,
+    "success": false
+  },
+  {
+    "test_id": "random_sparse_1000x1000_dom1.1_random",
+    "error": "'MatrixGenerators' object has no attribute 'random_sparse_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 84, in run_single_test\n    A, matrix_props = self.matrix_generator.random_sparse_add(size, 0.1, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'random_sparse_add'\n",
+    "matrix_type": "random_sparse",
+    "size": 1000,
+    "dominance_factor": 1.1,
+    "success": false
+  },
+  {
+    "test_id": "random_sparse_1000x1000_dom1.5_random",
+    "error": "'MatrixGenerators' object has no attribute 'random_sparse_add'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspaces/sublinear-time-solver/scripts/linear_systems/comprehensive_benchmark.py\", line 84, in run_single_test\n    A, matrix_props = self.matrix_generator.random_sparse_add(size, 0.1, dominance_factor)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'MatrixGenerators' object has no attribute 'random_sparse_add'\n",
+    "matrix_type": "random_sparse",
+    "size": 1000,
+    "dominance_factor": 1.5,
+    "success": false
+  }
+]

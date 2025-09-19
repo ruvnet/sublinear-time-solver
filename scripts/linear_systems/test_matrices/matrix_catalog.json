@@ -1,0 +1,393 @@
+{
+  "n_50": {
+    "dd_symmetric": {
+      "file": "test_matrices/n_50/dd_symmetric.json",
+      "description": "Dense symmetric diagonally dominant",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": false
+      }
+    },
+    "dd_asymmetric": {
+      "file": "test_matrices/n_50/dd_asymmetric.json",
+      "description": "Dense asymmetric diagonally dominant",
+      "properties": {
+        "symmetric": false,
+        "diagonally_dominant": true,
+        "sparse": false
+      }
+    },
+    "tridiagonal": {
+      "file": "test_matrices/n_50/tridiagonal.json",
+      "description": "Tridiagonal matrix",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "banded": true
+      }
+    },
+    "spd_well_conditioned": {
+      "file": "test_matrices/n_50/spd_well_conditioned.json",
+      "description": "Well-conditioned SPD matrix",
+      "properties": {
+        "symmetric": true,
+        "positive_definite": true,
+        "sparse": false
+      }
+    },
+    "spd_ill_conditioned": {
+      "file": "test_matrices/n_50/spd_ill_conditioned.json",
+      "description": "Ill-conditioned SPD matrix",
+      "properties": {
+        "symmetric": true,
+        "positive_definite": true,
+        "sparse": false,
+        "ill_conditioned": true
+      }
+    },
+    "banded": {
+      "file": "test_matrices/n_50/banded.json",
+      "description": "Banded matrix (bandwidth=5)",
+      "properties": {
+        "symmetric": false,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "banded": true
+      }
+    },
+    "laplacian_1d": {
+      "file": "test_matrices/n_50/laplacian_1d.json",
+      "description": "1D discretized Laplacian",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "pde_origin": true
+      }
+    }
+  },
+  "n_100": {
+    "dd_symmetric": {
+      "file": "test_matrices/n_100/dd_symmetric.json",
+      "description": "Dense symmetric diagonally dominant",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": false
+      }
+    },
+    "dd_asymmetric": {
+      "file": "test_matrices/n_100/dd_asymmetric.json",
+      "description": "Dense asymmetric diagonally dominant",
+      "properties": {
+        "symmetric": false,
+        "diagonally_dominant": true,
+        "sparse": false
+      }
+    },
+    "tridiagonal": {
+      "file": "test_matrices/n_100/tridiagonal.json",
+      "description": "Tridiagonal matrix",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "banded": true
+      }
+    },
+    "spd_well_conditioned": {
+      "file": "test_matrices/n_100/spd_well_conditioned.json",
+      "description": "Well-conditioned SPD matrix",
+      "properties": {
+        "symmetric": true,
+        "positive_definite": true,
+        "sparse": false
+      }
+    },
+    "spd_ill_conditioned": {
+      "file": "test_matrices/n_100/spd_ill_conditioned.json",
+      "description": "Ill-conditioned SPD matrix",
+      "properties": {
+        "symmetric": true,
+        "positive_definite": true,
+        "sparse": false,
+        "ill_conditioned": true
+      }
+    },
+    "banded": {
+      "file": "test_matrices/n_100/banded.json",
+      "description": "Banded matrix (bandwidth=10)",
+      "properties": {
+        "symmetric": false,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "banded": true
+      }
+    },
+    "sparse_dd": {
+      "file": "test_matrices/n_100/sparse_dd.json",
+      "description": "Sparse diagonally dominant",
+      "properties": {
+        "symmetric": false,
+        "diagonally_dominant": true,
+        "sparse": true
+      }
+    },
+    "laplacian_1d": {
+      "file": "test_matrices/n_100/laplacian_1d.json",
+      "description": "1D discretized Laplacian",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "pde_origin": true
+      }
+    },
+    "laplacian_2d": {
+      "file": "test_matrices/n_100/laplacian_2d.json",
+      "description": "2D discretized Laplacian",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "pde_origin": true
+      }
+    }
+  },
+  "n_200": {
+    "dd_symmetric": {
+      "file": "test_matrices/n_200/dd_symmetric.json",
+      "description": "Dense symmetric diagonally dominant",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": false
+      }
+    },
+    "dd_asymmetric": {
+      "file": "test_matrices/n_200/dd_asymmetric.json",
+      "description": "Dense asymmetric diagonally dominant",
+      "properties": {
+        "symmetric": false,
+        "diagonally_dominant": true,
+        "sparse": false
+      }
+    },
+    "tridiagonal": {
+      "file": "test_matrices/n_200/tridiagonal.json",
+      "description": "Tridiagonal matrix",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "banded": true
+      }
+    },
+    "spd_well_conditioned": {
+      "file": "test_matrices/n_200/spd_well_conditioned.json",
+      "description": "Well-conditioned SPD matrix",
+      "properties": {
+        "symmetric": true,
+        "positive_definite": true,
+        "sparse": false
+      }
+    },
+    "spd_ill_conditioned": {
+      "file": "test_matrices/n_200/spd_ill_conditioned.json",
+      "description": "Ill-conditioned SPD matrix",
+      "properties": {
+        "symmetric": true,
+        "positive_definite": true,
+        "sparse": false,
+        "ill_conditioned": true
+      }
+    },
+    "banded": {
+      "file": "test_matrices/n_200/banded.json",
+      "description": "Banded matrix (bandwidth=20)",
+      "properties": {
+        "symmetric": false,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "banded": true
+      }
+    },
+    "sparse_dd": {
+      "file": "test_matrices/n_200/sparse_dd.json",
+      "description": "Sparse diagonally dominant",
+      "properties": {
+        "symmetric": false,
+        "diagonally_dominant": true,
+        "sparse": true
+      }
+    },
+    "laplacian_1d": {
+      "file": "test_matrices/n_200/laplacian_1d.json",
+      "description": "1D discretized Laplacian",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "pde_origin": true
+      }
+    }
+  },
+  "n_500": {
+    "dd_symmetric": {
+      "file": "test_matrices/n_500/dd_symmetric.json",
+      "description": "Dense symmetric diagonally dominant",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": false
+      }
+    },
+    "dd_asymmetric": {
+      "file": "test_matrices/n_500/dd_asymmetric.json",
+      "description": "Dense asymmetric diagonally dominant",
+      "properties": {
+        "symmetric": false,
+        "diagonally_dominant": true,
+        "sparse": false
+      }
+    },
+    "tridiagonal": {
+      "file": "test_matrices/n_500/tridiagonal.json",
+      "description": "Tridiagonal matrix",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "banded": true
+      }
+    },
+    "spd_well_conditioned": {
+      "file": "test_matrices/n_500/spd_well_conditioned.json",
+      "description": "Well-conditioned SPD matrix",
+      "properties": {
+        "symmetric": true,
+        "positive_definite": true,
+        "sparse": false
+      }
+    },
+    "spd_ill_conditioned": {
+      "file": "test_matrices/n_500/spd_ill_conditioned.json",
+      "description": "Ill-conditioned SPD matrix",
+      "properties": {
+        "symmetric": true,
+        "positive_definite": true,
+        "sparse": false,
+        "ill_conditioned": true
+      }
+    },
+    "banded": {
+      "file": "test_matrices/n_500/banded.json",
+      "description": "Banded matrix (bandwidth=50)",
+      "properties": {
+        "symmetric": false,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "banded": true
+      }
+    },
+    "sparse_dd": {
+      "file": "test_matrices/n_500/sparse_dd.json",
+      "description": "Sparse diagonally dominant",
+      "properties": {
+        "symmetric": false,
+        "diagonally_dominant": true,
+        "sparse": true
+      }
+    },
+    "laplacian_1d": {
+      "file": "test_matrices/n_500/laplacian_1d.json",
+      "description": "1D discretized Laplacian",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "pde_origin": true
+      }
+    }
+  },
+  "n_1000": {
+    "dd_symmetric": {
+      "file": "test_matrices/n_1000/dd_symmetric.json",
+      "description": "Dense symmetric diagonally dominant",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": false
+      }
+    },
+    "dd_asymmetric": {
+      "file": "test_matrices/n_1000/dd_asymmetric.json",
+      "description": "Dense asymmetric diagonally dominant",
+      "properties": {
+        "symmetric": false,
+        "diagonally_dominant": true,
+        "sparse": false
+      }
+    },
+    "tridiagonal": {
+      "file": "test_matrices/n_1000/tridiagonal.json",
+      "description": "Tridiagonal matrix",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "banded": true
+      }
+    },
+    "spd_well_conditioned": {
+      "file": "test_matrices/n_1000/spd_well_conditioned.json",
+      "description": "Well-conditioned SPD matrix",
+      "properties": {
+        "symmetric": true,
+        "positive_definite": true,
+        "sparse": false
+      }
+    },
+    "spd_ill_conditioned": {
+      "file": "test_matrices/n_1000/spd_ill_conditioned.json",
+      "description": "Ill-conditioned SPD matrix",
+      "properties": {
+        "symmetric": true,
+        "positive_definite": true,
+        "sparse": false,
+        "ill_conditioned": true
+      }
+    },
+    "banded": {
+      "file": "test_matrices/n_1000/banded.json",
+      "description": "Banded matrix (bandwidth=100)",
+      "properties": {
+        "symmetric": false,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "banded": true
+      }
+    },
+    "sparse_dd": {
+      "file": "test_matrices/n_1000/sparse_dd.json",
+      "description": "Sparse diagonally dominant",
+      "properties": {
+        "symmetric": false,
+        "diagonally_dominant": true,
+        "sparse": true
+      }
+    },
+    "laplacian_1d": {
+      "file": "test_matrices/n_1000/laplacian_1d.json",
+      "description": "1D discretized Laplacian",
+      "properties": {
+        "symmetric": true,
+        "diagonally_dominant": true,
+        "sparse": true,
+        "pde_origin": true
+      }
+    }
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "facebook": {
+    "name": "facebook",
+    "n_nodes": 500,
+    "n_edges": 9877,
+    "is_directed": false,
+    "density": 0.07917434869739479,
+    "average_degree": 39.508,
+    "average_clustering": 0.19509345290983296,
+    "diameter": 3,
+    "average_path_length": 2.0901963927855713,
+    "degree_stats": {
+      "mean": 39.508,
+      "std": 6.439715521667087,
+      "min": 21,
+      "max": 57,
+      "median": 39.0
+    }
+  },
+  "twitter": {
+    "name": "twitter",
+    "n_nodes": 400,
+    "n_edges": 11638,
+    "is_directed": true,
+    "density": 0.07291979949874687,
+    "average_degree": 58.19,
+    "degree_stats": {
+      "mean": 58.19,
+      "std": 12.971464836324385,
+      "min": 36,
+      "max": 121,
+      "median": 56.0
+    }
+  },
+  "collaboration": {
+    "name": "collaboration",
+    "n_nodes": 300,
+    "n_edges": 700,
+    "is_directed": false,
+    "density": 0.01560758082497213,
+    "average_degree": 4.666666666666667,
+    "average_clustering": 0.44405409282266867,
+    "diameter": 8,
+    "average_path_length": 3.573212747631352,
+    "n_components": 80,
+    "degree_stats": {
+      "mean": 4.666666666666667,
+      "std": 4.238972621861208,
+      "min": 0,
+      "max": 20,
+      "median": 4.0
+    }
+  },
+  "organization": {
+    "name": "organization",
+    "n_nodes": 200,
+    "n_edges": 2993,
+    "is_directed": true,
+    "density": 0.07520100502512563,
+    "average_degree": 29.93,
+    "degree_stats": {
+      "mean": 29.93,
+      "std": 11.360242074885553,
+      "min": 1,
+      "max": 55,
+      "median": 31.0
+    }
+  },
+  "community": {
+    "name": "community",
+    "n_nodes": 300,
+    "n_edges": 11392,
+    "is_directed": false,
+    "density": 0.25400222965440356,
+    "average_degree": 75.94666666666667,
+    "average_clustering": 0.47514541871963334,
+    "diameter": 3,
+    "average_path_length": 1.7641917502787068,
+    "degree_stats": {
+      "mean": 75.94666666666667,
+      "std": 34.319049455886095,
+      "min": 22,
+      "max": 137,
+      "median": 83.0
+    }
+  },
+  "multilayer": {
+    "friendship": {
+      "name": "multilayer_friendship",
+      "n_nodes": 200,
+      "n_edges": 440,
+      "is_directed": false,
+      "density": 0.022110552763819097,
+      "average_degree": 4.4,
+      "average_clustering": 0.5771309523809524,
+      "diameter": 20,
+      "average_path_length": 8.36884842519685,
+      "n_components": 7,
+      "degree_stats": {
+        "mean": 4.4,
+        "std": 1.47648230602334,
+        "min": 1,
+        "max": 8,
+        "median": 4.0
+      }
+    },
+    "professional": {
+      "name": "multilayer_professional",
+      "n_nodes": 200,
+      "n_edges": 687,
+      "is_directed": false,
+      "density": 0.034522613065326634,
+      "average_degree": 6.87,
+      "average_clustering": 0.16451108782858007,
+      "diameter": 5,
+      "average_path_length": 2.4734597688250477,
+      "n_components": 67,
+      "degree_stats": {
+        "mean": 6.87,
+        "std": 6.307384560972955,
+        "min": 0,
+        "max": 26,
+        "median": 7.0
+      }
+    },
+    "family": {
+      "name": "multilayer_family",
+      "n_nodes": 200,
+      "n_edges": 300,
+      "is_directed": false,
+      "density": 0.01507537688442211,
+      "average_degree": 3.0,
+      "average_clustering": 1.0,
+      "diameter": 1,
+      "average_path_length": 1.0,
+      "n_components": 50,
+      "degree_stats": {
+        "mean": 3.0,
+        "std": 0.0,
+        "min": 3,
+        "max": 3,
+        "median": 3.0
+      }
+    },
+    "online": {
+      "name": "multilayer_online",
+      "n_nodes": 200,
+      "n_edges": 10299,
+      "is_directed": false,
+      "density": 0.517537688442211,
+      "average_degree": 102.99,
+      "average_clustering": 0.6480581957373879,
+      "diameter": 2,
+      "average_path_length": 1.4824623115577888,
+      "degree_stats": {
+        "mean": 102.99,
+        "std": 28.194855913801014,
+        "min": 41,
+        "max": 152,
+        "median": 103.0
+      }
+    }
+  }
+}

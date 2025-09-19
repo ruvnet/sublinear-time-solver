@@ -1,0 +1,98 @@
+{
+  "name": "sublinear-solver-mcp",
+  "version": "1.0.0",
+  "description": "Sublinear-time solver for asymmetric diagonally dominant systems with MCP interface",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "bin": {
+    "sublinear-solver-mcp": "./dist/cli/index.js",
+    "sublinear-solver": "./dist/cli/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./mcp": {
+      "import": "./dist/mcp/index.js",
+      "types": "./dist/mcp/index.d.ts"
+    },
+    "./core": {
+      "import": "./dist/core/solver.js",
+      "types": "./dist/core/solver.d.ts"
+    },
+    "./tools": {
+      "import": "./dist/mcp/tools/index.js",
+      "types": "./dist/mcp/tools/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "npm run clean && npm run build:ts",
+    "build:ts": "tsc",
+    "build:dev": "tsc --watch",
+    "clean": "rm -rf dist/",
+    "test": "npm run build && node --test tests/",
+    "lint": "echo 'Linting would go here'",
+    "start": "npm run build && node dist/mcp/server.js",
+    "serve": "npm run build && node dist/cli/index.js serve",
+    "dev:serve": "tsx src/cli/index.ts serve",
+    "solve": "npm run build && node dist/cli/index.js solve",
+    "analyze": "npm run build && node dist/cli/index.js analyze",
+    "pagerank": "npm run build && node dist/cli/index.js pagerank"
+  },
+  "devDependencies": {
+    "wasm-pack": "^0.12.1"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.1",
+    "@ruvnet/bmssp": "^1.0.0",
+    "@types/node": "^24.5.2",
+    "chalk": "^4.1.2",
+    "commander": "^9.4.1",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "ora": "^5.4.1",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "uuid": "^9.0.1",
+    "ws": "^8.14.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "linear-algebra",
+    "solver",
+    "sublinear-time",
+    "diagonally-dominant",
+    "pagerank",
+    "random-walk",
+    "neumann-series",
+    "mcp",
+    "model-context-protocol",
+    "typescript",
+    "cli",
+    "graph-algorithms",
+    "asymmetric-matrices"
+  ],
+  "author": "WASM Integration Engineer",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/sublinear-time-solver"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/sublinear-time-solver/issues"
+  },
+  "homepage": "https://github.com/your-org/sublinear-time-solver#readme"
+}

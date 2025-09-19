@@ -1,0 +1,100 @@
+[
+  {
+    "algorithm": "User Equilibrium (Frank-Wolfe)",
+    "total_travel_time": 0.0,
+    "total_delay": null,
+    "convergence_achieved": true,
+    "execution_time": 0.0033135414123535156,
+    "iterations": 1,
+    "convergence_info": null,
+    "network_performance": null,
+    "num_links": 8
+  },
+  {
+    "algorithm": "System Optimal (Sublinear)",
+    "total_travel_time": null,
+    "total_delay": null,
+    "convergence_achieved": false,
+    "execution_time": 1.194305658340454,
+    "iterations": 0,
+    "convergence_info": {
+      "error": "Sublinear solver failed"
+    },
+    "network_performance": null,
+    "num_links": 0
+  },
+  {
+    "algorithm": "Incremental Assignment",
+    "total_travel_time": 7291.455999999999,
+    "total_delay": null,
+    "convergence_achieved": true,
+    "execution_time": 0.001880645751953125,
+    "iterations": 10,
+    "convergence_info": null,
+    "network_performance": null,
+    "num_links": 8
+  },
+  {
+    "algorithm": "Capacity Constrained Assignment",
+    "total_travel_time": 6444.959999999999,
+    "total_delay": null,
+    "convergence_achieved": false,
+    "execution_time": 0.005815744400024414,
+    "iterations": 2,
+    "convergence_info": null,
+    "network_performance": {
+      "assignment_rate": 0.8888888888888888,
+      "unassigned_demand": 200.0
+    },
+    "num_links": 8
+  },
+  {
+    "algorithm": "User Equilibrium (Frank-Wolfe)",
+    "total_travel_time": 0.0,
+    "total_delay": null,
+    "convergence_achieved": true,
+    "execution_time": 0.005724668502807617,
+    "iterations": 1,
+    "convergence_info": null,
+    "network_performance": null,
+    "num_links": 48
+  },
+  {
+    "algorithm": "System Optimal (Sublinear)",
+    "total_travel_time": null,
+    "total_delay": null,
+    "convergence_achieved": false,
+    "execution_time": 1.2135186195373535,
+    "iterations": 0,
+    "convergence_info": {
+      "error": "Sublinear solver failed"
+    },
+    "network_performance": null,
+    "num_links": 0
+  },
+  {
+    "algorithm": "Incremental Assignment",
+    "total_travel_time": 5713.640941326943,
+    "total_delay": null,
+    "convergence_achieved": true,
+    "execution_time": 0.007732391357421875,
+    "iterations": 10,
+    "convergence_info": null,
+    "network_performance": null,
+    "num_links": 48
+  },
+  {
+    "algorithm": "Capacity Constrained Assignment",
+    "total_travel_time": 13025.202268770114,
+    "total_delay": null,
+    "convergence_achieved": false,
+    "execution_time": 0.09001612663269043,
+    "iterations": 2,
+    "convergence_info": null,
+    "network_performance": {
+      "assignment_rate": 0.9203980099502488,
+      "unassigned_demand": 192.0
+    },
+    "num_links": 48
+  }
+]

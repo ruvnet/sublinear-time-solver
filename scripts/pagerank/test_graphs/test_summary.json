@@ -1,0 +1,96 @@
+{
+  "small_dense": {
+    "count": 4,
+    "graphs": [
+      "small_dense_10",
+      "small_dense_30",
+      "small_dense_50",
+      "small_dense_100"
+    ],
+    "size_range": [
+      10,
+      100
+    ]
+  },
+  "large_sparse": {
+    "count": 4,
+    "graphs": [
+      "large_sparse_500",
+      "large_sparse_1000",
+      "large_sparse_2000",
+      "large_sparse_5000"
+    ],
+    "size_range": [
+      500,
+      5000
+    ]
+  },
+  "power_law": {
+    "count": 3,
+    "graphs": [
+      "power_law_200",
+      "power_law_500",
+      "power_law_1000"
+    ],
+    "size_range": [
+      200,
+      1000
+    ]
+  },
+  "social_network": {
+    "count": 3,
+    "graphs": [
+      "social_network_300",
+      "social_network_600",
+      "social_network_1000"
+    ],
+    "size_range": [
+      300,
+      1000
+    ]
+  },
+  "dag": {
+    "count": 3,
+    "graphs": [
+      "dag_100",
+      "dag_200",
+      "dag_400"
+    ],
+    "size_range": [
+      100,
+      400
+    ]
+  },
+  "grid": {
+    "count": 3,
+    "graphs": [
+      "grid_10x10",
+      "grid_15x15",
+      "grid_20x20"
+    ],
+    "size_range": [
+      100,
+      400
+    ]
+  },
+  "complete": {
+    "count": 1,
+    "graphs": [
+      "complete_25"
+    ],
+    "size_range": [
+      25,
+      25
+    ]
+  },
+  "star": {
+    "count": 1,
+    "graphs": [
+      "star_100_3centers"
+    ],
+    "size_range": [
+      100,
+      100
+    ]
+  }
+}

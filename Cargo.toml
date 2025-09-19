@@ -1,0 +1,82 @@
+[package]
+name = "sublinear-time-solver"
+version = "0.1.0"
+edition = "2021"
+authors = ["Sublinear Solver Team"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/your-org/sublinear-time-solver"
+description = "High-performance sublinear-time solver for asymmetric diagonally dominant systems"
+keywords = ["linear-algebra", "sparse-matrix", "solver", "sublinear", "wasm"]
+categories = ["mathematics", "science", "wasm"]
+
+[lib]
+name = "sublinear_solver"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Core dependencies
+nalgebra = { version = "0.32", features = ["serde-serialize"] }
+serde = { version = "1.0", features = ["derive"], optional = true }
+thiserror = "1.0"
+log = "0.4"
+rand = { version = "0.8", features = ["small_rng"] }
+fnv = "1.0"
+num-traits = "0.2"
+num-complex = "0.4"
+bit-set = "0.5"
+lazy_static = { version = "1.4", optional = true }
+
+# Optional WASM dependencies
+wasm-bindgen = { version = "0.2", features = ["serde-serialize"], optional = true }
+web-sys = { version = "0.3", features = ["console", "Window", "Performance", "PerformanceEntry"], optional = true }
+js-sys = { version = "0.3", optional = true }
+serde-wasm-bindgen = { version = "0.6", optional = true }
+console_error_panic_hook = { version = "0.1", optional = true }
+wee_alloc = { version = "0.4", optional = true }
+getrandom = { version = "0.2", features = ["js"], optional = true }
+fastrand = { version = "2.0", optional = true }
+
+# Optional CLI dependencies
+clap = { version = "4.0", features = ["derive"], optional = true }
+tokio = { version = "1.0", features = ["full"], optional = true }
+axum = { version = "0.7", optional = true }
+serde_json = { version = "1.0", optional = true }
+
+# Optional performance dependencies
+wide = { version = "0.7", optional = true }
+rayon = { version = "1.7", optional = true }
+env_logger = { version = "0.10", optional = true }
+
+[dev-dependencies]
+criterion = { version = "0.5" }
+proptest = { version = "1.0" }
+
+[features]
+default = ["std", "serde"]
+std = ["env_logger", "lazy_static"]
+serde = ["dep:serde"]
+wasm = ["wasm-bindgen", "web-sys", "js-sys", "serde-wasm-bindgen", "console_error_panic_hook", "getrandom", "fastrand"]
+wee_alloc = ["dep:wee_alloc"]
+cli = ["clap", "tokio", "axum", "serde_json"]
+simd = ["wide"]
+parallel = ["rayon", "std"]
+
+[[bench]]
+name = "solver_benchmarks"
+harness = false
+required-features = ["criterion"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+opt-level = 3
+
+[profile.release-wasm]
+inherits = "release"
+opt-level = "s"
+lto = "fat"
+
+[profile.bench]
+inherits = "release"
+debug = true

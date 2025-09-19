@@ -1,0 +1,9 @@
+{
+  "main_test": {
+    "network_size": 22,
+    "matrix_shape": [
+      22,
+      41
+    ],
+    "condition_number": 1.914308197922804,
+    "diagonally_dominant": 
