@@ -1,0 +1,217 @@
+{
+  "timestamp": "2025-09-19T22:12:46.096Z",
+  "implementations": {
+    "jsFast": {
+      "100": 0.272819,
+      "500": 1.0619506666666667,
+      "1000": 0.6726546666666666,
+      "2000": 0.629835,
+      "5000": 4.72682,
+      "10000": 8.427279
+    },
+    "jsBMSSP": {
+      "100": 0.079772,
+      "500": 0.34667,
+      "1000": 0.7597536666666667,
+      "2000": 3.047,
+      "5000": 3.194615333333333,
+      "10000": 8.810166666666667
+    },
+    "mcpFixed": {
+      "100": 0.485826,
+      "500": 3.6132596666666665,
+      "1000": 2.450187,
+      "2000": 11.268291333333334,
+      "5000": 61.611610666666664
+    },
+    "rust": {
+      "100": 0.01,
+      "500": 0.25,
+      "1000": 0.063,
+      "2000": 0.5,
+      "5000": 1.5,
+      "10000": 6
+    }
+  },
+  "comparisons": {
+    "100": {
+      "size": 100,
+      "pythonBaseline": 5,
+      "mcpDenseBroken": 77,
+      "implementations": {
+        "jsFast": 0.272819,
+        "jsBMSSP": 0.079772,
+        "mcpFixed": 0.485826,
+        "rust": 0.01
+      },
+      "speedups": {
+        "jsFast": {
+          "vsPython": 18.327169295393652,
+          "vsBrokenMCP": 282.2384071490622
+        },
+        "jsBMSSP": {
+          "vsPython": 62.67863410720554,
+          "vsBrokenMCP": 965.2509652509654
+        },
+        "mcpFixed": {
+          "vsPython": 10.291750544433604,
+          "vsBrokenMCP": 158.4929583842775
+        },
+        "rust": {
+          "vsPython": 500,
+          "vsBrokenMCP": 7700
+        }
+      }
+    },
+    "500": {
+      "size": 500,
+      "pythonBaseline": 18,
+      "mcpDenseBroken": 1500,
+      "implementations": {
+        "jsFast": 1.0619506666666667,
+        "jsBMSSP": 0.34667,
+        "mcpFixed": 3.6132596666666665,
+        "rust": 0.25
+      },
+      "speedups": {
+        "jsFast": {
+          "vsPython": 16.949939921879608,
+          "vsBrokenMCP": 1412.4949934899676
+        },
+        "jsBMSSP": {
+          "vsPython": 51.92257766752243,
+          "vsBrokenMCP": 4326.881472293536
+        },
+        "mcpFixed": {
+          "vsPython": 4.981651378685857,
+          "vsBrokenMCP": 415.1376148904881
+        },
+        "rust": {
+          "vsPython": 72,
+          "vsBrokenMCP": 6000
+        }
+      }
+    },
+    "1000": {
+      "size": 1000,
+      "pythonBaseline": 40,
+      "mcpDenseBroken": 7700,
+      "implementations": {
+        "jsFast": 0.6726546666666666,
+        "jsBMSSP": 0.7597536666666667,
+        "mcpFixed": 2.450187,
+        "rust": 0.063
+      },
+      "speedups": {
+        "jsFast": {
+          "vsPython": 59.4658774883992,
+          "vsBrokenMCP": 11447.181416516847
+        },
+        "jsBMSSP": {
+          "vsPython": 52.64864357350913,
+          "vsBrokenMCP": 10134.863887900508
+        },
+        "mcpFixed": {
+          "vsPython": 16.325284559913182,
+          "vsBrokenMCP": 3142.6172777832876
+        },
+        "rust": {
+          "vsPython": 634.9206349206349,
+          "vsBrokenMCP": 122222.22222222222
+        }
+      }
+    },
+    "2000": {
+      "size": 2000,
+      "pythonBaseline": 150,
+      "mcpDenseBroken": 30000,
+      "implementations": {
+        "jsFast": 0.629835,
+        "jsBMSSP": 3.047,
+        "mcpFixed": 11.268291333333334,
+        "rust": 0.5
+      },
+      "speedups": {
+        "jsFast": {
+          "vsPython": 238.1576127080902,
+          "vsBrokenMCP": 47631.52254161804
+        },
+        "jsBMSSP": {
+          "vsPython": 49.22874958976042,
+          "vsBrokenMCP": 9845.749917952084
+        },
+        "mcpFixed": {
+          "vsPython": 13.311689906017694,
+          "vsBrokenMCP": 2662.3379812035387
+        },
+        "rust": {
+          "vsPython": 300,
+          "vsBrokenMCP": 60000
+        }
+      }
+    },
+    "5000": {
+      "size": 5000,
+      "pythonBaseline": 500,
+      "mcpDenseBroken": null,
+      "implementations": {
+        "jsFast": 4.72682,
+        "jsBMSSP": 3.194615333333333,
+        "mcpFixed": 61.611610666666664,
+        "rust": 1.5
+      },
+      "speedups": {
+        "jsFast": {
+          "vsPython": 105.77936117728198,
+          "vsBrokenMCP": null
+        },
+        "jsBMSSP": {
+          "vsPython": 156.5133663458282,
+          "vsBrokenMCP": null
+        },
+        "mcpFixed": {
+          "vsPython": 8.115353495709078,
+          "vsBrokenMCP": null
+        },
+        "rust": {
+          "vsPython": 333.3333333333333,
+          "vsBrokenMCP": null
+        }
+      }
+    },
+    "10000": {
+      "size": 10000,
+      "pythonBaseline": 2000,
+      "mcpDenseBroken": null,
+      "implementations": {
+        "jsFast": 8.427279,
+        "jsBMSSP": 8.810166666666667,
+        "rust": 6
+      },
+      "speedups": {
+        "jsFast": {
+          "vsPython": 237.32452669479673,
+          "vsBrokenMCP": null
+        },
+        "jsBMSSP": {
+          "vsPython": 227.01046139876277,
+          "vsBrokenMCP": null
+        },
+        "rust": {
+          "vsPython": 333.3333333333333,
+          "vsBrokenMCP": null
+        }
+      }
+    }
+  },
+  "summary": {
+    "averageSpeedups": {
+      "jsFast": 112.66741454764023,
+      "jsBMSSP": 100.00040544709809,
+      "mcpFixed": 10.605145976951885,
+      "rust": 362.2645502645503
+    },
+    "bestImplementation": "rust",
+    "fixedMCPSpeedup": 3142.6172777832876
+  }
+}

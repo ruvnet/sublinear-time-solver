@@ -6,7 +6,8 @@
 //! - WASM SIMD optimizations
 //! - Neural pathfinding capabilities
 
-use crate::ultra_fast::{UltraFastCSR, UltraFastCG};
+// Import from the ultra_fast module
+use super::ultra_fast::{UltraFastCSR, UltraFastCG};
 use std::collections::{BinaryHeap, HashMap};
 use std::cmp::Ordering;
 
