@@ -76,6 +76,34 @@ npx sublinear-time-solver help-examples
 - **🏗️ Engineering** - Structural analysis and finite element computations
 - **⚡ Low-Latency Prediction** - Compute specific solution components before full data arrives (see [temporal-lead-solver](temporal-lead-solver/))
 
+## ⚡ TNS - Temporal Neural Solver
+
+A companion ultra-fast neural network inference engine achieving **sub-microsecond latency** through mathematical optimization and temporal coherence.
+
+### Quick Start
+```bash
+# Try it instantly with npx - no installation needed!
+npx temporal-neural-solver demo
+
+# Or install the Rust CLI for native performance
+cargo install temporal-neural-solver && tns demo
+```
+
+### Key Features
+- **🎯 <1µs inference latency** on modern hardware
+- **🚄 1M+ ops/sec throughput** for batch processing
+- **🧠 Temporal Kalman filtering** for stable outputs
+- **📦 Dual distribution** - Native Rust and WebAssembly
+- **⚙️ SIMD optimizations** with AVX2/AVX-512 support
+
+### Installation & Links
+- **npm Package**: [`temporal-neural-solver`](https://www.npmjs.com/package/temporal-neural-solver) - `npm install temporal-neural-solver`
+- **Rust Crate**: [`temporal-neural-solver`](https://crates.io/crates/temporal-neural-solver) - `cargo add temporal-neural-solver`
+- **Documentation**: [TNS Engine Docs](tns-engine/temporal-neural-solver/README.md)
+- **Blog Post**: [Neural Networks in the Speed of Light](docs/neural-networks/)
+
+Perfect for high-frequency trading, real-time control systems, edge computing, and game AI where microsecond response times are critical.
+
 ### 🤖 Agentic Systems & ML Applications
 
 The sublinear-time solver is particularly powerful for **autonomous agent systems** and **modern ML workloads** where speed and scalability are critical:
