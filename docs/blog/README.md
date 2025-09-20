@@ -14,6 +14,12 @@ Exploring the intersection of sublinear mathematics, real-time systems, and mode
 
   From a 2 AM debugging session to mathematical certificates that quantify trust. Learn how modern solvers return not just answers but error bounds and confidence levels, enabling graduated response patterns in trading systems, robot control, and distributed computing. Features real-world case studies from Tesla FSD, Citadel Securities, and Google Borg.
 
+- **[The Age of the GPU in AI is Ending](003-gpu-age-ending.md)** - *January 20, 2025*
+
+  The GPU era assumed you need to compute everything to know anything. That assumption is wrong. Learn how O(log n) complexity, WebAssembly acceleration, and microsecond inference on CPUs are replacing $40,000 GPUs with $5 chips. The revolution runs too fast for the GPU crowd to notice.
+
+### Upcoming
+
 - **Temporal-Lead Computing: Solving Problems Before Data Arrives** - *Coming Soon*
 
   A deep dive into how sublinear complexity enables computation to outpace the speed of light for global data transmission, and what this means for distributed systems. We will explore the physics, the mathematics, and the practical engineering of systems that complete calculations before their inputs fully arrive, opening new paradigms for global-scale computing.
