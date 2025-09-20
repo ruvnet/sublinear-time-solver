@@ -13,6 +13,30 @@
 
 **⚡ Performance:** Significantly faster than traditional solvers for sparse matrices | **[View Benchmarks](#-performance)**
 
+## 🚀 Quick Start
+
+### MCP Server (Model Context Protocol)
+```bash
+# Serve the solver as an MCP tool - no installation required!
+npx sublinear-time-solver mcp serve
+
+# Or add to Claude Desktop or other MCP clients
+# In Claude Desktop settings, add to mcpServers:
+{
+  "sublinear-solver": {
+    "command": "npx",
+    "args": ["sublinear-time-solver", "mcp", "serve"]
+  }
+}
+```
+
+### Direct Usage
+```bash
+# Run directly with npx - no installation needed!
+npx sublinear-time-solver solve --size 1000 --method jacobi
+npx sublinear-time-solver benchmark --compare
+```
+
 ### 🏆 Performance Highlights
 - **Up to 600x faster** than Python baseline for sparse matrices
 - **O(log n) scaling** for specific query operations
@@ -160,11 +184,11 @@ const solver = await createSolver({
 ### MCP Integration (AI Assistants)
 ```bash
 # Start MCP server for Claude/AI integration
-npx sublinear-time-solver serve
+npx sublinear-time-solver mcp serve
 
 # Or install and run
 npm install -g sublinear-time-solver
-sublinear-solver serve
+sublinear-solver mcp serve
 
 # Add to Claude Desktop config:
 {
@@ -479,6 +503,9 @@ Connect directly to AI assistants like Claude via Model Context Protocol:
 
 ```bash
 # Start MCP server for AI integration (✅ CONFIRMED WORKING)
+npx sublinear-time-solver mcp serve
+
+# Or use the shorter alias
 npx sublinear-time-solver serve
 
 # Add to Claude Desktop config:
@@ -486,7 +513,7 @@ npx sublinear-time-solver serve
   "mcpServers": {
     "sublinear-solver": {
       "command": "npx",
-      "args": ["sublinear-time-solver", "serve"]
+      "args": ["sublinear-time-solver", "mcp", "serve"]
     }
   }
 }
