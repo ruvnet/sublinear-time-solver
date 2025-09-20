@@ -22,7 +22,14 @@
 
 ## 🤔 What is this?
 
-The **Sublinear-Time Solver** is an optimized mathematical library that solves large sparse systems of linear equations (`Ax = b`) much faster than traditional methods. By exploiting sparsity and diagonal dominance, it achieves significant speedups for specific problem types.
+Think of the **Sublinear-Time Solver** as a superfast calculator for solving massive puzzles where you need to find unknown values based on their relationships to each other. Imagine thousands of interconnected variables: prices in a market, forces in a building structure, or connections in a social network.
+
+In technical terms, it solves systems of linear equations (`Ax = b`) where:
+- **A** is a matrix describing how variables relate to each other
+- **x** is what we're solving for (the unknowns)
+- **b** is what we know (the constraints)
+
+Traditional solvers need to process all relationships to find any answer. Our solver is smarter: it recognizes that most real-world problems are "sparse" (most connections are zero) and "diagonally dominant" (each variable is most strongly influenced by itself). By focusing only on the connections that matter, it delivers answers in microseconds instead of seconds.
 
 
 ### Why Sublinear?

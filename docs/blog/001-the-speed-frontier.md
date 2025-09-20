@@ -8,7 +8,9 @@ Speed has become the new frontier.
 
 ## What Is This? The Technology Behind the Speed
 
-The Sublinear-Time Solver is an optimized mathematical library that solves large sparse systems of linear equations (Ax = b) much faster than traditional methods. By exploiting sparsity and diagonal dominance, it achieves significant speedups for specific problem types.
+Think of the Sublinear-Time Solver as a calculator for solving massive puzzles where you need to find unknown values based on their relationships to each other. Imagine you have thousands of interconnected variables, like prices in a market, forces in a structure, or connections in a network. Traditional solvers need to crunch through all the relationships to find any answer.
+
+Our solver is different. It recognizes that most real-world problems are "sparse" (most connections are zero) and "diagonally dominant" (each variable is most strongly influenced by itself). By focusing only on the connections that matter, it can find answers dramatically faster.
 
 Traditional iterative solvers scale poorly with problem size. Our implementation leverages sparsity patterns and diagonal dominance to achieve much better scaling for suitable problems:
 
