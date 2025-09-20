@@ -1,0 +1,197 @@
+{
+  "small_social_network": {
+    "description": "Small social network for testing (50 users)",
+    "nodes": 50,
+    "edges": 250,
+    "format": "edge_list",
+    "data": {
+      "users": [
+        {"id": 0, "username": "alice", "followers": 25, "verified": true},
+        {"id": 1, "username": "bob", "followers": 12, "verified": false},
+        {"id": 2, "username": "charlie", "followers": 45, "verified": true},
+        {"id": 3, "username": "diana", "followers": 8, "verified": false},
+        {"id": 4, "username": "eve", "followers": 33, "verified": false}
+      ],
+      "edges": [
+        {"from": 0, "to": 1, "weight": 1.0, "type": "follow"},
+        {"from": 0, "to": 2, "weight": 1.0, "type": "follow"},
+        {"from": 1, "to": 0, "weight": 1.0, "type": "follow"},
+        {"from": 1, "to": 3, "weight": 1.0, "type": "follow"},
+        {"from": 2, "to": 0, "weight": 1.0, "type": "follow"},
+        {"from": 2, "to": 4, "weight": 1.0, "type": "follow"},
+        {"from": 3, "to": 1, "weight": 1.0, "type": "follow"},
+        {"from": 3, "to": 4, "weight": 1.0, "type": "follow"},
+        {"from": 4, "to": 2, "weight": 1.0, "type": "follow"}
+      ]
+    },
+    "metadata": {
+      "generated": "2024-01-01",
+      "type": "synthetic",
+      "density": 0.1,
+      "communities": 3
+    }
+  },
+
+  "web_graph_sample": {
+    "description": "Sample web page link graph",
+    "nodes": 25,
+    "edges": 80,
+    "format": "adjacency_coo",
+    "data": {
+      "pages": [
+        {"id": 0, "url": "homepage.html", "title": "Homepage", "authority": 0.15},
+        {"id": 1, "url": "about.html", "title": "About Us", "authority": 0.08},
+        {"id": 2, "url": "products.html", "title": "Products", "authority": 0.12},
+        {"id": 3, "url": "contact.html", "title": "Contact", "authority": 0.05},
+        {"id": 4, "url": "blog.html", "title": "Blog", "authority": 0.10}
+      ],
+      "adjacency": {
+        "rows": 25,
+        "cols": 25,
+        "format": "coo",
+        "data": {
+          "values": [1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1],
+          "rowIndices": [0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 6, 7],
+          "colIndices": [1, 2, 3, 0, 4, 0, 1, 0, 2, 0, 1, 2, 4, 2, 1]
+        }
+      }
+    },
+    "metadata": {
+      "domain": "example.com",
+      "crawl_date": "2024-01-01",
+      "type": "website"
+    }
+  },
+
+  "supply_chain_network": {
+    "description": "Supply chain relationship network",
+    "nodes": 30,
+    "edges": 120,
+    "format": "weighted_edges",
+    "data": {
+      "companies": [
+        {"id": 0, "name": "Raw Materials Corp", "type": "supplier", "tier": 1},
+        {"id": 1, "name": "Component Maker Inc", "type": "manufacturer", "tier": 2},
+        {"id": 2, "name": "Assembly Works", "type": "manufacturer", "tier": 3},
+        {"id": 3, "name": "Logistics Plus", "type": "distributor", "tier": 4},
+        {"id": 4, "name": "Retail Chain", "type": "retailer", "tier": 5}
+      ],
+      "relationships": [
+        {"from": 0, "to": 1, "weight": 0.8, "type": "supplies", "volume": 1000},
+        {"from": 1, "to": 2, "weight": 0.9, "type": "supplies", "volume": 800},
+        {"from": 2, "to": 3, "weight": 0.7, "type": "ships_to", "volume": 600},
+        {"from": 3, "to": 4, "weight": 0.85, "type": "distributes", "volume": 500}
+      ]
+    },
+    "metadata": {
+      "industry": "electronics",
+      "region": "global",
+      "risk_factors": ["geopolitical", "natural_disasters", "economic"]
+    }
+  },
+
+  "citation_network": {
+    "description": "Academic paper citation network",
+    "nodes": 100,
+    "edges": 350,
+    "format": "directed_graph",
+    "data": {
+      "papers": [
+        {
+          "id": 0,
+          "title": "Sublinear Time Algorithms",
+          "authors": ["A. Smith", "B. Jones"],
+          "year": 2020,
+          "citations": 45,
+          "field": "computer_science"
+        },
+        {
+          "id": 1,
+          "title": "Matrix Approximation Methods",
+          "authors": ["C. Davis", "D. Wilson"],
+          "year": 2019,
+          "citations": 32,
+          "field": "mathematics"
+        },
+        {
+          "id": 2,
+          "title": "Network Analysis in Social Media",
+          "authors": ["E. Brown", "F. Taylor"],
+          "year": 2021,
+          "citations": 28,
+          "field": "social_science"
+        }
+      ],
+      "citations": [
+        {"citing": 1, "cited": 0, "weight": 1.0, "context": "methodology"},
+        {"citing": 2, "cited": 0, "weight": 0.8, "context": "application"},
+        {"citing": 2, "cited": 1, "weight": 0.9, "context": "theory"}
+      ]
+    },
+    "metadata": {
+      "database": "academic_search",
+      "time_period": "2019-2024",
+      "fields": ["computer_science", "mathematics", "social_science"]
+    }
+  },
+
+  "financial_correlation_network": {
+    "description": "Financial asset correlation network",
+    "nodes": 50,
+    "format": "correlation_matrix",
+    "data": {
+      "assets": [
+        {"id": 0, "symbol": "AAPL", "name": "Apple Inc.", "sector": "technology", "market_cap": 3000000000000},
+        {"id": 1, "symbol": "MSFT", "name": "Microsoft Corp.", "sector": "technology", "market_cap": 2800000000000},
+        {"id": 2, "symbol": "JPM", "name": "JPMorgan Chase", "sector": "financial", "market_cap": 450000000000},
+        {"id": 3, "symbol": "JNJ", "name": "Johnson & Johnson", "sector": "healthcare", "market_cap": 420000000000},
+        {"id": 4, "symbol": "WMT", "name": "Walmart Inc.", "sector": "consumer", "market_cap": 400000000000}
+      ],
+      "correlations": {
+        "rows": 50,
+        "cols": 50,
+        "format": "dense",
+        "data": "truncated_for_brevity",
+        "sample": [
+          [1.00, 0.75, 0.25, 0.15, 0.30],
+          [0.75, 1.00, 0.22, 0.18, 0.28],
+          [0.25, 0.22, 1.00, 0.45, 0.35],
+          [0.15, 0.18, 0.45, 1.00, 0.40],
+          [0.30, 0.28, 0.35, 0.40, 1.00]
+        ]
+      }
+    },
+    "metadata": {
+      "time_period": "2023-01-01_to_2024-01-01",
+      "frequency": "daily",
+      "total_observations": 252,
+      "currency": "USD"
+    }
+  },
+
+  "transportation_network": {
+    "description": "Urban transportation network",
+    "nodes": 40,
+    "edges": 160,
+    "format": "weighted_graph",
+    "data": {
+      "stations": [
+        {"id": 0, "name": "Central Station", "type": "hub", "coordinates": [40.7589, -73.9851]},
+        {"id": 1, "name": "North Terminal", "type": "terminal", "coordinates": [40.7831, -73.9712]},
+        {"id": 2, "name": "East Junction", "type": "junction", "coordinates": [40.7505, -73.9934]},
+        {"id": 3, "name": "West Plaza", "type": "plaza", "coordinates": [40.7614, -73.9776]}
+      ],
+      "routes": [
+        {"from": 0, "to": 1, "distance": 2.5, "travel_time": 8, "capacity": 1000, "type": "subway"},
+        {"from": 0, "to": 2, "distance": 1.8, "travel_time": 6, "capacity": 800, "type": "bus"},
+        {"from": 1, "to": 3, "distance": 3.2, "travel_time": 12, "capacity": 600, "type": "train"},
+        {"from": 2, "to": 3, "distance": 2.1, "travel_time": 7, "capacity": 1200, "type": "subway"}
+      ]
+    },
+    "metadata": {
+      "city": "sample_city",
+      "coverage_area": "metropolitan",
+      "peak_hours": ["07:00-09:00", "17:00-19:00"]
+    }
+  }
+}

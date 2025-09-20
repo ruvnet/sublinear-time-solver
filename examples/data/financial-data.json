@@ -1,0 +1,166 @@
+{
+  "market_data": {
+    "description": "Sample financial market data for trading examples",
+    "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"],
+    "timestamps": [
+      1640995200000, 1641081600000, 1641168000000, 1641254400000, 1641340800000,
+      1641427200000, 1641513600000, 1641600000000, 1641686400000, 1641772800000
+    ],
+    "prices": [
+      [182.01, 181.56, 179.70, 174.92, 172.17, 175.08, 179.70, 175.53, 171.27, 174.92],
+      [334.75, 336.06, 331.62, 323.01, 320.14, 326.19, 331.62, 327.89, 322.58, 323.01],
+      [2897.04, 2893.59, 2832.02, 2752.88, 2728.12, 2804.63, 2832.02, 2817.90, 2743.25, 2752.88],
+      [3334.34, 3372.20, 3294.62, 3164.68, 3149.84, 3212.96, 3294.62, 3231.61, 3185.92, 3164.68],
+      [1199.78, 1229.91, 1149.59, 1024.86, 996.27, 1056.78, 1149.59, 1084.59, 1010.64, 1024.86]
+    ],
+    "volumes": [
+      [89742640, 103049200, 108923400, 98942080, 96970160, 99171360, 108923400, 102034560, 91725360, 98942080],
+      [37498800, 41467200, 45672400, 42156480, 38934720, 40582560, 45672400, 41934240, 38167200, 42156480],
+      [28167200, 31245600, 34567200, 31892160, 29534880, 30678240, 34567200, 32145360, 28934160, 31892160],
+      [35642800, 39567600, 43789200, 40234080, 37156320, 38891760, 43789200, 40987440, 36234720, 40234080],
+      [27845600, 30923400, 34278600, 31567440, 28934160, 30234720, 34278600, 31723440, 28156320, 31567440]
+    ]
+  },
+
+  "correlation_matrix": {
+    "description": "Historical correlation matrix for portfolio optimization",
+    "assets": ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "JPM", "JNJ", "WMT", "PG", "KO"],
+    "timeframe": "252_trading_days",
+    "correlations": {
+      "rows": 10,
+      "cols": 10,
+      "format": "dense",
+      "data": [
+        [1.00, 0.78, 0.72, 0.68, 0.52, 0.45, 0.32, 0.28, 0.25, 0.22],
+        [0.78, 1.00, 0.75, 0.71, 0.48, 0.42, 0.35, 0.31, 0.28, 0.24],
+        [0.72, 0.75, 1.00, 0.69, 0.51, 0.38, 0.29, 0.26, 0.23, 0.21],
+        [0.68, 0.71, 0.69, 1.00, 0.49, 0.41, 0.33, 0.29, 0.27, 0.23],
+        [0.52, 0.48, 0.51, 0.49, 1.00, 0.35, 0.22, 0.19, 0.16, 0.14],
+        [0.45, 0.42, 0.38, 0.41, 0.35, 1.00, 0.58, 0.52, 0.48, 0.44],
+        [0.32, 0.35, 0.29, 0.33, 0.22, 0.58, 1.00, 0.62, 0.58, 0.54],
+        [0.28, 0.31, 0.26, 0.29, 0.19, 0.52, 0.62, 1.00, 0.65, 0.61],
+        [0.25, 0.28, 0.23, 0.27, 0.16, 0.48, 0.58, 0.65, 1.00, 0.72],
+        [0.22, 0.24, 0.21, 0.23, 0.14, 0.44, 0.54, 0.61, 0.72, 1.00]
+      ]
+    }
+  },
+
+  "expected_returns": {
+    "description": "Annualized expected returns and risk metrics",
+    "assets": ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "JPM", "JNJ", "WMT", "PG", "KO"],
+    "returns": [0.12, 0.11, 0.13, 0.14, 0.18, 0.09, 0.07, 0.06, 0.05, 0.04],
+    "volatilities": [0.28, 0.26, 0.31, 0.33, 0.45, 0.22, 0.16, 0.14, 0.12, 0.11],
+    "sharpe_ratios": [0.36, 0.35, 0.35, 0.36, 0.36, 0.32, 0.31, 0.29, 0.25, 0.18],
+    "risk_free_rate": 0.02
+  },
+
+  "trading_opportunities": {
+    "description": "Sample arbitrage opportunities for high-frequency trading",
+    "opportunities": [
+      {
+        "symbol": "AAPL",
+        "exchange1": {"name": "NYSE", "bid": 174.85, "ask": 174.87, "timestamp": 1641081600500},
+        "exchange2": {"name": "NASDAQ", "bid": 174.88, "ask": 174.90, "timestamp": 1641081600520},
+        "arbitrage_profit": 0.01,
+        "execution_window_ms": 50,
+        "risk_score": 0.2
+      },
+      {
+        "symbol": "MSFT",
+        "exchange1": {"name": "NYSE", "bid": 323.45, "ask": 323.47, "timestamp": 1641081600600},
+        "exchange2": {"name": "BATS", "bid": 323.49, "ask": 323.51, "timestamp": 1641081600610},
+        "arbitrage_profit": 0.02,
+        "execution_window_ms": 35,
+        "risk_score": 0.15
+      }
+    ]
+  },
+
+  "time_series_data": {
+    "description": "High-frequency price data for temporal advantage testing",
+    "symbol": "AAPL",
+    "frequency": "1_second",
+    "data": [
+      {"timestamp": 1641081600000, "price": 174.92, "volume": 1000},
+      {"timestamp": 1641081601000, "price": 174.93, "volume": 1500},
+      {"timestamp": 1641081602000, "price": 174.91, "volume": 800},
+      {"timestamp": 1641081603000, "price": 174.94, "volume": 1200},
+      {"timestamp": 1641081604000, "price": 174.92, "volume": 900},
+      {"timestamp": 1641081605000, "price": 174.95, "volume": 1800},
+      {"timestamp": 1641081606000, "price": 174.93, "volume": 1100},
+      {"timestamp": 1641081607000, "price": 174.96, "volume": 1600},
+      {"timestamp": 1641081608000, "price": 174.94, "volume": 1300},
+      {"timestamp": 1641081609000, "price": 174.97, "volume": 2000}
+    ]
+  },
+
+  "market_microstructure": {
+    "description": "Order book and market microstructure data",
+    "symbol": "AAPL",
+    "timestamp": 1641081600000,
+    "order_book": {
+      "bids": [
+        {"price": 174.90, "size": 1000, "orders": 5},
+        {"price": 174.89, "size": 2500, "orders": 12},
+        {"price": 174.88, "size": 1800, "orders": 8},
+        {"price": 174.87, "size": 3200, "orders": 15},
+        {"price": 174.86, "size": 2100, "orders": 9}
+      ],
+      "asks": [
+        {"price": 174.91, "size": 1200, "orders": 6},
+        {"price": 174.92, "size": 2800, "orders": 14},
+        {"price": 174.93, "size": 1500, "orders": 7},
+        {"price": 174.94, "size": 3500, "orders": 18},
+        {"price": 174.95, "size": 2300, "orders": 11}
+      ]
+    },
+    "spread": 0.01,
+    "mid_price": 174.905,
+    "imbalance": 0.15
+  },
+
+  "portfolio_constraints": {
+    "description": "Sample portfolio optimization constraints",
+    "max_weights": {
+      "single_asset": 0.25,
+      "sector_technology": 0.60,
+      "sector_financial": 0.30,
+      "sector_healthcare": 0.25,
+      "sector_consumer": 0.20
+    },
+    "min_weights": {
+      "single_asset": 0.01,
+      "total_equity": 0.80
+    },
+    "risk_constraints": {
+      "max_portfolio_volatility": 0.20,
+      "max_tracking_error": 0.05,
+      "var_95_daily": 0.02
+    },
+    "transaction_costs": {
+      "fixed_cost": 5.0,
+      "variable_rate": 0.001,
+      "market_impact": 0.0005
+    }
+  },
+
+  "factor_model_data": {
+    "description": "Factor model data for advanced portfolio optimization",
+    "factors": ["market", "size", "value", "momentum", "quality"],
+    "factor_returns": [
+      [0.08, -0.02, 0.03, 0.05, 0.01],
+      [0.12, -0.01, 0.02, 0.04, 0.02],
+      [-0.05, 0.03, 0.06, -0.02, 0.01],
+      [0.15, 0.01, -0.01, 0.08, 0.03],
+      [0.09, -0.03, 0.04, 0.02, 0.02]
+    ],
+    "factor_loadings": {
+      "AAPL": [1.2, -0.5, -0.3, 0.8, 0.6],
+      "MSFT": [1.1, -0.4, -0.2, 0.6, 0.7],
+      "GOOGL": [1.3, -0.3, -0.4, 0.9, 0.5],
+      "AMZN": [1.4, 0.2, -0.6, 1.1, 0.3],
+      "TSLA": [1.8, 0.8, -0.9, 1.5, -0.2]
+    },
+    "specific_risks": [0.25, 0.23, 0.28, 0.31, 0.42]
+  }
+}
