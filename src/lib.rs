@@ -110,6 +110,9 @@ pub mod wasm_iface;
 pub mod math_wasm;
 pub mod solver_core;
 
+#[cfg(feature = "wasm")]
+pub mod wasm;
+
 // High-performance SIMD operations
 #[cfg(any(feature = "simd", feature = "std"))]
 pub mod simd_ops;

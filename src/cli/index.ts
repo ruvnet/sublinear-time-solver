@@ -30,9 +30,12 @@ program
   .description('Sublinear-time solver for asymmetric diagonally dominant systems with MCP interface')
   .version(VERSION);
 
-// MCP Server command
+// MCP Server command (with multiple aliases)
 program
   .command('serve')
+  .alias('mcp-server')
+  .alias('mcp')
+  .alias('server')
   .description('Start the MCP server')
   .option('-p, --port <port>', 'Port number (if using HTTP transport)')
   .option('--transport <type>', 'Transport type (stdio|http)', 'stdio')
@@ -134,7 +137,7 @@ program
       console.log(`  Solve time: ${elapsed}ms`);
       console.log(`  Memory used: ${result.memoryUsed}MB`);
 
-      if (options.verbose) {
+      if (options.verbose && 'efficiency' in result) {
         console.log(`  Convergence rate: ${result.efficiency.convergenceRate.toFixed(6)}`);
         console.log(`  Time per iteration: ${result.efficiency.timePerIteration.toFixed(2)}ms`);
       }

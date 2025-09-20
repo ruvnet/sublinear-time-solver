@@ -1,14 +1,15 @@
 {
-  "name": "sublinear-solver-mcp",
-  "version": "1.0.0",
-  "description": "Sublinear-time solver for asymmetric diagonally dominant systems with MCP interface",
+  "name": "sublinear-time-solver",
+  "version": "0.2.1",
+  "description": "High-performance sublinear-time solver for asymmetric diagonally dominant systems with CLI, SDK, and MCP interface",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "sublinear-solver-mcp": "./dist/cli/index.js",
-    "sublinear-solver": "./dist/cli/index.js"
+    "sublinear-time-solver": "./dist/cli/index.js",
+    "sublinear-solver": "./dist/cli/index.js",
+    "sublinear": "./dist/cli/index.js"
   },
   "exports": {
     ".": {
@@ -62,6 +63,7 @@
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
     "ora": "^5.4.1",
+    "temporal-lead-solver": "^0.1.0",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "uuid": "^9.0.1",
@@ -85,14 +87,14 @@
     "graph-algorithms",
     "asymmetric-matrices"
   ],
-  "author": "WASM Integration Engineer",
-  "license": "MIT",
+  "author": "rUv <github.com/ruvnet>",
+  "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/sublinear-time-solver"
+    "url": "https://github.com/ruvnet/sublinear-time-solver"
   },
   "bugs": {
-    "url": "https://github.com/your-org/sublinear-time-solver/issues"
+    "url": "https://github.com/ruvnet/sublinear-time-solver/issues"
   },
-  "homepage": "https://github.com/your-org/sublinear-time-solver#readme"
+  "homepage": "https://github.com/ruvnet/sublinear-time-solver#readme"
 }

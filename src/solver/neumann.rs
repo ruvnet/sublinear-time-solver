@@ -107,8 +107,9 @@ pub struct NeumannState {
     residual_norm: Precision,
     /// Diagonal scaling matrix (D^(-1))
     diagonal_inv: Vec<Precision>,
-    /// Iteration matrix M = I - D^(-1)A
-    iteration_matrix: Option<Box<dyn Matrix>>,
+    /// Iteration matrix M = I - D^(-1)A (not cloneable)
+    #[allow(dead_code)]
+    iteration_matrix: Option<Vec<Vec<Precision>>>,
     /// Cached matrix powers M^k
     matrix_powers: Vec<Vec<Precision>>,
     /// Current series term

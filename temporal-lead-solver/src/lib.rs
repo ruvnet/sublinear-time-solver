@@ -12,6 +12,9 @@ pub mod solver;
 pub mod predictor;
 pub mod validation;
 
+#[cfg(target_arch = "wasm32")]
+pub mod wasm;
+
 pub use core::{Matrix, Vector, SparseMatrix, Complexity};
 pub use physics::{Distance, SpeedOfLight, TemporalAdvantage};
 pub use predictor::{TemporalPredictor, PredictionResult, DominanceParameters};

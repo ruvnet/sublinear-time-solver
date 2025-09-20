@@ -208,8 +208,9 @@ pub struct PartialSolution {
     pub converged: bool,
     /// Estimated remaining iterations
     pub estimated_remaining: Option<usize>,
-    /// Timestamp when this solution was computed
+    /// Timestamp when this solution was computed (not serialized)
     #[cfg(feature = "std")]
+    #[cfg_attr(feature = "serde", serde(skip, default = "std::time::Instant::now"))]
     pub timestamp: std::time::Instant,
     #[cfg(not(feature = "std"))]
     pub timestamp: u64,

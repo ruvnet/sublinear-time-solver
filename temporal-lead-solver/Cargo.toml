@@ -2,7 +2,7 @@
 name = "temporal-lead-solver"
 version = "0.1.0"
 edition = "2021"
-authors = ["Sublinear Solver Team"]
+authors = ["rUv <github.com/ruvnet>"]
 description = "Temporal computational lead via sublinear local solvers for diagonally dominant systems"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/ruvnet/sublinear-time-solver"
@@ -12,6 +12,7 @@ categories = ["algorithms", "science", "mathematics"]
 [lib]
 name = "temporal_lead"
 path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
 
 [[bin]]
 name = "temporal-cli"

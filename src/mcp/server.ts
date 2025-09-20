@@ -14,6 +14,7 @@ import {
 
 import { SublinearSolver } from '../core/solver.js';
 import { MatrixOperations } from '../core/matrix.js';
+import { TemporalTools } from './tools/temporal.js';
 import {
   Matrix,
   Vector,
@@ -29,8 +30,10 @@ import {
 export class SublinearSolverMCPServer {
   private server: Server;
   private solvers: Map<string, SublinearSolver> = new Map();
+  private temporalTools: TemporalTools;
 
   constructor() {
+    this.temporalTools = new TemporalTools();
     this.server = new Server(
       {
         name: 'sublinear-solver',
@@ -223,7 +226,9 @@ export class SublinearSolverMCPServer {
             },
             required: ['adjacency']
           }
-        }
+        },
+        // Add temporal lead tools
+        ...this.temporalTools.getTools()
       ]
     }));
 
@@ -240,6 +245,17 @@ export class SublinearSolverMCPServer {
             return await this.handleAnalyzeMatrix(args as any);
           case 'pageRank':
             return await this.handlePageRank(args as any);
+          case 'predictWithTemporalAdvantage':
+          case 'validateTemporalAdvantage':
+          case 'calculateLightTravel':
+          case 'demonstrateTemporalLead':
+            const temporalResult = await this.temporalTools.handleToolCall(name, args);
+            return {
+              content: [{
+                type: 'text',
+                text: JSON.stringify(temporalResult, null, 2)
+              }]
+            };
           default:
             throw new McpError(
               ErrorCode.MethodNotFound,

@@ -2,16 +2,16 @@
 
 ## Executive Summary
 
-BMSSP integration provides **10-15x additional performance gains** for sparse matrices by using multi-source pathfinding algorithms instead of traditional linear algebra approaches. This document presents comprehensive benchmarks showing BMSSP's advantages across different matrix structures and problem sizes.
+BMSSP integration provides **10-15x additional performance gains** for sparse matrices by combining forward push and backward sampling algorithms. This hybrid approach achieves O(poly(1/ε, 1/δ)) query complexity while maintaining numerical stability.
 
 ## BMSSP Algorithm Overview
 
 ### Key Features
-- **Multi-source pathfinding**: Process multiple RHS sources simultaneously
-- **Early termination**: Stop when bound is reached
-- **Sublinear complexity**: O(k log n) for k sources in sparse graphs
-- **Neural caching**: Learn and reuse solution patterns
-- **Automatic method selection**: Choose optimal algorithm based on matrix structure
+- **Hybrid approach**: Combines forward push + backward sampling
+- **Sublinear complexity**: O(poly(1/ε, 1/δ)) queries for DD systems
+- **Early termination**: Adaptive convergence detection
+- **Memory efficient**: O(nnz) space complexity
+- **Automatic method selection**: Switches based on residual distribution
 
 ### When BMSSP Excels
 - **Ultra-sparse matrices**: < 0.1% non-zeros
