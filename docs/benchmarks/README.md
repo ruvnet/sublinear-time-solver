@@ -1,3 +1,19 @@
+# Benchmarks Documentation
+
+## Table of Contents
+
+### Performance Reports
+- [**BENCHMARK_REPORT.md**](BENCHMARK_REPORT.md) - Comprehensive benchmark analysis and results
+- [**BMSSP_BENCHMARKS.md**](BMSSP_BENCHMARKS.md) - BMSSP algorithm integration benchmarks
+- [**benchmark-report-2025-09-19.md**](benchmark-report-2025-09-19.md) - Daily benchmark report
+- [**optimization-guide.md**](optimization-guide.md) - Performance optimization strategies
+
+### Benchmark Data
+- [**benchmark-2025-09-19T20-28-25.json**](benchmark-2025-09-19T20-28-25.json) - Raw benchmark data
+- [**benchmark_results_2025-09-19.json**](benchmark_results_2025-09-19.json) - Processed benchmark results
+
+---
+
 # 📊 Sublinear-Time Solver Benchmarks
 
 ## Executive Summary
