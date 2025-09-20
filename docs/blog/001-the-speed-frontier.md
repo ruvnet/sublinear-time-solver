@@ -23,7 +23,9 @@ This is not just an incremental improvement. It is a fundamental change in how w
 
 ## The Math Finally Caught Up
 
-What changed is that the mathematics finally caught up with the engineering requirements. We now have a Rust-based sublinear solver for asymmetric diagonally dominant systems that can answer local numeric questions in microseconds instead of solving entire systems.
+What changed is that the mathematics finally caught up with the engineering requirements. Building on decades of research in fast linear solvers, two breakthrough papers in 2025 cracked the asymmetric case. Kwok, Wei, and Yang introduced a unified framework using the "maximum p-norm gap" to handle directed and asymmetric systems¹. Meanwhile, Feng, Li, and Peng developed a probabilistic recurrence approach that works even without positive diagonal entries². These advances extend beyond the symmetric systems that Spielman and Teng revolutionized in 2004³ and the local solvers Andoni et al. demonstrated in 2019⁴.
+
+We now have a Rust-based implementation of these sublinear solvers for asymmetric diagonally dominant systems that can answer local numeric questions in microseconds instead of solving entire systems.
 
 Think about what this means. Projections, selected coordinates, and quick validation checks come back with a certificate that tells you exactly how much to trust the number. That certificate is the missing piece for real-time systems. You can decide fast while knowing your risk.
 
@@ -190,3 +192,15 @@ A deep dive into how sublinear complexity enables computation to outpace the spe
 ### The Architecture of Speed: Building Microsecond Intelligence Systems
 
 Practical patterns and architectures for leveraging sublinear solvers in production AI systems, from hierarchical time horizons to predictive memory systems. This post will provide blueprints for building systems that think faster than they can sense, with real-world examples from robotics, finance, and autonomous vehicles.
+
+---
+
+## References
+
+¹ Tsz Chiu Kwok, Zhewei Wei, Mingji Yang. "On Solving Asymmetric Diagonally Dominant Linear Systems in Sublinear Time." arXiv:2509.13891 (September 2025).
+
+² Weiming Feng, Zelin Li, Pan Peng. "Sublinear-Time Algorithms for Diagonally Dominant Systems and Applications to the Friedkin–Johnsen Model." arXiv:2509.13112 (September 2025).
+
+³ Daniel A. Spielman, Shang-Hua Teng. "Nearly-linear time algorithms for graph partitioning, graph sparsification, and solving linear systems." STOC 2004.
+
+⁴ Alexandr Andoni, Robert Krauthgamer, Yosef Pogrow. "On Solving Linear Systems in Sublinear Time." ITCS 2019.
