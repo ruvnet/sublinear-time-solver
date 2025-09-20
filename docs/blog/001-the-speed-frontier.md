@@ -55,6 +55,8 @@ Here is something surprising: with sublinear solvers, you can sometimes compute 
 
 When data travels from Tokyo to New York, light takes about 36 milliseconds. Our solver can process million-dimensional problems in 8 milliseconds. This means we can predict, prepare, and pre-position computations before the full dataset arrives. We call this temporal-lead computation, and it fundamentally changes how we think about distributed systems.
 
+The temporal-lead-solver package⁶ implements this capability, providing APIs to calculate and exploit temporal advantages in distributed systems. It can prove mathematically when computation will complete before data transmission, enabling genuinely predictive computing.
+
 Imagine a trading system that begins computing optimal portfolios based on partial market data, refining its solutions as more information arrives. Or a content delivery network that starts optimizing routes before user requests complete. Or a satellite constellation that pre-computes orbital adjustments based on predicted debris patterns.
 
 ## The New Competitive Landscape
@@ -85,6 +87,10 @@ npx sublinear-time-solver serve
 npx sublinear-time-solver generate -t diagonally-dominant -s 1000 -o matrix.json
 echo '[1,1,1,1,1]' > vector.json
 npx sublinear-time-solver solve -m matrix.json -b vector.json
+
+# Test temporal-lead computation
+npx temporal-lead-solver predict --size 1000 --distance 10900
+npx temporal-lead-solver prove --theorem temporal-lead
 
 # For AI integration with Claude Desktop, add to config:
 {
@@ -208,3 +214,5 @@ Practical patterns and architectures for leveraging sublinear solvers in product
 ⁴ Alexandr Andoni, Robert Krauthgamer, Yosef Pogrow. "On Solving Linear Systems in Sublinear Time." ITCS 2019.
 
 ⁵ @ruvnet/bmssp. "Bounded Multi-Source Shortest Path WebAssembly Implementation." NPM package providing 10-15x speedup for graph pathfinding with neural semantic search capabilities.
+
+⁶ temporal-lead-solver. "Temporal-Lead Computation Package." NPM package for exploiting speed-of-light advantages in distributed computing, enabling computation to complete before data transmission.
