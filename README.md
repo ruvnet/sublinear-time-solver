@@ -13,29 +13,6 @@
 
 **⚡ Performance:** Significantly faster than traditional solvers for sparse matrices | **[View Benchmarks](#-performance)**
 
-## 🚀 Quick Start
-
-### MCP Server (Model Context Protocol)
-```bash
-# Serve the solver as an MCP tool - no installation required!
-npx sublinear-time-solver mcp serve
-
-# Or add to Claude Desktop or other MCP clients
-# In Claude Desktop settings, add to mcpServers:
-{
-  "sublinear-solver": {
-    "command": "npx",
-    "args": ["sublinear-time-solver", "mcp", "serve"]
-  }
-}
-```
-
-### Direct Usage
-```bash
-# Run directly with npx - no installation needed!
-npx sublinear-time-solver solve --size 1000 --method jacobi
-npx sublinear-time-solver benchmark --compare
-```
 
 ### 🏆 Performance Highlights
 - **Up to 600x faster** than Python baseline for sparse matrices
@@ -55,6 +32,29 @@ Traditional iterative solvers scale poorly with problem size. Our implementation
 ```
 Dense solver:  1,000 equations → 40ms  | 10,000 equations → 4,000ms
 Our solver:    1,000 equations → 0.7ms | 10,000 equations → 8ms
+```
+## 🚀 Quick Start
+
+### MCP Server (Model Context Protocol)
+```bash
+# Serve the solver as an MCP tool - no installation required!
+npx sublinear-time-solver mcp
+# Or use the serve alias
+npx sublinear-time-solver serve
+```
+
+### Direct CLI Usage
+```bash
+# Generate a test matrix and solve it
+npx sublinear-time-solver generate -t diagonally-dominant -s 1000 -o matrix.json
+echo '[1, 2, 3, 4, 5]' > vector.json  # Create a simple vector (adjust size to match)
+npx sublinear-time-solver solve -m matrix.json -b vector.json -o solution.json
+
+# Analyze a matrix for solvability
+npx sublinear-time-solver analyze -m matrix.json --full
+
+# Show usage examples
+npx sublinear-time-solver help-examples
 ```
 
 ### Real-World Applications
@@ -127,8 +127,14 @@ The solver combines several optimization techniques:
 ```bash
 # Run directly with npx - no installation needed!
 npx sublinear-time-solver --help
-npx sublinear-time-solver solve --size 1000 --method jacobi
-npx sublinear-time-solver benchmark --compare
+
+# Generate and solve a test system
+npx sublinear-time-solver generate -t diagonally-dominant -s 100 -o test.json
+echo '[1,1,1,1,1]' > b.json  # Create vector (adjust size)
+npx sublinear-time-solver solve -m test.json -b b.json
+
+# Start MCP server for AI integration
+npx sublinear-time-solver serve
 
 # For temporal computational lead features
 npx temporal-lead-solver predict --size 1000 --distance 10900
@@ -184,11 +190,13 @@ const solver = await createSolver({
 ### MCP Integration (AI Assistants)
 ```bash
 # Start MCP server for Claude/AI integration
-npx sublinear-time-solver mcp serve
+npx sublinear-time-solver serve
+# Or explicitly use mcp command
+npx sublinear-time-solver mcp
 
-# Or install and run
+# After global installation
 npm install -g sublinear-time-solver
-sublinear-solver mcp serve
+sublinear-time-solver serve
 
 # Add to Claude Desktop config:
 {
@@ -513,7 +521,7 @@ npx sublinear-time-solver serve
   "mcpServers": {
     "sublinear-solver": {
       "command": "npx",
-      "args": ["sublinear-time-solver", "mcp", "serve"]
+      "args": ["sublinear-time-solver", "serve"]
     }
   }
 }
