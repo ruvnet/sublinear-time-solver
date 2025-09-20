@@ -10,11 +10,9 @@ Exploring the intersection of sublinear mathematics, real-time systems, and mode
 
   The next wave of AI is not bigger models, but faster loops. Discover how microsecond-scale computation is reshaping intelligence, enabling predictive interfaces, temporal-lead computation, and fluid robotic control. Includes quick start guide and practical production examples for high-frequency trading, robot navigation, and swarm coordination.
 
-### Upcoming
+- **[Certificates of Confidence: How Mathematical Guarantees Enable Real-Time Decision Making](002-certificates-of-confidence.md)** - *January 20, 2025*
 
-- **Certificates of Confidence: How Mathematical Guarantees Enable Real-Time Decision Making** - *Coming Soon*
-
-  Exploring how sublinear solvers provide not just answers but confidence bounds, enabling systems to make informed decisions about when to act versus when to gather more information. We will dive into how mathematical certificates transform uncertain computations into actionable intelligence, allowing systems to operate at the edge of their knowledge while maintaining safety guarantees.
+  From a 2 AM debugging session to mathematical certificates that quantify trust. Learn how modern solvers return not just answers but error bounds and confidence levels, enabling graduated response patterns in trading systems, robot control, and distributed computing. Features real-world case studies from Tesla FSD, Citadel Securities, and Google Borg.
 
 - **Temporal-Lead Computing: Solving Problems Before Data Arrives** - *Coming Soon*
 
