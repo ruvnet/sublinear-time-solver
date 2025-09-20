@@ -11,6 +11,8 @@
 
 > High-performance Rust + WASM solver for asymmetric diagonally dominant linear systems with O(log^k n) sublinear time complexity
 
+**📖 Read:** [The Speed Frontier: Why the Future of AI Runs in Microseconds](docs/blog/001-the-speed-frontier.md) - Deep dive into the math, implementation, and implications
+
 **⚡ Performance:** Significantly faster than traditional solvers for sparse matrices | **[View Benchmarks](#-performance)**
 
 
