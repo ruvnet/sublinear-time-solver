@@ -54,6 +54,100 @@ Memory becomes critical. Not just storage, but active, predictive memory that ma
 
 Certificates and confidence bounds become first-class citizens in these architectures. Every computation comes with metadata about its reliability, allowing downstream systems to make informed decisions about when to act versus when to gather more information.
 
+## Quick Start: Experience the Speed
+
+Want to see sublinear solving in action? You can start experimenting in minutes:
+
+```bash
+# Install and run via NPX (no installation required)
+npx sublinear-time-solver serve
+
+# Generate a test matrix and solve it
+npx sublinear-time-solver generate -t diagonally-dominant -s 1000 -o matrix.json
+echo '[1,1,1,1,1]' > vector.json
+npx sublinear-time-solver solve -m matrix.json -b vector.json
+
+# For AI integration with Claude Desktop, add to config:
+{
+  "mcpServers": {
+    "sublinear-solver": {
+      "command": "npx",
+      "args": ["sublinear-time-solver", "serve"]
+    }
+  }
+}
+```
+
+## Practical Examples in Production
+
+Here are real-world scenarios where microsecond solving creates transformative advantages:
+
+### High-Frequency Trading Arbitrage
+```javascript
+// Detect and execute cross-exchange opportunities in microseconds
+const solver = new SublinearSolver();
+const correlation = await solver.solveCorrelationMatrix(marketData);
+const arbitrage = solver.findArbitrageWithCertificate(correlation);
+
+if (arbitrage.confidence > 0.98 && arbitrage.profit > threshold) {
+  // Execute with confidence bounds
+  await executeTradeWithRiskLimits(arbitrage);
+}
+```
+
+### Real-Time Robot Navigation
+```javascript
+// Predict collisions 500ms ahead with continuous refinement
+const trajectories = solver.predictTrajectories(sensorData, {
+  horizon: 500, // milliseconds
+  refinementRate: 100 // Hz
+});
+
+// Act on high-confidence predictions immediately
+const safePath = trajectories.filter(t => t.certificate.confidence > 0.95);
+robot.execute(safePath[0]);
+```
+
+### Network Traffic Optimization
+```javascript
+// PageRank-style importance scoring in real-time
+const importance = await solver.computePageRank(networkGraph, {
+  method: 'sublinear',
+  timeout: 5 // milliseconds max
+});
+
+// Route critical traffic through high-importance nodes
+routes.prioritize(importance.top(100));
+```
+
+### Distributed AI Inference
+```javascript
+// Temporal-lead computation for global AI systems
+const prediction = await solver.predictWithTemporalAdvantage({
+  partialData: eastCoastData,
+  distance: 10900, // km to data source
+  confidence: 0.9
+});
+
+// Begin acting before full data arrives
+if (prediction.temporalAdvantage > 20) { // milliseconds
+  startProcessing(prediction.result);
+}
+```
+
+### Swarm Coordination
+```javascript
+// Solve consensus across thousands of agents instantly
+const consensus = await solver.solveConsensus(agentStates, {
+  agents: 10000,
+  dimensions: 1000,
+  target: 'coordinate'
+});
+
+// Each agent gets personalized instructions
+agents.forEach(a => a.update(consensus.instructions[a.id]));
+```
+
 ## The Horizon Has Shifted
 
 We stand at an inflection point. The infrastructure for microsecond intelligence is here. The mathematical foundations are proven. The engineering is solid.
@@ -66,4 +160,18 @@ And it all starts with solving the right problems, the right way, at the right s
 
 ---
 
-*This is the first in a series exploring the intersection of sublinear mathematics, real-time systems, and modern AI. Next: "Certificates of Confidence: How Mathematical Guarantees Enable Real-Time Decision Making"*
+*This is the first in a series exploring the intersection of sublinear mathematics, real-time systems, and modern AI.*
+
+## Coming Next in This Series
+
+### Certificates of Confidence: How Mathematical Guarantees Enable Real-Time Decision Making
+
+Exploring how sublinear solvers provide not just answers but confidence bounds, enabling systems to make informed decisions about when to act versus when to gather more information. We will dive into how mathematical certificates transform uncertain computations into actionable intelligence, allowing systems to operate at the edge of their knowledge while maintaining safety guarantees.
+
+### Temporal-Lead Computing: Solving Problems Before Data Arrives
+
+A deep dive into how sublinear complexity enables computation to outpace the speed of light for global data transmission, and what this means for distributed systems. We will explore the physics, the mathematics, and the practical engineering of systems that complete calculations before their inputs fully arrive, opening new paradigms for global-scale computing.
+
+### The Architecture of Speed: Building Microsecond Intelligence Systems
+
+Practical patterns and architectures for leveraging sublinear solvers in production AI systems, from hierarchical time horizons to predictive memory systems. This post will provide blueprints for building systems that think faster than they can sense, with real-world examples from robotics, finance, and autonomous vehicles.
