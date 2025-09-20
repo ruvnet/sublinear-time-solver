@@ -25,6 +25,8 @@ This is not just an incremental improvement. It is a fundamental change in how w
 
 What changed is that the mathematics finally caught up with the engineering requirements. Building on decades of research in fast linear solvers, two breakthrough papers in 2025 cracked the asymmetric case. Kwok, Wei, and Yang introduced a unified framework using the "maximum p-norm gap" to handle directed and asymmetric systems¹. Meanwhile, Feng, Li, and Peng developed a probabilistic recurrence approach that works even without positive diagonal entries². These advances extend beyond the symmetric systems that Spielman and Teng revolutionized in 2004³ and the local solvers Andoni et al. demonstrated in 2019⁴.
 
+The implementation also integrates BMSSP (Bounded Multi-Source Shortest Path)⁵, a WebAssembly-powered graph pathfinding system that delivers 10-15x speedups for graph-based problems. By combining sublinear solving with BMSSP's multi-source pathfinding and neural semantic search capabilities, we achieve unprecedented performance across diverse problem types.
+
 We now have a Rust-based implementation of these sublinear solvers for asymmetric diagonally dominant systems that can answer local numeric questions in microseconds instead of solving entire systems.
 
 Think about what this means. Projections, selected coordinates, and quick validation checks come back with a certificate that tells you exactly how much to trust the number. That certificate is the missing piece for real-time systems. You can decide fast while knowing your risk.
@@ -204,3 +206,5 @@ Practical patterns and architectures for leveraging sublinear solvers in product
 ³ Daniel A. Spielman, Shang-Hua Teng. "Nearly-linear time algorithms for graph partitioning, graph sparsification, and solving linear systems." STOC 2004.
 
 ⁴ Alexandr Andoni, Robert Krauthgamer, Yosef Pogrow. "On Solving Linear Systems in Sublinear Time." ITCS 2019.
+
+⁵ @ruvnet/bmssp. "Bounded Multi-Source Shortest Path WebAssembly Implementation." NPM package providing 10-15x speedup for graph pathfinding with neural semantic search capabilities.
