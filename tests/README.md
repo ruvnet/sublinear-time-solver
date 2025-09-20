@@ -7,16 +7,25 @@ Comprehensive testing framework for the sublinear-time-solver MCP interface proj
 ```
 tests/
 ├── README.md                       # This file
-├── run_all.cjs                     # Comprehensive test runner
-├── unit/                           # Unit tests
-│   ├── matrix.test.cjs             # Matrix class tests
-│   └── solver.test.cjs             # Solver class tests
-├── integration/                    # Integration tests
-│   ├── cli.test.cjs                # CLI functionality tests
-│   ├── mcp.test.cjs                # MCP protocol compliance tests
-│   └── wasm.test.cjs               # WASM interface tests
-└── performance/                    # Performance and validation tests
-    └── benchmark.test.cjs          # Algorithm benchmarks and validation
+├── mcp/                           # MCP tool integration tests
+│   └── mcp-tool-tests.js         # Comprehensive MCP solver tool tests
+├── rust/                          # Rust implementation tests
+│   ├── hybrid_tests.rs           # Hybrid algorithm tests
+│   ├── push_tests.rs             # Forward/backward push algorithm tests
+│   └── standalone_benchmark.rs   # Performance benchmarks
+├── performance/                   # Performance and optimization tests
+│   ├── performance-test.js       # General performance tests
+│   ├── optimization-benchmark.js # Optimization benchmarks
+│   └── test-fast-solver.js       # Fast solver implementation tests
+├── validation/                    # Validation and correctness tests
+│   └── test-solver-fixes.js      # Solver bug fixes and edge cases
+├── convergence/                   # Convergence analysis tests
+│   ├── convergence-validation.js # Convergence validation
+│   ├── mini-benchmark.js         # Small-scale benchmarks
+│   └── quick-test.js             # Quick smoke tests
+└── wasm/                          # WebAssembly tests
+    ├── wasm_test.js               # WASM module tests
+    └── verify-wasm.js             # WASM verification tests
 ```
 
 ## Quick Start
