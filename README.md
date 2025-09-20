@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/ruvnet-sublinear-time-solver-badge.png)](https://mseep.ai/app/ruvnet-sublinear-time-solver)
+
 # 🚀 Sublinear-Time Solver
 
 [![npm version](https://img.shields.io/npm/v/sublinear-time-solver.svg)](https://www.npmjs.com/package/sublinear-time-solver)
