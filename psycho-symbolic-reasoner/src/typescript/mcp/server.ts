@@ -7,6 +7,7 @@ import { createServer } from 'http';
 import express from 'express';
 import cors from 'cors';
 import WebSocket from 'ws';
+import { getReasoner } from '../reasoner/psycho-symbolic-reasoner.js';
 
 /**
  * MCP Server implementation with multiple transport support
@@ -149,36 +150,26 @@ export class MCPServer {
    * Handle reasoning tool
    */
   private async handleReason(args: any): Promise<any> {
-    const { query, depth = 5 } = args;
+    const { query, context, depth = 5 } = args;
 
     Logger.info('Processing reasoning request', { query, depth });
 
-    // TODO: Integrate with actual reasoning engine
-    const reasoningResult = {
-      query,
-      result: 'Reasoning result placeholder - integrate with Rust backend',
-      confidence: 0.85,
-      steps: [
-        { step: 1, description: 'Parse query', confidence: 0.95 },
-        { step: 2, description: 'Search knowledge graph', confidence: 0.90 },
-        { step: 3, description: 'Apply inference rules', confidence: 0.80 },
-        { step: 4, description: 'Generate conclusion', confidence: 0.85 }
-      ],
-      metadata: {
-        depth_used: depth,
-        processing_time_ms: 150,
-        nodes_explored: 42
-      }
-    };
+    try {
+      const reasoner = getReasoner();
+      const reasoningResult = await reasoner.reason(query, context, depth);
 
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(reasoningResult, null, 2)
-        }
-      ]
-    };
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(reasoningResult, null, 2)
+          }
+        ]
+      };
+    } catch (error) {
+      Logger.error('Reasoning failed', error);
+      throw error;
+    }
   }
 
   /**
@@ -189,28 +180,22 @@ export class MCPServer {
 
     Logger.info('Processing knowledge graph query', { query, limit });
 
-    // TODO: Integrate with actual graph query engine
-    const queryResult = {
-      query,
-      results: [
-        { id: '1', type: 'entity', label: 'Sample Entity', confidence: 0.90 },
-        { id: '2', type: 'relationship', label: 'Sample Relationship', confidence: 0.85 }
-      ],
-      total: 2,
-      metadata: {
-        query_time_ms: 45,
-        filters_applied: Object.keys(filters).length
-      }
-    };
+    try {
+      const reasoner = getReasoner();
+      const queryResult = reasoner.queryKnowledgeGraph(query, filters, limit);
 
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(queryResult, null, 2)
-        }
-      ]
-    };
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(queryResult, null, 2)
+          }
+        ]
+      };
+    } catch (error) {
+      Logger.error('Knowledge graph query failed', error);
+      throw error;
+    }
   }
 
   /**
@@ -221,105 +206,95 @@ export class MCPServer {
 
     Logger.info('Adding knowledge to graph', { subject, predicate, object });
 
-    // TODO: Integrate with actual knowledge graph
-    const addResult = {
-      success: true,
-      triple: { subject, predicate, object },
-      id: `triple_${Date.now()}`,
-      metadata
-    };
+    try {
+      const reasoner = getReasoner();
+      const triple = reasoner.addKnowledge(subject, predicate, object, metadata);
 
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(addResult, null, 2)
-        }
-      ]
-    };
+      const addResult = {
+        success: true,
+        triple: {
+          subject: triple.subject,
+          predicate: triple.predicate,
+          object: triple.object
+        },
+        id: triple.id,
+        confidence: triple.confidence,
+        metadata: triple.metadata
+      };
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(addResult, null, 2)
+          }
+        ]
+      };
+    } catch (error) {
+      Logger.error('Failed to add knowledge', error);
+      throw error;
+    }
   }
 
   /**
    * Handle analyze reasoning path
    */
   private async handleAnalyzeReasoningPath(args: any): Promise<any> {
-    const { query, showSteps = true } = args;
+    const { query, showSteps = true, includeConfidence = true } = args;
 
     Logger.info('Analyzing reasoning path', { query });
 
-    // TODO: Integrate with actual reasoning path analyzer
-    const analysisResult = {
-      query,
-      path_analysis: {
-        total_steps: 4,
-        avg_confidence: 0.875,
-        bottlenecks: ['inference_rules'],
-        strengths: ['knowledge_coverage', 'logical_consistency']
-      },
-      suggestions: [
-        'Consider adding more domain-specific rules',
-        'Expand knowledge base in weak areas'
-      ]
-    };
+    try {
+      const reasoner = getReasoner();
+      const analysisResult = await reasoner.analyzeReasoningPath(query, showSteps, includeConfidence);
 
-    if (showSteps) {
-      (analysisResult.path_analysis as any).detailed_steps = [
-        { step: 1, description: 'Query parsing', confidence: 0.95, duration_ms: 15 },
-        { step: 2, description: 'Graph traversal', confidence: 0.90, duration_ms: 80 },
-        { step: 3, description: 'Rule application', confidence: 0.80, duration_ms: 45 },
-        { step: 4, description: 'Result synthesis', confidence: 0.85, duration_ms: 20 }
-      ];
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(analysisResult, null, 2)
+          }
+        ]
+      };
+    } catch (error) {
+      Logger.error('Reasoning path analysis failed', error);
+      throw error;
     }
-
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(analysisResult, null, 2)
-        }
-      ]
-    };
   }
 
   /**
    * Handle health check
    */
   private async handleHealthCheck(args: any): Promise<any> {
-    const { detailed = false } = args;
+    const { detailed = false } = args || {};
 
-    const healthData = {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      uptime_seconds: process.uptime(),
-      memory_usage: process.memoryUsage(),
-      server_info: {
+    Logger.info('Processing health check', { detailed });
+
+    try {
+      const reasoner = getReasoner();
+      const healthStatus = reasoner.getHealthStatus(detailed);
+
+      // Add server info
+      healthStatus.server = {
+        name: 'psycho-symbolic-reasoner',
+        version: '1.0.5',
         transport: this.config.server.transport,
-        port: this.config.server.port,
-        host: this.config.server.host
-      }
-    };
-
-    if (detailed) {
-      (healthData as any).detailed_metrics = {
-        cpu_usage: process.cpuUsage(),
-        event_loop_lag: 0, // TODO: implement actual measurement
-        active_connections: this.wsServer?.clients?.size || 0,
-        knowledge_graph_stats: {
-          nodes: 1234, // TODO: get from actual graph
-          edges: 5678,
-          last_update: new Date().toISOString()
-        }
+        host: this.config.server.host,
+        port: this.config.server.port
       };
-    }
 
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(healthData, null, 2)
-        }
-      ]
-    };
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(healthStatus, null, 2)
+          }
+        ]
+      };
+    } catch (error) {
+      Logger.error('Health check failed', error);
+      throw error;
+    }
   }
 
   /**

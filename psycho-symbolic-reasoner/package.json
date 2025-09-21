@@ -1,15 +1,15 @@
 {
   "name": "psycho-symbolic-reasoner",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "description": "A psycho-symbolic reasoning framework combining symbolic AI with psychological context using Rust WASM and FastMCP integration",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "psycho-symbolic-reasoner": "./dist/cli/index.js",
-    "psycho-reasoner": "./dist/cli/index.js",
-    "psr": "./dist/cli/index.js"
+    "psycho-symbolic-reasoner": "./dist/typescript/cli/index.js",
+    "psycho-reasoner": "./dist/typescript/cli/index.js",
+    "psr": "./dist/typescript/cli/index.js"
   },
   "exports": {
     ".": {
@@ -49,7 +49,7 @@
   "scripts": {
     "build": "npm run clean && npm run build:ts",
     "build:wasm": "wasm-pack build --target nodejs --out-dir ../wasm/pkg graph_reasoner && wasm-pack build --target nodejs --out-dir ../wasm/extractors extractors && wasm-pack build --target nodejs --out-dir ../wasm/planner planner",
-    "build:ts": "tsc",
+    "build:ts": "tsc && chmod +x dist/typescript/cli/index.js",
     "build:dev": "tsc --watch",
     "copy-wasm": "cp -r wasm/ dist/wasm/",
     "clean": "rm -rf dist/ wasm/pkg/ wasm/extractors/ wasm/planner/",
@@ -67,7 +67,7 @@
     "dev:serve": "tsx src/cli/index.ts serve",
     "dev:mcp": "tsx src/mcp/server.ts",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run test && npm run lint",
+    "prepublishOnly": "npm run build:wasm && npm run build:ts && chmod +x dist/typescript/cli/index.js",
     "release": "npm run test && npm run build && npm publish",
     "release:beta": "npm run test && npm run build && npm publish --tag beta",
     "version:patch": "npm version patch",

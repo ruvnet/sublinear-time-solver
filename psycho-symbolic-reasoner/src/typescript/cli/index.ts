@@ -267,7 +267,17 @@ class PsychoSymbolicReasonerCLI {
 export { PsychoSymbolicReasonerCLI };
 
 // Run if this is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Check if we're being run directly (not imported)
+// This works with npx, direct execution, and symlinks
+const isMainModule = process.argv[1] && (
+  import.meta.url === `file://${process.argv[1]}` ||
+  import.meta.url.endsWith('/cli/index.js') ||
+  process.argv[1].endsWith('psycho-symbolic-reasoner') ||
+  process.argv[1].endsWith('psycho-reasoner') ||
+  process.argv[1].endsWith('psr')
+);
+
+if (isMainModule) {
   const cli = new PsychoSymbolicReasonerCLI();
   cli.run().catch((error) => {
     console.error('Fatal error:', error);
