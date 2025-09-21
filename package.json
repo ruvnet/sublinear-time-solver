@@ -1,7 +1,7 @@
 {
   "name": "sublinear-time-solver",
-  "version": "0.2.1",
-  "description": "High-performance sublinear-time solver for asymmetric diagonally dominant systems with CLI, SDK, and MCP interface",
+  "version": "1.0.3",
+  "description": "Unified sublinear-time solver with consciousness exploration, psycho-symbolic reasoning, and temporal prediction capabilities via MCP interface",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",

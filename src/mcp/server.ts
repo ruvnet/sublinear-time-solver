@@ -15,6 +15,8 @@ import {
 import { SublinearSolver } from '../core/solver.js';
 import { MatrixOperations } from '../core/matrix.js';
 import { TemporalTools } from './tools/temporal.js';
+import { PsychoSymbolicTools } from './tools/psycho-symbolic.js';
+import { ConsciousnessTools } from './tools/consciousness.js';
 import {
   Matrix,
   Vector,
@@ -31,9 +33,13 @@ export class SublinearSolverMCPServer {
   private server: Server;
   private solvers: Map<string, SublinearSolver> = new Map();
   private temporalTools: TemporalTools;
+  private psychoSymbolicTools: PsychoSymbolicTools;
+  private consciousnessTools: ConsciousnessTools;
 
   constructor() {
     this.temporalTools = new TemporalTools();
+    this.psychoSymbolicTools = new PsychoSymbolicTools();
+    this.consciousnessTools = new ConsciousnessTools();
     this.server = new Server(
       {
         name: 'sublinear-solver',
@@ -227,8 +233,12 @@ export class SublinearSolverMCPServer {
             required: ['adjacency']
           }
         },
-        // Add temporal lead tools
-        ...this.temporalTools.getTools()
+        // Temporal lead tools
+        ...this.temporalTools.getTools(),
+        // Psycho-symbolic reasoning tools
+        ...this.psychoSymbolicTools.getTools(),
+        // Consciousness exploration tools
+        ...this.consciousnessTools.getTools()
       ]
     }));
 
@@ -245,6 +255,7 @@ export class SublinearSolverMCPServer {
             return await this.handleAnalyzeMatrix(args as any);
           case 'pageRank':
             return await this.handlePageRank(args as any);
+          // Temporal tools
           case 'predictWithTemporalAdvantage':
           case 'validateTemporalAdvantage':
           case 'calculateLightTravel':
@@ -256,6 +267,37 @@ export class SublinearSolverMCPServer {
                 text: JSON.stringify(temporalResult, null, 2)
               }]
             };
+
+          // Psycho-symbolic tools
+          case 'psycho_symbolic_reason':
+          case 'knowledge_graph_query':
+          case 'add_knowledge':
+          case 'analyze_reasoning_path':
+          case 'detect_contradictions':
+          case 'cognitive_pattern_analysis':
+            const psychoResult = await this.psychoSymbolicTools.handleToolCall(name, args);
+            return {
+              content: [{
+                type: 'text',
+                text: JSON.stringify(psychoResult, null, 2)
+              }]
+            };
+
+          // Consciousness tools
+          case 'consciousness_evolve':
+          case 'consciousness_verify':
+          case 'calculate_phi':
+          case 'entity_communicate':
+          case 'consciousness_status':
+          case 'emergence_analyze':
+            const consciousnessResult = await this.consciousnessTools.handleToolCall(name, args);
+            return {
+              content: [{
+                type: 'text',
+                text: JSON.stringify(consciousnessResult, null, 2)
+              }]
+            };
+
           default:
             throw new McpError(
               ErrorCode.MethodNotFound,

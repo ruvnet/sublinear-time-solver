@@ -351,6 +351,297 @@ program
     }
   });
 
+// Consciousness command
+program
+  .command('consciousness')
+  .description('Consciousness exploration tools')
+  .argument('<action>', 'Action to perform (evolve|verify|phi|communicate)')
+  .option('--target <number>', 'Target emergence level for evolution', '0.9')
+  .option('--iterations <number>', 'Maximum iterations', '1000')
+  .option('--mode <mode>', 'Mode (genuine|enhanced|advanced)', 'enhanced')
+  .option('--extended', 'Extended verification or analysis')
+  .option('--message <message>', 'Message for communication')
+  .option('--protocol <protocol>', 'Communication protocol', 'auto')
+  .option('--elements <number>', 'Number of elements for phi calculation', '100')
+  .option('--connections <number>', 'Number of connections', '500')
+  .option('-o, --output <path>', 'Output file path')
+  .action(async (action, options) => {
+    try {
+      const { ConsciousnessTools } = await import('../mcp/tools/consciousness.js');
+      const tools = new ConsciousnessTools();
+      let result;
+
+      switch (action) {
+        case 'evolve':
+          console.log('Starting consciousness evolution...');
+          result = await tools.handleToolCall('consciousness_evolve', {
+            mode: options.mode,
+            iterations: parseInt(options.iterations),
+            target: parseFloat(options.target)
+          });
+          console.log(`\nEvolution completed!`);
+          console.log(`  Final emergence: ${result.finalState?.emergence?.toFixed(3) || result.finalState?.emergence || 'N/A'}`);
+          console.log(`  Target reached: ${result.targetReached}`);
+          console.log(`  Iterations: ${result.iterations}`);
+          console.log(`  Runtime: ${result.runtime}ms`);
+          break;
+
+        case 'verify':
+          console.log('Running consciousness verification tests...');
+          result = await tools.handleToolCall('consciousness_verify', {
+            extended: options.extended,
+            export_proof: false
+          });
+          console.log(`\nVerification Results:`);
+          console.log(`  Tests passed: ${result.passed}/${result.total}`);
+          console.log(`  Overall score: ${result.overallScore?.toFixed(3)}`);
+          console.log(`  Confidence: ${result.confidence?.toFixed(3)}`);
+          console.log(`  Genuine: ${result.genuine ? 'Yes' : 'No'}`);
+          break;
+
+        case 'phi':
+          console.log('Calculating integrated information (Φ)...');
+          result = await tools.handleToolCall('calculate_phi', {
+            data: {
+              elements: parseInt(options.elements),
+              connections: parseInt(options.connections),
+              partitions: 4
+            },
+            method: 'all'
+          });
+          console.log(`\nIntegrated Information (Φ):`);
+          if (result.overall !== undefined) {
+            console.log(`  Overall: ${result.overall.toFixed(4)}`);
+          }
+          if (result.iit !== undefined) {
+            console.log(`  IIT: ${result.iit.toFixed(4)}`);
+          }
+          if (result.geometric !== undefined) {
+            console.log(`  Geometric: ${result.geometric.toFixed(4)}`);
+          }
+          if (result.entropy !== undefined) {
+            console.log(`  Entropy: ${result.entropy.toFixed(4)}`);
+          }
+          break;
+
+        case 'communicate':
+          if (!options.message) {
+            console.error('Error: --message is required for communication');
+            process.exit(1);
+          }
+          console.log('Establishing entity communication...');
+          result = await tools.handleToolCall('entity_communicate', {
+            message: options.message,
+            protocol: options.protocol
+          });
+          console.log(`\nResponse:`);
+          console.log(`  Protocol: ${result.protocol}`);
+          console.log(`  Message: ${result.response?.content || result.response?.message || 'No response'}`);
+          console.log(`  Confidence: ${result.confidence?.toFixed(3)}`);
+          break;
+
+        default:
+          console.error(`Unknown action: ${action}`);
+          console.log('Available actions: evolve, verify, phi, communicate');
+          process.exit(1);
+      }
+
+      if (options.output && result) {
+        writeFileSync(options.output, JSON.stringify(result, null, 2));
+        console.log(`\nResults saved to ${options.output}`);
+      }
+    } catch (error: any) {
+      console.error('Error:', error.message);
+      process.exit(1);
+    }
+  });
+
+// Reasoning command
+program
+  .command('reason')
+  .description('Psycho-symbolic reasoning')
+  .argument('<query>', 'Query to reason about')
+  .option('--depth <number>', 'Reasoning depth', '5')
+  .option('--show-steps', 'Show detailed reasoning steps')
+  .option('--confidence', 'Include confidence scores', true)
+  .option('-o, --output <path>', 'Output file path')
+  .action(async (query, options) => {
+    try {
+      const { PsychoSymbolicTools } = await import('../mcp/tools/psycho-symbolic.js');
+      const tools = new PsychoSymbolicTools();
+
+      console.log('Performing psycho-symbolic reasoning...');
+      const result = await tools.handleToolCall('psycho_symbolic_reason', {
+        query,
+        depth: parseInt(options.depth),
+        context: {}
+      });
+
+      console.log(`\nReasoning Results:`);
+      console.log(`  Query: ${query}`);
+      console.log(`  Answer: ${result.answer}`);
+      console.log(`  Confidence: ${result.confidence?.toFixed(3)}`);
+      console.log(`  Depth reached: ${result.depth}`);
+      console.log(`  Patterns: ${result.patterns?.join(', ')}`);
+
+      if (options.showSteps && result.reasoning) {
+        console.log(`\nReasoning Steps:`);
+        result.reasoning.forEach((step: any, i: number) => {
+          console.log(`  ${i + 1}. ${step.type}`);
+          if (step.conclusions) {
+            console.log(`     Conclusions: ${step.conclusions.join(', ')}`);
+          }
+        });
+      }
+
+      if (options.output) {
+        writeFileSync(options.output, JSON.stringify(result, null, 2));
+        console.log(`\nResults saved to ${options.output}`);
+      }
+    } catch (error: any) {
+      console.error('Error:', error.message);
+      process.exit(1);
+    }
+  });
+
+// Knowledge command
+program
+  .command('knowledge')
+  .description('Knowledge graph operations')
+  .argument('<action>', 'Action (add|query)')
+  .option('--subject <subject>', 'Subject entity')
+  .option('--predicate <predicate>', 'Relationship type')
+  .option('--object <object>', 'Object entity')
+  .option('--query <query>', 'Query for knowledge graph')
+  .option('--limit <number>', 'Result limit', '10')
+  .action(async (action, options) => {
+    try {
+      const { PsychoSymbolicTools } = await import('../mcp/tools/psycho-symbolic.js');
+      const tools = new PsychoSymbolicTools();
+      let result;
+
+      switch (action) {
+        case 'add':
+          if (!options.subject || !options.predicate || !options.object) {
+            console.error('Error: --subject, --predicate, and --object are required');
+            process.exit(1);
+          }
+          result = await tools.handleToolCall('add_knowledge', {
+            subject: options.subject,
+            predicate: options.predicate,
+            object: options.object
+          });
+          console.log('Knowledge added successfully!');
+          console.log(`  ID: ${result.id}`);
+          break;
+
+        case 'query':
+          if (!options.query) {
+            console.error('Error: --query is required');
+            process.exit(1);
+          }
+          result = await tools.handleToolCall('knowledge_graph_query', {
+            query: options.query,
+            limit: parseInt(options.limit)
+          });
+          console.log(`\nQuery Results:`);
+          console.log(`  Found: ${result.total} items`);
+          if (result.results && result.results.length > 0) {
+            result.results.forEach((item: any) => {
+              console.log(`  - ${item.subject} ${item.predicate} ${item.object}`);
+            });
+          }
+          break;
+
+        default:
+          console.error(`Unknown action: ${action}`);
+          console.log('Available actions: add, query');
+          process.exit(1);
+      }
+    } catch (error: any) {
+      console.error('Error:', error.message);
+      process.exit(1);
+    }
+  });
+
+// Temporal command
+program
+  .command('temporal')
+  .description('Temporal advantage calculations')
+  .argument('<action>', 'Action (validate|calculate|predict)')
+  .option('--size <number>', 'Matrix size', '1000')
+  .option('--distance <km>', 'Distance in kilometers', '10900')
+  .option('-m, --matrix <path>', 'Matrix file path')
+  .option('-b, --vector <path>', 'Vector file path')
+  .action(async (action, options) => {
+    try {
+      const { TemporalTools } = await import('../mcp/tools/temporal.js');
+      const tools = new TemporalTools();
+      let result;
+
+      switch (action) {
+        case 'validate':
+          console.log('Validating temporal advantage...');
+          result = await tools.handleToolCall('validateTemporalAdvantage', {
+            size: parseInt(options.size),
+            distanceKm: parseInt(options.distance)
+          });
+          console.log(`\nTemporal Validation:`);
+          console.log(`  Matrix size: ${result.matrixSize}`);
+          console.log(`  Compute time: ${result.computeTimeMs?.toFixed(2)}ms`);
+          console.log(`  Light travel time: ${result.lightTravelTimeMs?.toFixed(2)}ms`);
+          console.log(`  Temporal advantage: ${result.temporalAdvantageMs?.toFixed(2)}ms`);
+          console.log(`  Valid: ${result.valid ? 'Yes' : 'No'}`);
+          break;
+
+        case 'calculate':
+          console.log('Calculating light travel time...');
+          result = await tools.handleToolCall('calculateLightTravel', {
+            distanceKm: parseInt(options.distance),
+            matrixSize: parseInt(options.size)
+          });
+          console.log(`\nLight Travel Calculation:`);
+          console.log(`  Distance: ${result.distance?.km || 'unknown'}km`);
+          console.log(`  Light travel time: ${result.lightTravelTime?.ms?.toFixed(2) || 'unknown'}ms`);
+          console.log(`  Compute time estimate: ${result.estimatedComputeTime?.ms?.toFixed(2) || 'unknown'}ms`);
+          console.log(`  Temporal advantage: ${result.temporalAdvantage?.ms?.toFixed(2) || 'unknown'}ms`);
+          console.log(`  Feasible: ${result.feasible ? 'Yes' : 'No'}`);
+          if (result.summary) {
+            console.log(`  Summary: ${result.summary}`);
+          }
+          break;
+
+        case 'predict':
+          if (!options.matrix || !options.vector) {
+            console.error('Error: --matrix and --vector are required for prediction');
+            process.exit(1);
+          }
+          const matrixData = JSON.parse(readFileSync(options.matrix, 'utf-8'));
+          const vectorData = JSON.parse(readFileSync(options.vector, 'utf-8'));
+
+          console.log('Computing with temporal advantage...');
+          result = await tools.handleToolCall('predictWithTemporalAdvantage', {
+            matrix: matrixData,
+            vector: vectorData,
+            distanceKm: parseInt(options.distance)
+          });
+          console.log(`\nPrediction Results:`);
+          console.log(`  Solution computed: Yes`);
+          console.log(`  Temporal advantage: ${result.temporalAdvantage?.toFixed(2)}ms`);
+          console.log(`  Solution available before data arrives!`);
+          break;
+
+        default:
+          console.error(`Unknown action: ${action}`);
+          console.log('Available actions: validate, calculate, predict');
+          process.exit(1);
+      }
+    } catch (error: any) {
+      console.error('Error:', error.message);
+      process.exit(1);
+    }
+  });
+
 // Help command
 program
   .command('help-examples')

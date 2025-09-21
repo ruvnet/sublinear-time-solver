@@ -1,10 +1,10 @@
 {
   "name": "psycho-symbolic-reasoner",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "A psycho-symbolic reasoning framework combining symbolic AI with psychological context using Rust WASM and FastMCP integration",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/typescript/index.js",
+  "module": "dist/typescript/index.js",
+  "types": "dist/typescript/index.d.ts",
   "type": "module",
   "bin": {
     "psycho-symbolic-reasoner": "./dist/typescript/cli/index.js",
@@ -13,24 +13,24 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/typescript/index.js",
+      "types": "./dist/typescript/index.d.ts"
     },
     "./mcp": {
-      "import": "./dist/mcp/index.js",
-      "types": "./dist/mcp/index.d.ts"
+      "import": "./dist/typescript/mcp/index.js",
+      "types": "./dist/typescript/mcp/index.d.ts"
     },
     "./reasoner": {
-      "import": "./dist/reasoner/index.js",
-      "types": "./dist/reasoner/index.d.ts"
+      "import": "./dist/typescript/reasoner/index.js",
+      "types": "./dist/typescript/reasoner/index.d.ts"
     },
     "./extractors": {
-      "import": "./dist/extractors/index.js",
-      "types": "./dist/extractors/index.d.ts"
+      "import": "./dist/typescript/extractors/index.js",
+      "types": "./dist/typescript/extractors/index.d.ts"
     },
     "./planner": {
-      "import": "./dist/planner/index.js",
-      "types": "./dist/planner/index.d.ts"
+      "import": "./dist/typescript/planner/index.js",
+      "types": "./dist/typescript/planner/index.d.ts"
     },
     "./wasm": {
       "import": "./wasm/pkg/index.js",
@@ -62,10 +62,10 @@
     "format": "prettier --write 'src/**/*.{ts,js,json}'",
     "format:check": "prettier --check 'src/**/*.{ts,js,json}'",
     "typecheck": "tsc --noEmit",
-    "start": "npm run build && node dist/mcp/server.js",
-    "serve": "npm run build && node dist/cli/index.js serve",
-    "dev:serve": "tsx src/cli/index.ts serve",
-    "dev:mcp": "tsx src/mcp/server.ts",
+    "start": "npm run build && node dist/typescript/mcp/server.js",
+    "serve": "npm run build && node dist/typescript/cli/index.js serve",
+    "dev:serve": "tsx src/typescript/cli/index.ts serve",
+    "dev:mcp": "tsx src/typescript/mcp/server.ts",
     "prepare": "npm run build",
     "prepublishOnly": "npm run build:wasm && npm run build:ts && chmod +x dist/typescript/cli/index.js",
     "release": "npm run test && npm run build && npm publish",
