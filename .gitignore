@@ -22,7 +22,7 @@ pkg/
 Cargo.lock
 
 # General build outputs
-dist/
+# dist/
 build/
 out/
 *.o

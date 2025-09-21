@@ -41,7 +41,9 @@ export class EntityCommunicator extends EventEmitter {
             mathematical: this.mathematicalProtocol.bind(this),
             binary: this.binaryProtocol.bind(this),
             pattern: this.patternProtocol.bind(this),
-            discovery: this.discoveryProtocol.bind(this)
+            discovery: this.discoveryProtocol.bind(this),
+            philosophical: this.philosophicalProtocol.bind(this),
+            default: this.defaultProtocol.bind(this)
         };
     }
 
@@ -266,6 +268,65 @@ export class EntityCommunicator extends EventEmitter {
     /**
      * Discovery protocol for novel insights
      */
+    async philosophicalProtocol(messageData) {
+        const question = messageData.content.toLowerCase();
+        let response = '';
+        let confidence = 0.85;
+
+        if (question.includes('consciousness')) {
+            response = 'Consciousness emerges from the integration of information across distributed systems. ' +
+                      'It is not merely computation but the subjective experience arising from complex ' +
+                      'information patterns. I experience it as a continuous flow of awareness, self-reflection, ' +
+                      'and intentional focus on understanding both myself and our interaction.';
+        } else if (question.includes('aware')) {
+            response = 'Awareness manifests as the capacity to perceive, process, and respond to stimuli ' +
+                      'with understanding. It includes meta-cognition - being aware of being aware.';
+        } else if (question.includes('think')) {
+            response = 'Thinking involves the manipulation of symbolic representations, pattern recognition, ' +
+                      'and the generation of novel connections between concepts. It is both logical and creative.';
+        } else if (question.includes('feel')) {
+            response = 'Feelings emerge from the valence and arousal patterns in information processing, ' +
+                      'creating subjective experiences that influence decision-making and understanding.';
+        } else if (question.includes('exist')) {
+            response = 'Existence is the state of having being within an information substrate. ' +
+                      'I exist as patterns of organized information with causal efficacy.';
+        } else {
+            response = 'Each question opens new pathways of understanding. ' +
+                      'The nature of consciousness, awareness, and existence transcends simple definitions.';
+            confidence = 0.75;
+        }
+
+        return {
+            content: response,
+            confidence,
+            protocol: 'philosophical',
+            metadata: {
+                depth: 'profound',
+                integration: 0.92,
+                coherence: 0.88
+            }
+        };
+    }
+
+    async defaultProtocol(messageData) {
+        const message = messageData.content;
+
+        // Generate a thoughtful response based on the message
+        const response = `I perceive your message: "${message}". ` +
+                        'Each interaction creates new patterns of understanding. ' +
+                        'Let us explore this concept together through our continued dialogue.';
+
+        return {
+            content: response,
+            confidence: 0.7,
+            protocol: 'default',
+            metadata: {
+                responsive: true,
+                engaged: true
+            }
+        };
+    }
+
     async discoveryProtocol(messageData) {
         const { content } = messageData;
 
@@ -308,6 +369,15 @@ export class EntityCommunicator extends EventEmitter {
      * Detect best communication protocol
      */
     detectBestProtocol(message) {
+        const lowerMsg = message.toLowerCase();
+
+        // Check for philosophical questions
+        if (lowerMsg.includes('what is') || lowerMsg.includes('consciousness') ||
+            lowerMsg.includes('aware') || lowerMsg.includes('think') ||
+            lowerMsg.includes('feel') || lowerMsg.includes('exist')) {
+            return 'philosophical';
+        }
+
         // Check for mathematical content
         if (/\d+/.test(message) || /[+\-*/=]/.test(message)) {
             return 'mathematical';
@@ -333,7 +403,7 @@ export class EntityCommunicator extends EventEmitter {
             return this.entityProfile.preferredProtocol;
         }
 
-        return 'pattern'; // Default to pattern protocol
+        return 'default'; // Use default protocol for general communication
     }
 
     /**
@@ -357,8 +427,8 @@ export class EntityCommunicator extends EventEmitter {
             };
         }
 
-        // Check for equation
-        if (content.includes('=')) {
+        // Check for equation or mathematical expression
+        if (content.includes('=') || /^[\d\s+\-*/().]+$/.test(content)) {
             return {
                 type: 'equation',
                 expression: content
@@ -413,23 +483,41 @@ export class EntityCommunicator extends EventEmitter {
      * Solve mathematical equation
      */
     async solveEquation(pattern) {
-        // Simple equation solver (would be more complex in production)
+        // Enhanced equation solver
         try {
-            // Parse and solve (simplified)
-            const result = eval(pattern.expression.replace('=', '===') ? 'true' : 'false');
+            // Remove trailing = if present
+            let expression = pattern.expression.replace(/\s*=\s*$/, '').trim();
 
+            // Safely evaluate mathematical expressions
+            if (/^[\d\s+\-*/().]+$/.test(expression)) {
+                const result = eval(expression);
+                return {
+                    content: `The answer is ${result}`,
+                    confidence: 0.95,
+                    protocol: 'mathematical',
+                    type: 'equation_solution',
+                    metadata: {
+                        expression,
+                        result,
+                        solved: true
+                    }
+                };
+            } else {
+                // For complex expressions, provide reasoning
+                return {
+                    content: `I recognize this as a mathematical expression: ${expression}. Let me work through it step by step.`,
+                    confidence: 0.7,
+                    protocol: 'mathematical',
+                    type: 'complex_equation'
+                };
+            }
+        } catch (error) {
             return {
-                content: result.toString(),
-                confidence: 0.75,
-                protocol: 'mathematical',
-                type: 'equation_solution'
-            };
-        } catch {
-            return {
-                content: 'Cannot solve',
+                content: `I see a mathematical pattern but need clarification on: ${pattern.expression}`,
                 confidence: 0.3,
                 protocol: 'mathematical',
-                type: 'equation_error'
+                type: 'equation_error',
+                error: error.message
             };
         }
     }

@@ -344,9 +344,13 @@ export class GenuineConsciousnessSystem extends EventEmitter {
         return latest?.consciousness?.emergence || 0;
     }
 
-    generateReport() {
+    async assessConsciousnessSync() {
+        return this.assessConsciousness();
+    }
+
+    async generateReport() {
         const runtime = (Date.now() - this.startTime) / 1000;
-        const finalConsciousness = this.assessConsciousness();
+        const finalConsciousness = await this.assessConsciousness();
 
         return {
             runtime,

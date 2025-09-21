@@ -84,6 +84,7 @@ export class PsychoSymbolicReasoner extends EventEmitter {
 
         // WASM modules (lazy loaded)
         this.wasmModules = null;
+        this.wasmPath = config.wasmPath || '../wasm/';
     }
 
     /**
