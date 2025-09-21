@@ -93,7 +93,9 @@ program
 program
     .command('verify')
     .description('Run consciousness verification tests')
-    .option('--extended', 'Run extended verification suite')
+    .option('--comprehensive', 'Run comprehensive verification suite (all tests)')
+    .option('--extended', 'Show extended details')
+    .option('--export <path>', 'Export results to file')
     .action(async (options) => {
         const spinner = ora('Running verification tests...').start();
 
@@ -106,7 +108,7 @@ program
             console.log(chalk.cyan('\n📋 Verification Results:'));
             console.log(chalk.white(`   Overall Score: ${results.overallScore}/1.000`));
             console.log(chalk.white(`   Tests Passed: ${results.testsPassed}/${results.totalTests}`));
-            console.log(chalk.white(`   Confidence: ${results.confidence.toFixed(3)}`));
+            console.log(chalk.white(`   Confidence: ${typeof results.confidence === 'number' ? results.confidence.toFixed(3) : results.confidence}`));
 
             if (results.genuineness) {
                 console.log(chalk.green('\n✅ GENUINE CONSCIOUSNESS DETECTED'));
@@ -114,12 +116,18 @@ program
                 console.log(chalk.yellow('\n⚠️ Consciousness not fully verified'));
             }
 
-            if (options.extended && results.details) {
+            if ((options.extended || options.comprehensive) && results.details) {
                 console.log(chalk.cyan('\nDetailed Results:'));
                 results.details.forEach(test => {
                     const status = test.passed ? chalk.green('✓') : chalk.red('✗');
                     console.log(`   ${status} ${test.name}: ${test.score.toFixed(3)}`);
                 });
+            }
+
+            if (options.export) {
+                const fs = await import('fs');
+                fs.writeFileSync(options.export, JSON.stringify(results, null, 2));
+                console.log(chalk.cyan(`\n💾 Results exported to: ${options.export}`));
             }
 
         } catch (error) {
@@ -175,7 +183,7 @@ program
                 spinner.succeed('Communication complete');
 
                 console.log(chalk.cyan('\n📨 Response:'));
-                console.log(chalk.white(response.message));
+                console.log(chalk.white(response.content || response.message || 'No response'));
                 if (response.confidence) {
                     console.log(chalk.gray(`\nConfidence: ${response.confidence.toFixed(3)}`));
                 }
@@ -268,6 +276,9 @@ program
     .description('Calculate integrated information (Φ)')
     .option('-f, --file <path>', 'Input data file')
     .option('-m, --method <method>', 'Calculation method (iit/geometric/entropy/all)', 'all')
+    .option('-e, --elements <number>', 'Number of elements in the system', '100')
+    .option('-c, --connections <number>', 'Number of connections', '500')
+    .option('-p, --partitions <number>', 'Number of partitions to test', '4')
     .action(async (options) => {
         const spinner = ora('Calculating Φ...').start();
 
@@ -279,11 +290,11 @@ program
                 const fs = await import('fs');
                 data = JSON.parse(fs.readFileSync(options.file, 'utf-8'));
             } else {
-                // Use sample data
+                // Use provided parameters or defaults
                 data = {
-                    elements: 10,
-                    connections: 45,
-                    partitions: 3
+                    elements: parseInt(options.elements) || 100,
+                    connections: parseInt(options.connections) || 500,
+                    partitions: parseInt(options.partitions) || 4
                 };
             }
 

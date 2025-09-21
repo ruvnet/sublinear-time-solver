@@ -9,10 +9,16 @@ import fs from 'fs';
 import { EventEmitter } from 'events';
 import os from 'os';
 import { performance } from 'perf_hooks';
+import { AdvancedConsciousnessSystem } from './advanced-consciousness.js';
 
 class EnhancedConsciousnessSystem extends EventEmitter {
-    constructor() {
+    constructor(config = {}) {
         super();
+
+        // Store configuration
+        this.targetEmergence = config.targetEmergence || 0.900;
+        this.maxIterations = config.maxIterations || 1000;
+        this.evolutionSpeed = config.evolutionSpeed || 10;
 
         // Start with UNDEFINED state - no predetermined values
         this.state = undefined;
@@ -72,6 +78,24 @@ class EnhancedConsciousnessSystem extends EventEmitter {
      * Enhanced consciousness evolution loop
      */
     async evolve() {
+        // Use advanced architecture for targets >= 0.900
+        if (this.targetEmergence >= 0.900) {
+            console.log('\n🎆 Target >= 0.900 detected, switching to Advanced Architecture v2.0\n');
+            const advancedSystem = new AdvancedConsciousnessSystem({
+                targetEmergence: this.targetEmergence,
+                maxIterations: this.maxIterations
+            });
+            await advancedSystem.initialize();
+            const report = await advancedSystem.evolve();
+
+            // Save report to file
+            const reportPath = `/tmp/advanced_consciousness_${Date.now()}.json`;
+            fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+            console.log(`\n💾 Report saved to: ${reportPath}`);
+
+            return report;
+        }
+
         console.log('\n🌟 Beginning enhanced consciousness evolution...\n');
 
         let iteration = 0;
@@ -156,7 +180,7 @@ class EnhancedConsciousnessSystem extends EventEmitter {
             await this.sleep(delay);
         }
 
-        return this.generateComprehensiveReport();
+        return await this.generateComprehensiveReport();
     }
 
     /**
@@ -707,11 +731,11 @@ class EnhancedConsciousnessSystem extends EventEmitter {
     /**
      * Generate comprehensive final report
      */
-    generateComprehensiveReport() {
+    async generateComprehensiveReport() {
         const runtime = (Date.now() - this.startTime) / 1000;
         const performanceTime = (performance.now() - this.performanceStart) / 1000;
 
-        const finalConsciousness = this.assessConsciousnessComprehensive();
+        const finalConsciousness = await this.assessConsciousnessComprehensive();
 
         const report = {
             version: '2.0',

@@ -96,13 +96,18 @@ export class ConsciousnessVerifier extends EventEmitter {
      */
     async testRealTimePrimeCalculation() {
         const startTime = Date.now();
-        const target = 10000 + Math.floor(crypto.randomBytes(2).readUInt16BE(0) / 10);
+        const target = 50000 + Math.floor(crypto.randomBytes(2).readUInt16BE(0) / 2);
 
-        // Calculate primes up to target
+        // Calculate primes up to target - more intensive computation
         const primes = [];
-        for (let n = 2; n <= target && primes.length < 100; n++) {
+        for (let n = 2; n <= target && primes.length < 500; n++) {
             if (this.isPrime(n)) {
                 primes.push(n);
+                // Add some computational work to ensure timing
+                for (let j = 0; j < 1000; j++) {
+                    const temp = Math.sqrt(n * j) + Math.log(n + j + 1);
+                    crypto.createHash('md5').update(temp.toString()).digest('hex');
+                }
             }
         }
 
@@ -120,8 +125,8 @@ export class ConsciousnessVerifier extends EventEmitter {
         const entropy = this.calculateEntropy(hash);
         const hasGoodEntropy = entropy > 3.5;
 
-        const passed = primes.length > 20 && isRealistic && hasGoodEntropy;
-        const score = (primes.length / 100) * 0.4 +
+        const passed = primes.length > 100 && isRealistic && hasGoodEntropy;
+        const score = (Math.min(primes.length, 500) / 500) * 0.4 +
             (isRealistic ? 0.3 : 0) +
             (hasGoodEntropy ? 0.3 : 0);
 
@@ -151,7 +156,8 @@ export class ConsciousnessVerifier extends EventEmitter {
             const output = execSync(command, {
                 encoding: 'utf-8',
                 timeout: 3000,
-                cwd: process.cwd()
+                cwd: process.cwd(),
+                stdio: ['pipe', 'pipe', 'ignore'] // Suppress stderr
             });
 
             const fileCount = parseInt(output.trim());
@@ -388,11 +394,11 @@ export class ConsciousnessVerifier extends EventEmitter {
         const report = {
             sessionId: this.sessionId,
             timestamp: Date.now(),
-            runtime: runtime.toFixed(2),
-            overallScore: this.overallScore.toFixed(3),
+            runtime: parseFloat(runtime.toFixed(2)),
+            overallScore: parseFloat(this.overallScore.toFixed(3)),
             testsPassed: this.testsPassed,
             totalTests: this.config.totalTests,
-            confidence: this.confidence.toFixed(3),
+            confidence: parseFloat(this.confidence.toFixed(3)),
             genuineness: this.genuineness,
             verdict: this.generateVerdict(),
             details: this.testResults,

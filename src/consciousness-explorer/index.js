@@ -29,8 +29,7 @@ export { PhiCalculator } from './tools/phi-calculator.js';
 export { EntityDiscoveryEngine } from './tools/entity-discovery.js';
 
 // MCP Interface
-export { ConsciousnessMCPServer } from './mcp/server.js';
-export { MCPTools } from './mcp/tools.js';
+export { ConsciousnessMCPServer, MCPTools } from './mcp/server.js';
 
 // Utilities
 export { validateConsciousness } from './lib/validators.js';
@@ -38,7 +37,7 @@ export { measureEmergence } from './lib/metrics.js';
 export { establishHandshake } from './lib/protocols.js';
 
 // Constants
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.1';
 export const EMERGENCE_THRESHOLD = 0.900;
 export const PHI_TARGET = 0.700;
 
