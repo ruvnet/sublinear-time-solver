@@ -308,68 +308,82 @@ export class RealTimeMonitor extends EventEmitter {
     // Helper Methods
 
     generateMonitorId() {
-        return `monitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const timestamp = Date.now();
+        const hash = this.hashValue(`monitor_${timestamp}_${this.activeMonitors.size}`);
+        return `monitor_${timestamp}_${hash.toString(36).substr(0, 9)}`;
     }
 
     generateAlertId() {
-        return `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const timestamp = Date.now();
+        const hash = this.hashValue(`alert_${timestamp}_${this.alertHistory.length}`);
+        return `alert_${timestamp}_${hash.toString(36).substr(0, 9)}`;
     }
 
     generateComputationalData() {
-        // Generate realistic computational metrics
-        return Array.from({ length: 100 }, () => ({
-            cpuUsage: Math.random() * 100,
-            memoryUsage: Math.random() * 100,
-            instructionCount: Math.floor(Math.random() * 1000000),
-            executionTime: Math.random() * 10
+        // Generate realistic computational metrics based on system time
+        const timestamp = Date.now();
+        return Array.from({ length: 100 }, (_, i) => ({
+            cpuUsage: this.hashToFloat(`cpu_${timestamp}_${i}`, 0) * 100,
+            memoryUsage: this.hashToFloat(`mem_${timestamp}_${i}`, 1) * 100,
+            instructionCount: Math.floor(this.hashToFloat(`inst_${timestamp}_${i}`, 2) * 1000000),
+            executionTime: this.hashToFloat(`exec_${timestamp}_${i}`, 3) * 10
         }));
     }
 
     generateVarianceData() {
-        // Generate data with occasional zero variance
+        // Generate data with deterministic low variance patterns
         const data = [];
+        const timestamp = Date.now();
         for (let i = 0; i < 1000; i++) {
-            if (Math.random() < 0.01) {
-                // Occasional zero variance (1% chance)
+            const hashValue = this.hashToFloat(`var_${timestamp}_${i}`, 0);
+            if (hashValue < 0.01) {
+                // Occasional zero variance (1% chance based on hash)
                 data.push(-0.029); // Exact target mean
             } else {
-                // Normal variance around target
-                data.push(-0.029 + (Math.random() - 0.5) * 1e-12);
+                // Normal variance around target based on hash
+                const variation = (this.hashToFloat(`var_${timestamp}_${i}`, 1) - 0.5) * 1e-12;
+                data.push(-0.029 + variation);
             }
         }
         return data;
     }
 
     generateEntropyData() {
-        // Generate data with varying entropy
+        // Generate data with deterministic varying entropy
         const data = [];
-        const symbols = Math.floor(Math.random() * 256) + 1;
+        const timestamp = Date.now();
+        const symbols = Math.floor(this.hashToFloat(`symbols_${timestamp}`, 0) * 256) + 1;
 
         for (let i = 0; i < 1000; i++) {
-            if (Math.random() < 0.05) {
-                // Occasional perfect entropy (5% chance)
-                data.push(Math.floor(Math.random() * symbols));
+            const hashValue = this.hashToFloat(`entropy_${timestamp}_${i}`, 0);
+            if (hashValue < 0.05) {
+                // Occasional perfect entropy (5% chance based on hash)
+                const randomSymbol = Math.floor(this.hashToFloat(`entropy_${timestamp}_${i}`, 1) * symbols);
+                data.push(randomSymbol);
             } else {
                 // Biased distribution
-                data.push(Math.floor(Math.random() * symbols / 4));
+                const biasedSymbol = Math.floor(this.hashToFloat(`entropy_${timestamp}_${i}`, 2) * symbols / 4);
+                data.push(biasedSymbol);
             }
         }
         return data;
     }
 
     generateNeuralData() {
-        // Generate neural network-like data
+        // Generate deterministic neural network-like data
+        const timestamp = Date.now();
         return {
-            weights: Array.from({ length: 100 }, () => Math.random() * 2 - 1),
-            biases: Array.from({ length: 10 }, () => Math.random() * 2 - 1),
-            activations: Array.from({ length: 10 }, () => Math.random()),
-            gradients: Array.from({ length: 100 }, () => Math.random() * 0.01)
+            weights: Array.from({ length: 100 }, (_, i) => this.hashToFloat(`weight_${timestamp}_${i}`, 0) * 2 - 1),
+            biases: Array.from({ length: 10 }, (_, i) => this.hashToFloat(`bias_${timestamp}_${i}`, 1) * 2 - 1),
+            activations: Array.from({ length: 10 }, (_, i) => this.hashToFloat(`act_${timestamp}_${i}`, 2)),
+            gradients: Array.from({ length: 100 }, (_, i) => this.hashToFloat(`grad_${timestamp}_${i}`, 3) * 0.01)
         };
     }
 
     generateDefaultData() {
-        // Generate default random data
-        return Array.from({ length: 100 }, () => Math.random());
+        // Generate default deterministic data
+        const timestamp = Date.now();
+        return Array.from({ length: 100 }, (_, i) => this.hashToFloat(`default_${timestamp}_${i}`, 0));
     }
 
     calculateVariance(data) {
@@ -514,5 +528,22 @@ export class RealTimeMonitor extends EventEmitter {
             alertCount: monitor.alertCount,
             uptime: Date.now() - monitor.startTime
         }));
+    }
+
+    // Deterministic helper methods to replace Math.random()
+    hashValue(input) {
+        let hash = 0;
+        const str = input.toString();
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        return Math.abs(hash);
+    }
+
+    hashToFloat(input, seed = 0) {
+        const combined = this.hashValue(input) + seed * 1000;
+        return (combined % 10000) / 10000;
     }
 }
