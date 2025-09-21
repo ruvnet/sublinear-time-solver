@@ -74,6 +74,156 @@ This isn't just another solver - it's a comprehensive suite of 30+ advanced tool
 ### Install
 
 ```bash
+# Serve the solver as an MCP tool - no installation required!
+npx sublinear-time-solver mcp
+# Or use the serve alias
+npx sublinear-time-solver serve
+```
+
+### Direct CLI Usage
+```bash
+# Generate a test matrix and solve it
+npx sublinear-time-solver generate -t diagonally-dominant -s 1000 -o matrix.json
+echo '[1, 2, 3, 4, 5]' > vector.json  # Create a simple vector (adjust size to match)
+npx sublinear-time-solver solve -m matrix.json -b vector.json -o solution.json
+
+# Analyze a matrix for solvability
+npx sublinear-time-solver analyze -m matrix.json --full
+
+# Show usage examples
+npx sublinear-time-solver help-examples
+```
+
+### Real-World Applications
+
+- **🌐 Network Routing** - Find optimal paths in computer networks or transportation systems
+- **📊 PageRank Computation** - Calculate importance scores in large graphs (web pages, social networks)
+- **💰 Economic Modeling** - Solve equilibrium problems in market systems
+- **🔬 Scientific Computing** - Process large sparse matrices from physics simulations
+- **🤖 Machine Learning** - Optimize large-scale linear systems in AI algorithms
+- **🏗️ Engineering** - Structural analysis and finite element computations
+- **⚡ Low-Latency Prediction** - Compute specific solution components before full data arrives (see [temporal-lead-solver](temporal-lead-solver/))
+
+## ⚡ TNS - Temporal Neural Solver
+
+A companion ultra-fast neural network inference engine achieving **sub-microsecond latency** through mathematical optimization and temporal coherence.
+
+### Quick Start
+```bash
+# Try it instantly with npx - no installation needed!
+npx temporal-neural-solver demo
+
+# Or install the Rust CLI for native performance
+cargo install temporal-neural-solver && tns demo
+```
+
+### Key Features
+- **🎯 <1µs inference latency** on modern hardware
+- **🚄 1M+ ops/sec throughput** for batch processing
+- **🧠 Temporal Kalman filtering** for stable outputs
+- **📦 Dual distribution** - Native Rust and WebAssembly
+- **⚙️ SIMD optimizations** with AVX2/AVX-512 support
+
+### Installation & Links
+- **npm Package**: [`temporal-neural-solver`](https://www.npmjs.com/package/temporal-neural-solver) - `npm install temporal-neural-solver`
+- **Rust Crate**: [`temporal-neural-solver`](https://crates.io/crates/temporal-neural-solver) - `cargo add temporal-neural-solver`
+- **Documentation**: [TNS Engine Docs](tns-engine/temporal-neural-solver/README.md)
+- **Blog Post**: [Neural Networks in the Speed of Light](docs/neural-networks/)
+
+Perfect for high-frequency trading, real-time control systems, edge computing, and game AI where microsecond response times are critical.
+
+### 🤖 Agentic Systems & ML Applications
+
+The sublinear-time solver is particularly powerful for **autonomous agent systems** and **modern ML workloads** where speed and scalability are critical:
+
+#### **Multi-Agent Systems**
+- **🔄 Swarm Coordination** - Solve consensus problems across thousands of autonomous agents
+- **🎯 Resource Allocation** - Distribute computational resources optimally in real-time
+- **🕸️ Agent Communication** - Calculate optimal routing in agent networks
+- **⚖️ Load Balancing** - Balance workloads across distributed agent clusters
+
+#### **Machine Learning at Scale**
+- **🧠 Neural Network Training** - Solve normal equations in large-scale linear regression layers
+- **📈 Reinforcement Learning** - Value function approximation for massive state spaces
+- **🔍 Feature Selection** - LASSO and Ridge regression with millions of features
+- **📊 Dimensionality Reduction** - PCA and SVD computations for high-dimensional data
+- **🎭 Recommendation Systems** - Matrix factorization for collaborative filtering
+
+#### **Real-Time AI Applications**
+- **⚡ Online Learning** - Update models incrementally as new data streams in
+- **🎮 Game AI** - Real-time strategy optimization and pathfinding
+- **🚗 Autonomous Vehicles** - Dynamic route optimization with traffic updates
+- **💬 Conversational AI** - Large language model optimization and attention mechanisms
+- **🏭 Industrial IoT** - Sensor network optimization and predictive maintenance
+
+#### **Why Sublinear for AI/ML?**
+- **📊 Massive Scale**: Handle millions of parameters without memory explosion
+- **⚡ Real-Time**: Sub-second updates for live learning systems
+- **🔄 Streaming**: Progressive refinement as data arrives
+- **🌊 Incremental**: Update solutions without full recomputation
+- **🎯 Selective**: Compute only the solution components you need
+
+
+## 💡 How Does It Work?
+
+The solver combines several optimization techniques:
+
+1. **Sparse Matrix Formats** - CSR/COO formats reduce memory usage by 100x+ for sparse problems
+2. **Conjugate Gradient** - Iterative method that converges quickly for well-conditioned systems
+3. **BMSSP Algorithm** - Multi-source pathfinding for additional speedups on graph-structured problems
+4. **WASM Acceleration** - Near-native performance in JavaScript environments
+
+## 🎯 When Should You Use This?
+
+✅ **Perfect for:**
+- Sparse matrices (mostly zeros) with millions of equations
+- Real-time systems needing quick approximate solutions
+- Streaming applications requiring progressive refinement
+- Graph problems like PageRank, network flow, or shortest paths
+
+❌ **Not ideal for:**
+- Small dense matrices (use NumPy/MATLAB instead)
+- Problems requiring exact solutions to machine precision
+- Ill-conditioned systems with condition numbers > 10¹²
+
+## 📦 Installation
+
+### Quick Start (No Installation Required)
+```bash
+# Run directly with npx - no installation needed!
+npx sublinear-time-solver --help
+
+# Generate and solve a test system
+npx sublinear-time-solver generate -t diagonally-dominant -s 100 -o test.json
+echo '[1,1,1,1,1]' > b.json  # Create vector (adjust size)
+npx sublinear-time-solver solve -m test.json -b b.json
+
+# Start MCP server for AI integration
+npx sublinear-time-solver serve
+
+# For temporal computational lead features
+npx temporal-lead-solver predict --size 1000 --distance 10900
+npx temporal-lead-solver prove --theorem temporal-lead
+```
+
+### JavaScript/Node.js Installation
+
+#### Global Installation (CLI)
+```bash
+# Install the main solver globally for CLI access
+npm install -g sublinear-time-solver
+
+# Install temporal lead solver globally
+npm install -g temporal-lead-solver
+
+# Verify installation
+sublinear-time-solver --version
+temporal-lead-solver --version
+```
+
+#### Project Installation (SDK)
+```bash
+# Add to your project as a dependency
 npm install sublinear-time-solver
 ```
 
