@@ -3,7 +3,7 @@
  * Includes: Domain Adaptation, Creative Reasoning, Enhanced Knowledge Base, Analogical Reasoning
  */
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-export declare class PsychoSymbolicTools {
+export declare class CompletePsychoSymbolicTools {
     private knowledgeBase;
     private domainEngine;
     private creativeEngine;

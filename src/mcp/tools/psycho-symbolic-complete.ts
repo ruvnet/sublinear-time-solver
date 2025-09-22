@@ -41,13 +41,11 @@ class DomainAdaptationEngine {
   private domainPatterns: Map<string, any> = new Map();
   private reasoningStyles: Map<string, string> = new Map();
   private crossDomainMappings: Map<string, string[]> = new Map();
-  private semanticClusters: Map<string, string[]> = new Map();
 
   constructor() {
     this.initializeDomainPatterns();
     this.initializeReasoningStyles();
     this.initializeCrossDomainMappings();
-    this.buildSemanticClusters();
   }
 
   private initializeDomainPatterns() {
@@ -80,49 +78,6 @@ class DomainAdaptationEngine {
       reasoning_style: 'temporal_analysis',
       analogy_domains: ['physics', 'consciousness', 'systems_theory']
     });
-
-    this.domainPatterns.set('art', {
-      keywords: ['art', 'artistic', 'painting', 'visual', 'aesthetic', 'creative', 'expression', 'pollock', 'drip', 'canvas', 'color', 'form', 'style', 'composition'],
-      reasoning_style: 'aesthetic_synthesis',
-      analogy_domains: ['mathematics', 'physics', 'psychology', 'philosophy']
-    });
-
-    this.domainPatterns.set('music', {
-      keywords: ['music', 'musical', 'sound', 'rhythm', 'melody', 'harmony', 'composition', 'jazz', 'improvisation', 'symphony', 'acoustic', 'tone', 'chord'],
-      reasoning_style: 'harmonic_analysis',
-      analogy_domains: ['mathematics', 'physics', 'emotion', 'language']
-    });
-
-    this.domainPatterns.set('narrative', {
-      keywords: ['story', 'narrative', 'plot', 'character', 'fiction', 'novel', 'literary', 'text', 'author', 'dialogue', 'scene', 'chapter'],
-      reasoning_style: 'narrative_analysis',
-      analogy_domains: ['psychology', 'philosophy', 'sociology', 'linguistics']
-    });
-
-    this.domainPatterns.set('philosophy', {
-      keywords: ['philosophy', 'philosophical', 'metaphysics', 'ontology', 'epistemology', 'ethics', 'logic', 'existence', 'reality', 'truth'],
-      reasoning_style: 'conceptual_analysis',
-      analogy_domains: ['logic', 'psychology', 'mathematics', 'consciousness']
-    });
-
-    this.domainPatterns.set('emotion', {
-      keywords: ['emotion', 'emotional', 'feeling', 'mood', 'sentiment', 'empathy', 'psychology', 'affect', 'resonance'],
-      reasoning_style: 'empathetic_reasoning',
-      analogy_domains: ['neuroscience', 'art', 'music', 'social_dynamics']
-    });
-
-    this.domainPatterns.set('mathematics', {
-      keywords: ['mathematical', 'equation', 'function', 'theorem', 'proof', 'geometry', 'algebra', 'calculus', 'topology', 'fractal', 'chaos'],
-      reasoning_style: 'formal_reasoning',
-      analogy_domains: ['physics', 'art', 'music', 'nature']
-    });
-
-    // Add the missing creative_synthesis domain
-    this.domainPatterns.set('creative_synthesis', {
-      keywords: ['creative', 'synthesis', 'novel', 'innovation', 'interdisciplinary', 'cross-domain', 'emergent', 'hybrid'],
-      reasoning_style: 'creative_synthesis',
-      analogy_domains: ['art', 'music', 'philosophy', 'science']
-    });
   }
 
   private initializeReasoningStyles() {
@@ -132,13 +87,6 @@ class DomainAdaptationEngine {
     this.reasoningStyles.set('phenomenological', 'Examine subjective experience and qualitative aspects');
     this.reasoningStyles.set('temporal_analysis', 'Consider temporal dynamics and causal sequences');
     this.reasoningStyles.set('creative_synthesis', 'Generate novel connections across domains');
-    this.reasoningStyles.set('aesthetic_synthesis', 'Explore aesthetic relationships, visual harmony, and creative expression patterns');
-    this.reasoningStyles.set('harmonic_analysis', 'Analyze rhythmic patterns, melodic structures, and sonic relationships');
-    this.reasoningStyles.set('narrative_analysis', 'Follow story structures, character development, and plot dynamics');
-    this.reasoningStyles.set('conceptual_analysis', 'Examine abstract concepts, logical relationships, and philosophical implications');
-    this.reasoningStyles.set('empathetic_reasoning', 'Consider emotional resonance, human feelings, and psychological impact');
-    this.reasoningStyles.set('formal_reasoning', 'Apply logical structures, mathematical proofs, and formal methods');
-    this.reasoningStyles.set('creative_synthesis', 'Generate novel connections across domains and explore interdisciplinary insights');
   }
 
   private initializeCrossDomainMappings() {
@@ -146,144 +94,37 @@ class DomainAdaptationEngine {
     this.crossDomainMappings.set('biology', ['network_connectivity', 'adaptive_behavior', 'emergent_intelligence']);
     this.crossDomainMappings.set('consciousness', ['information_integration', 'subjective_experience', 'awareness_levels']);
     this.crossDomainMappings.set('temporal', ['causal_chains', 'temporal_ordering', 'dynamic_evolution']);
-    this.crossDomainMappings.set('art', ['visual_patterns', 'aesthetic_harmony', 'creative_expression', 'compositional_balance']);
-    this.crossDomainMappings.set('music', ['harmonic_resonance', 'rhythmic_patterns', 'melodic_flow', 'sonic_textures']);
-    this.crossDomainMappings.set('narrative', ['story_arcs', 'character_development', 'thematic_elements', 'dramatic_tension']);
-    this.crossDomainMappings.set('philosophy', ['conceptual_frameworks', 'logical_structures', 'ethical_implications', 'metaphysical_dimensions']);
-    this.crossDomainMappings.set('emotion', ['affective_resonance', 'emotional_dynamics', 'empathetic_connections', 'psychological_impact']);
-    this.crossDomainMappings.set('mathematics', ['formal_structures', 'logical_proofs', 'geometric_relationships', 'abstract_patterns']);
-  }
-
-  private buildSemanticClusters() {
-    // Build semantic clusters for enhanced search
-    this.semanticClusters.set('consciousness', ['awareness', 'experience', 'mind', 'cognition', 'qualia']);
-    this.semanticClusters.set('quantum', ['probabilistic', 'superposition', 'entanglement', 'coherence']);
-    this.semanticClusters.set('neural', ['network', 'brain', 'neuron', 'synapse', 'learning']);
-    this.semanticClusters.set('temporal', ['time', 'sequence', 'causality', 'evolution', 'dynamics']);
-    this.semanticClusters.set('emergence', ['complexity', 'self-organization', 'phase-transition', 'novelty']);
-
-    // Creative domain clusters
-    this.semanticClusters.set('art', ['painting', 'visual', 'aesthetic', 'creative', 'expression', 'color', 'form', 'composition', 'style']);
-    this.semanticClusters.set('music', ['harmony', 'rhythm', 'melody', 'sound', 'tone', 'composition', 'resonance', 'frequency']);
-    this.semanticClusters.set('narrative', ['story', 'character', 'plot', 'theme', 'meaning', 'structure', 'narrative']);
-    this.semanticClusters.set('philosophy', ['concept', 'logic', 'ethics', 'metaphysics', 'knowledge', 'truth', 'reality']);
-    this.semanticClusters.set('emotion', ['feeling', 'affective', 'psychological', 'empathy', 'resonance', 'connection']);
-    this.semanticClusters.set('mathematics', ['formal', 'logical', 'proof', 'structure', 'pattern', 'relationship', 'abstract']);
   }
 
   detectDomains(query: string, concepts: string[]): any {
-    const detectedDomains: { domain: string, score: number }[] = [];
+    const detectedDomains: string[] = [];
     const queryLower = query.toLowerCase();
     const allTerms = [queryLower, ...concepts.map(c => c.toLowerCase())];
 
-    console.log('DEBUG: Domain detection called with:', { query, concepts, allTerms });
-    console.log('DEBUG: Available domains:', Array.from(this.domainPatterns.keys()));
-
-    // Score-based domain detection for better accuracy
     for (const [domain, pattern] of this.domainPatterns) {
-      let score = 0;
-      const matches: string[] = [];
-
-      pattern.keywords.forEach((keyword: string) => {
-        allTerms.forEach(term => {
-          const keywordLower = keyword.toLowerCase();
-          if (term.includes(keywordLower)) {
-            // Exact matches get higher score
-            if (term === keywordLower) {
-              score += 3.0; // Increased from 2.0
-              matches.push(`exact:${keyword}`);
-            } else if (term.includes(keywordLower)) {
-              // Check for strong partial matches (keyword at word boundary)
-              const wordBoundaryMatch = term.split(/\W+/).some(word => word === keywordLower);
-              if (wordBoundaryMatch) {
-                score += 2.0; // Strong partial match
-                matches.push(`strong_partial:${keyword}`);
-              } else {
-                score += 1.0; // Weak partial match
-                matches.push(`partial:${keyword}`);
-              }
-            }
-          }
-        });
-      });
-
-      // Boost score for domain-specific semantic clusters
-      const clusterTerms = this.semanticClusters.get(domain) || [];
-      clusterTerms.forEach(clusterTerm => {
-        allTerms.forEach(term => {
-          if (term.includes(clusterTerm.toLowerCase())) {
-            score += 1.2; // Increased from 0.8 to give semantic clusters more weight
-            matches.push(`cluster:${clusterTerm}`);
-          }
-        });
-      });
-
-      // Additional scoring for exact domain name matches
-      if (queryLower.includes(domain.toLowerCase()) || allTerms.some(term => term === domain.toLowerCase())) {
-        score += 3.0;
-        matches.push(`domain_name:${domain}`);
-      }
-
-      console.log(`DEBUG: Domain ${domain} - Score: ${score}, Matches: ${matches.join(', ')}`);
-
-      if (score > 0) {
-        detectedDomains.push({ domain, score });
-      }
-    }
-
-    console.log('DEBUG: Detected domains:', detectedDomains);
-
-    // Sort by score and extract domain names
-    const sortedDomains = detectedDomains
-      .sort((a, b) => b.score - a.score)
-      .map(d => d.domain);
-
-    // Default to art domain for creative queries if no specific domain detected
-    if (sortedDomains.length === 0) {
-      // Check if this might be a creative query
-      const creativeIndicators = ['painting', 'art', 'music', 'creative', 'aesthetic', 'visual', 'narrative', 'story'];
-      const hasCreativeIndicators = allTerms.some(term =>
-        creativeIndicators.some(indicator => term.includes(indicator.toLowerCase()))
+      const matches = pattern.keywords.filter((keyword: string) =>
+        allTerms.some(term => term.includes(keyword))
       );
 
-      if (hasCreativeIndicators) {
-        // Try to determine specific creative domain
-        if (allTerms.some(term => ['painting', 'visual', 'art', 'aesthetic', 'color', 'canvas'].some(art => term.includes(art)))) {
-          sortedDomains.push('art');
-          console.log('DEBUG: No specific domains detected but creative visual indicators found, defaulting to art');
-        } else if (allTerms.some(term => ['music', 'sound', 'rhythm', 'melody', 'harmony'].some(music => term.includes(music)))) {
-          sortedDomains.push('music');
-          console.log('DEBUG: No specific domains detected but musical indicators found, defaulting to music');
-        } else if (allTerms.some(term => ['story', 'narrative', 'character', 'plot'].some(narrative => term.includes(narrative)))) {
-          sortedDomains.push('narrative');
-          console.log('DEBUG: No specific domains detected but narrative indicators found, defaulting to narrative');
-        } else {
-          sortedDomains.push('creative_synthesis');
-          console.log('DEBUG: Creative indicators found but no specific domain, defaulting to creative_synthesis');
-        }
-      } else {
-        sortedDomains.push('creative_synthesis');
-        console.log('DEBUG: No domains detected and no creative indicators, defaulting to creative_synthesis');
+      if (matches.length > 0) {
+        detectedDomains.push(domain);
       }
     }
 
-    const primaryDomain = sortedDomains[0];
+    // Default to creative synthesis for unknown domains
+    if (detectedDomains.length === 0) {
+      detectedDomains.push('creative_synthesis');
+    }
+
+    const primaryDomain = detectedDomains[0];
     const reasoningStyle = this.domainPatterns.get(primaryDomain)?.reasoning_style || 'creative_synthesis';
 
     return {
-      domains: sortedDomains.slice(0, 3), // Limit to top 3 domains
+      domains: detectedDomains,
       primary_domain: primaryDomain,
       reasoning_style: reasoningStyle,
-      cross_domain: sortedDomains.length > 1,
-      adaptation_strategy: sortedDomains.length > 1 ? 'multi_domain_synthesis' : 'single_domain_focus',
-      detection_scores: detectedDomains.filter(d => d.score > 0),
-      debug_info: {
-        query_lower: queryLower,
-        all_terms: allTerms,
-        available_domains: Array.from(this.domainPatterns.keys()),
-        all_detection_results: detectedDomains,
-        raw_domain_patterns: Object.fromEntries(this.domainPatterns)
-      }
+      cross_domain: detectedDomains.length > 1,
+      adaptation_strategy: detectedDomains.length > 1 ? 'multi_domain_synthesis' : 'single_domain_focus'
     };
   }
 
@@ -450,6 +291,7 @@ class EnhancedSemanticKnowledgeBase {
 
   constructor() {
     this.initializeEnhancedKnowledge();
+    this.buildSemanticClusters();
   }
 
   private initializeEnhancedKnowledge() {
@@ -483,61 +325,15 @@ class EnhancedSemanticKnowledgeBase {
       analogy_links: ['rhythm', 'synchronization', 'influence'],
       learning_source: 'foundational'
     });
+  }
 
-    // Creative domain foundational knowledge
-    this.addSemanticTriple('art', 'expresses', 'visual_language', 0.9, {
-      domain_tags: ['art', 'communication'],
-      analogy_links: ['expression', 'meaning', 'symbolism'],
-      learning_source: 'foundational'
-    });
-
-    this.addSemanticTriple('pollock_drip_painting', 'demonstrates', 'controlled_chaos', 0.85, {
-      domain_tags: ['art', 'physics'],
-      analogy_links: ['emergence', 'pattern', 'complexity'],
-      learning_source: 'foundational'
-    });
-
-    this.addSemanticTriple('music', 'creates', 'harmonic_resonance', 0.9, {
-      domain_tags: ['music', 'physics'],
-      analogy_links: ['frequency', 'vibration', 'wave'],
-      learning_source: 'foundational'
-    });
-
-    this.addSemanticTriple('rhythm', 'establishes', 'temporal_pattern', 0.88, {
-      domain_tags: ['music', 'temporal'],
-      analogy_links: ['periodicity', 'cycle', 'structure'],
-      learning_source: 'foundational'
-    });
-
-    this.addSemanticTriple('narrative', 'constructs', 'meaning_framework', 0.9, {
-      domain_tags: ['narrative', 'philosophy'],
-      analogy_links: ['structure', 'coherence', 'understanding'],
-      learning_source: 'foundational'
-    });
-
-    this.addSemanticTriple('character_development', 'reflects', 'psychological_growth', 0.85, {
-      domain_tags: ['narrative', 'psychology'],
-      analogy_links: ['evolution', 'change', 'transformation'],
-      learning_source: 'foundational'
-    });
-
-    this.addSemanticTriple('aesthetic_beauty', 'emerges_from', 'mathematical_proportion', 0.8, {
-      domain_tags: ['art', 'mathematics'],
-      analogy_links: ['golden_ratio', 'symmetry', 'harmony'],
-      learning_source: 'foundational'
-    });
-
-    this.addSemanticTriple('emotion', 'influences', 'creative_expression', 0.9, {
-      domain_tags: ['emotion', 'art'],
-      analogy_links: ['inspiration', 'energy', 'motivation'],
-      learning_source: 'foundational'
-    });
-
-    this.addSemanticTriple('philosophical_inquiry', 'seeks', 'fundamental_truth', 0.9, {
-      domain_tags: ['philosophy', 'consciousness'],
-      analogy_links: ['questioning', 'understanding', 'knowledge'],
-      learning_source: 'foundational'
-    });
+  private buildSemanticClusters() {
+    // Build semantic clusters for enhanced search
+    this.semanticClusters.set('consciousness', ['awareness', 'experience', 'mind', 'cognition', 'qualia']);
+    this.semanticClusters.set('quantum', ['probabilistic', 'superposition', 'entanglement', 'coherence']);
+    this.semanticClusters.set('neural', ['network', 'brain', 'neuron', 'synapse', 'learning']);
+    this.semanticClusters.set('temporal', ['time', 'sequence', 'causality', 'evolution', 'dynamics']);
+    this.semanticClusters.set('emergence', ['complexity', 'self-organization', 'phase-transition', 'novelty']);
   }
 
   addSemanticTriple(subject: string, predicate: string, object: string, confidence: number, metadata: any = {}) {
@@ -922,7 +718,7 @@ class AnalogicalReasoningEngine {
 }
 
 // Complete Enhanced Psycho-Symbolic Reasoning Tool with Learning Hooks
-export class PsychoSymbolicTools {
+export class CompletePsychoSymbolicTools {
   private knowledgeBase: EnhancedSemanticKnowledgeBase;
   private domainEngine: DomainAdaptationEngine;
   private creativeEngine: CreativeReasoningEngine;
@@ -1088,8 +884,7 @@ export class PsychoSymbolicTools {
         reasoning_style: domainInfo.reasoning_style,
         adaptation_strategy: domainInfo.adaptation_strategy,
         reasoning_guidance: guidance,
-        confidence: 0.85,
-        debug_info: domainInfo.debug_info
+        confidence: 0.85
       });
 
       guidance.forEach(g => insights.add(g));

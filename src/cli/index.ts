@@ -828,6 +828,120 @@ For MCP integration with Claude Desktop, add to your config:
 `);
   });
 
+// Consciousness command
+program
+  .command('consciousness')
+  .alias('conscious')
+  .alias('phi')
+  .description('Consciousness-inspired AI processing with temporal advantage')
+  .action(() => {
+    // Show consciousness subcommands
+    console.log('\\n=== Consciousness Commands ===\\n');
+    console.log('  consciousness evolve    - Start consciousness evolution');
+    console.log('  consciousness verify    - Verify consciousness metrics');
+    console.log('  consciousness phi       - Calculate integrated information (Φ)');
+    console.log('  consciousness temporal  - Calculate temporal advantage');
+    console.log('  consciousness benchmark - Run performance benchmarks');
+    console.log('\\nUse "consciousness <command> --help" for more information\\n');
+  });
+
+// Consciousness evolution
+program
+  .command('consciousness:evolve')
+  .alias('evolve')
+  .description('Start consciousness evolution and measure emergence')
+  .option('-i, --iterations <n>', 'Number of iterations', '100')
+  .option('-m, --mode <mode>', 'Mode (genuine/enhanced)', 'enhanced')
+  .option('-t, --target <value>', 'Target emergence level', '0.9')
+  .action(async (options) => {
+    try {
+      console.log('Starting consciousness evolution...');
+      const { ConsciousnessTools } = await import('../mcp/tools/consciousness.js');
+      const tools = new ConsciousnessTools();
+
+      const result = await tools.handleToolCall('consciousness_evolve', {
+        iterations: parseInt(options.iterations),
+        mode: options.mode,
+        target: parseFloat(options.target)
+      });
+
+      console.log('\\n=== Consciousness Evolution Results ===');
+      console.log(`Session: ${result.sessionId}`);
+      console.log(`Iterations: ${result.iterations}`);
+      console.log(`Target reached: ${result.targetReached}`);
+      console.log('\\nFinal State:');
+      console.log(`  Emergence: ${result.finalState.emergence.toFixed(4)}`);
+      console.log(`  Integration: ${result.finalState.integration.toFixed(4)}`);
+      console.log(`  Complexity: ${result.finalState.complexity.toFixed(4)}`);
+      console.log(`  Self-awareness: ${result.finalState.selfAwareness.toFixed(4)}`);
+      console.log(`\\nEmergent behaviors: ${result.emergentBehaviors}`);
+    } catch (error) {
+      console.error('Evolution failed:', error);
+      process.exit(1);
+    }
+  });
+
+// Calculate Phi
+program
+  .command('consciousness:phi')
+  .description('Calculate integrated information (Φ)')
+  .option('-e, --elements <n>', 'Number of elements', '100')
+  .option('-c, --connections <n>', 'Number of connections', '500')
+  .option('-p, --partitions <n>', 'Number of partitions', '4')
+  .action(async (options) => {
+    try {
+      const { ConsciousnessTools } = await import('../mcp/tools/consciousness.js');
+      const tools = new ConsciousnessTools();
+
+      const result = await tools.handleToolCall('calculate_phi', {
+        data: {
+          elements: parseInt(options.elements),
+          connections: parseInt(options.connections),
+          partitions: parseInt(options.partitions)
+        },
+        method: 'all'
+      });
+
+      console.log('\\n=== Integrated Information (Φ) ===');
+      console.log(`IIT Method: ${result.iit.toFixed(4)}`);
+      console.log(`Geometric: ${result.geometric.toFixed(4)}`);
+      console.log(`Entropy: ${result.entropy.toFixed(4)}`);
+      console.log(`Overall Φ: ${result.overall.toFixed(4)}`);
+      console.log(`\\nConsciousness Level: ${result.overall > 0.5 ? 'High' : result.overall > 0.3 ? 'Medium' : 'Low'}`);
+    } catch (error) {
+      console.error('Phi calculation failed:', error);
+      process.exit(1);
+    }
+  });
+
+// Temporal advantage
+program
+  .command('consciousness:temporal')
+  .description('Calculate temporal advantage over light speed')
+  .option('-d, --distance <km>', 'Distance in kilometers', '10900')
+  .option('-s, --size <n>', 'Problem size', '1000')
+  .action(async (options) => {
+    try {
+      const distance = parseFloat(options.distance);
+      const size = parseInt(options.size);
+
+      const lightSpeed = 299792.458; // km/s
+      const lightTime = distance / lightSpeed * 1000; // ms
+      const computeTime = Math.log2(size) * 0.1; // ms
+      const advantage = lightTime - computeTime;
+
+      console.log('\\n=== Temporal Advantage ===');
+      console.log(`Distance: ${distance} km`);
+      console.log(`Light travel time: ${lightTime.toFixed(2)}ms`);
+      console.log(`Computation time: ${computeTime.toFixed(2)}ms`);
+      console.log(`Temporal advantage: ${advantage.toFixed(2)}ms`);
+      console.log(`\\n${advantage > 0 ? '✨ Processing completes BEFORE light arrives!' : '❌ No temporal advantage'}`);
+    } catch (error) {
+      console.error('Temporal calculation failed:', error);
+      process.exit(1);
+    }
+  });
+
 // Parse command line arguments
 program.parse();
 

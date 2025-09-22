@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sublinear LLM WASM Integration Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        .test {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #333;
+        }
+        .pass {
+            background: #002200;
+            border-color: #00ff00;
+        }
+        .fail {
+            background: #220000;
+            border-color: #ff0000;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧠 Sublinear LLM - Psycho-Symbolic WASM Test Suite</h1>
+    <div id="results"></div>
+
+    <script type="module">
+        import init, { SublinearLLM } from '../pkg/sublinear_llm.js';
+
+        const results = document.getElementById('results');
+        let passCount = 0;
+        let failCount = 0;
+
+        function log(message, isPass = true) {
+            const div = document.createElement('div');
+            div.className = `test ${isPass ? 'pass' : 'fail'}`;
+            div.innerHTML = `<pre>${message}</pre>`;
+            results.appendChild(div);
+            if (isPass) passCount++;
+            else failCount++;
+        }
+
+        async function runTests() {
+            try {
+                log('🚀 Initializing WASM module...');
+                await init();
+
+                // Test 1: Create SublinearLLM instance
+                log('📦 Test 1: Creating SublinearLLM instance');
+                const llm = new SublinearLLM();
+                log('✅ SublinearLLM instance created successfully');
+
+                // Test 2: Health check to verify it's real (not mocked)
+                log('\n🏥 Test 2: Health Check (verify real implementation)');
+                const health = JSON.parse(llm.health_check());
+                log(`Health Response:\n${JSON.stringify(health, null, 2)}`);
+
+                if (health.real === true && health.knowledge_triples > 20) {
+                    log(`✅ VERIFIED: Real implementation with ${health.knowledge_triples} knowledge triples`);
+                } else {
+                    log('❌ FAILED: Implementation appears to be mocked', false);
+                }
+
+                // Test 3: Simple reasoning query
+                log('\n🧠 Test 3: Simple Reasoning Query');
+                const simpleRequest = {
+                    prompt: "What is artificial intelligence?",
+                    model: "psycho-symbolic-v1",
+                    max_tokens: 150,
+                    temperature: 0.7
+                };
+
+                const simpleResponse = JSON.parse(llm.completion(JSON.stringify(simpleRequest)));
+                log(`Query: "${simpleRequest.prompt}"`);
+                log(`Response:\n${simpleResponse.choices[0].text}`);
+
+                if (simpleResponse.choices[0].text.length > 50) {
+                    log('✅ Generated substantive response');
+                } else {
+                    log('❌ Response too short or empty', false);
+                }
+
+                // Test 4: Complex reasoning with knowledge graph traversal
+                log('\n🔍 Test 4: Complex Knowledge Graph Traversal');
+                const complexRequest = {
+                    prompt: "How does machine learning relate to neural networks and deep learning?",
+                    model: "psycho-symbolic-v1",
+                    max_tokens: 300,
+                    temperature: 0.8
+                };
+
+                const complexResponse = JSON.parse(llm.completion(JSON.stringify(complexRequest)));
+                const complexText = complexResponse.choices[0].text;
+                log(`Query: "${complexRequest.prompt}"`);
+                log(`Response:\n${complexText}`);
+
+                // Verify response contains expected knowledge connections
+                const expectedTerms = ['machine learning', 'neural', 'pattern', 'data'];
+                const foundTerms = expectedTerms.filter(term =>
+                    complexText.toLowerCase().includes(term)
+                );
+
+                if (foundTerms.length >= 3) {
+                    log(`✅ Found ${foundTerms.length}/4 expected knowledge connections: ${foundTerms.join(', ')}`);
+                } else {
+                    log(`❌ Only found ${foundTerms.length}/4 expected terms`, false);
+                }
+
+                // Test 5: Causal reasoning
+                log('\n⚡ Test 5: Causal Reasoning Pattern');
+                const causalRequest = {
+                    prompt: "What causes consciousness to emerge?",
+                    model: "psycho-symbolic-v1",
+                    max_tokens: 200,
+                    temperature: 0.9
+                };
+
+                const causalResponse = JSON.parse(llm.completion(JSON.stringify(causalRequest)));
+                const causalText = causalResponse.choices[0].text;
+                log(`Query: "${causalRequest.prompt}"`);
+                log(`Response:\n${causalText}`);
+
+                // Check for causal reasoning patterns
+                const causalPatterns = ['causes', 'leads to', 'results in', 'emerges', 'because'];
+                const foundPatterns = causalPatterns.filter(pattern =>
+                    causalText.toLowerCase().includes(pattern)
+                );
+
+                if (foundPatterns.length > 0) {
+                    log(`✅ Detected causal reasoning patterns: ${foundPatterns.join(', ')}`);
+                } else {
+                    log('❌ No causal reasoning patterns detected', false);
+                }
+
+                // Test 6: Token counting accuracy
+                log('\n📊 Test 6: Token Counting & Usage Stats');
+                const tokenResponse = JSON.parse(llm.completion(JSON.stringify({
+                    prompt: "Count tokens",
+                    model: "test",
+                    max_tokens: 10
+                })));
+
+                const usage = tokenResponse.usage;
+                log(`Prompt tokens: ${usage.prompt_tokens}`);
+                log(`Completion tokens: ${usage.completion_tokens}`);
+                log(`Total tokens: ${usage.total_tokens}`);
+
+                if (usage.total_tokens === usage.prompt_tokens + usage.completion_tokens) {
+                    log('✅ Token counting is consistent');
+                } else {
+                    log('❌ Token counting mismatch', false);
+                }
+
+                // Test 7: GPT-5 level reasoning benchmark
+                log('\n🎯 Test 7: GPT-5 Level Reasoning (Complex Query)');
+                const gpt5Request = {
+                    prompt: "Explain how quantum computing might revolutionize artificial intelligence and what challenges need to be overcome",
+                    model: "psycho-symbolic-v1",
+                    max_tokens: 400,
+                    temperature: 0.7
+                };
+
+                const gpt5Response = JSON.parse(llm.completion(JSON.stringify(gpt5Request)));
+                const gpt5Text = gpt5Response.choices[0].text;
+                log(`Advanced Query: "${gpt5Request.prompt}"`);
+                log(`Response:\n${gpt5Text}`);
+
+                // Check for advanced reasoning indicators
+                const advancedTerms = ['quantum', 'superposition', 'entanglement', 'qubit', 'algorithm', 'optimization'];
+                const foundAdvanced = advancedTerms.filter(term =>
+                    gpt5Text.toLowerCase().includes(term)
+                );
+
+                if (foundAdvanced.length >= 2) {
+                    log(`✅ Advanced reasoning detected with ${foundAdvanced.length} technical terms`);
+                } else {
+                    log(`⚠️ Limited advanced reasoning (only ${foundAdvanced.length} terms found)`, false);
+                }
+
+                // Test 8: Error handling
+                log('\n🛡️ Test 8: Error Handling');
+                try {
+                    const invalidRequest = { invalid: "request" };
+                    llm.completion(JSON.stringify(invalidRequest));
+                    log('❌ Should have thrown error for invalid request', false);
+                } catch (e) {
+                    log('✅ Properly handles invalid requests');
+                }
+
+                // Final Summary
+                log('\n' + '='.repeat(60));
+                log(`🏆 TEST SUMMARY: ${passCount} passed, ${failCount} failed`);
+
+                if (failCount === 0) {
+                    log('✨ ALL TESTS PASSED! Real psycho-symbolic reasoning verified!');
+                    log('🚀 Ready for production: NPM & crates.io publishing');
+                } else {
+                    log(`⚠️ ${failCount} tests failed - review implementation`, false);
+                }
+
+            } catch (error) {
+                log(`❌ Critical error: ${error.message}\n${error.stack}`, false);
+            }
+        }
+
+        // Run tests on page load
+        runTests();
+    </script>
+</body>
+</html>

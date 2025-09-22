@@ -1,0 +1,10 @@
+{
+  "name": "sublinear-llm-tests",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "node integration.test.js",
+    "test:browser": "python3 -m http.server 8080 --directory .. & echo 'Open http://localhost:8080/test/integration.test.html'"
+  },
+  "description": "Integration tests for Sublinear LLM WASM module"
+}
