@@ -1,0 +1,86 @@
+{
+  "timestamp": "1758492304",
+  "total_duration_ms": 104,
+  "summary": {
+    "total_tests": 30,
+    "passed_tests": 27,
+    "failed_tests": 3,
+    "success_rate": 90.00
+  },
+  "performance_metrics": {
+    "avg_tick_time_ns": 34.85,
+    "max_tick_time_ns": 291,
+    "throughput_tps": 28690453,
+    "memory_usage_mb": 50.00,
+    "target_1us_met": true
+  },
+  "test_categories": [
+    {
+      "category": "strange_loop",
+      "success": true,
+      "duration_ms": 0.00,
+      "assertions": 3,
+      "failures": ""
+    },
+    {
+      "category": "quantum_validation",
+      "success": true,
+      "duration_ms": 0.00,
+      "assertions": 4,
+      "failures": ""
+    },
+    {
+      "category": "performance_benchmarks",
+      "success": true,
+      "duration_ms": 100.00,
+      "assertions": 4,
+      "failures": ""
+    },
+    {
+      "category": "edge_cases",
+      "success": true,
+      "duration_ms": 0.00,
+      "assertions": 6,
+      "failures": ""
+    },
+    {
+      "category": "timing_precision",
+      "success": true,
+      "duration_ms": 1.00,
+      "assertions": 3,
+      "failures": ""
+    },
+    {
+      "category": "integration_tests",
+      "success": true,
+      "duration_ms": 0.00,
+      "assertions": 4,
+      "failures": ""
+    },
+    {
+      "category": "identity_continuity",
+      "success": false,
+      "duration_ms": 0.00,
+      "assertions": 3,
+      "failures": "Failed to detect identity discontinuity"
+    },
+    {
+      "category": "temporal_window",
+      "success": true,
+      "duration_ms": 0.00,
+      "assertions": 3,
+      "failures": ""
+    }
+  ],
+  "system_info": {
+    "architecture": "x86_64",
+    "os": "linux",
+    "tsc_support": true
+  },
+  "validation_summary": {
+    "timing_precision": true,
+    "strange_loop_convergence": true,
+    "quantum_validation": true,
+    "performance_targets": true
+  }
+}

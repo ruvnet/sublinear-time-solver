@@ -8,6 +8,7 @@ export declare class SublinearSolverMCPServer {
     private temporalTools;
     private psychoSymbolicTools;
     private consciousnessTools;
+    private schedulerTools;
     constructor();
     private setupToolHandlers;
     private setupErrorHandling;

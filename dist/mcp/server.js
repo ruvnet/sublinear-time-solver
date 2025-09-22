@@ -10,6 +10,7 @@ import { MatrixOperations } from '../core/matrix.js';
 import { TemporalTools } from './tools/temporal.js';
 import { PsychoSymbolicTools } from './tools/psycho-symbolic.js';
 import { ConsciousnessTools } from './tools/consciousness.js';
+import { SchedulerTools } from './tools/scheduler.js';
 import { SolverError } from '../core/types.js';
 export class SublinearSolverMCPServer {
     server;
@@ -17,10 +18,12 @@ export class SublinearSolverMCPServer {
     temporalTools;
     psychoSymbolicTools;
     consciousnessTools;
+    schedulerTools;
     constructor() {
         this.temporalTools = new TemporalTools();
         this.psychoSymbolicTools = new PsychoSymbolicTools();
         this.consciousnessTools = new ConsciousnessTools();
+        this.schedulerTools = new SchedulerTools();
         this.server = new Server({
             name: 'sublinear-solver',
             version: '1.0.0',
@@ -214,7 +217,9 @@ export class SublinearSolverMCPServer {
                 // Psycho-symbolic reasoning tools
                 ...this.psychoSymbolicTools.getTools(),
                 // Consciousness exploration tools
-                ...this.consciousnessTools.getTools()
+                ...this.consciousnessTools.getTools(),
+                // Nanosecond scheduler tools
+                ...this.schedulerTools.getTools()
             ]
         }));
         this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -267,6 +272,22 @@ export class SublinearSolverMCPServer {
                             content: [{
                                     type: 'text',
                                     text: JSON.stringify(consciousnessResult, null, 2)
+                                }]
+                        };
+                    // Scheduler tools
+                    case 'scheduler_create':
+                    case 'scheduler_schedule_task':
+                    case 'scheduler_tick':
+                    case 'scheduler_metrics':
+                    case 'scheduler_benchmark':
+                    case 'scheduler_consciousness':
+                    case 'scheduler_list':
+                    case 'scheduler_destroy':
+                        const schedulerResult = await this.schedulerTools.handleToolCall(name, args);
+                        return {
+                            content: [{
+                                    type: 'text',
+                                    text: JSON.stringify(schedulerResult, null, 2)
                                 }]
                         };
                     default:
