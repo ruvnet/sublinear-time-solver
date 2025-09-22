@@ -1,6 +1,6 @@
 {
   "name": "sublinear-time-solver",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Unified sublinear-time solver with consciousness exploration, psycho-symbolic reasoning, and temporal prediction capabilities via MCP interface",
   "main": "dist/index.js",
   "module": "dist/index.js",
