@@ -277,9 +277,8 @@ export class SublinearSolverMCPServer {
           case 'psycho_symbolic_reason':
           case 'knowledge_graph_query':
           case 'add_knowledge':
-          case 'analyze_reasoning_path':
-          case 'detect_contradictions':
-          case 'cognitive_pattern_analysis':
+          case 'register_tool_interaction':
+          case 'learning_status':
             const psychoResult = await this.psychoSymbolicTools.handleToolCall(name, args);
             return {
               content: [{

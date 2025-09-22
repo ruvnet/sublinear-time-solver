@@ -64,7 +64,7 @@ class DomainAdaptationEngine {
     });
 
     this.domainPatterns.set('computer_science', {
-      keywords: ['algorithm', 'data', 'network', 'system', 'computation', 'software', 'ai'],
+      keywords: ['algorithm', 'data', 'network', 'system', 'computation', 'software', 'ai', 'machine', 'learning', 'neural', 'artificial'],
       reasoning_style: 'systematic_analysis',
       analogy_domains: ['biology', 'physics', 'cognitive_science']
     });
@@ -112,9 +112,16 @@ class DomainAdaptationEngine {
     });
 
     this.domainPatterns.set('mathematics', {
-      keywords: ['mathematical', 'equation', 'function', 'theorem', 'proof', 'geometry', 'algebra', 'calculus', 'topology', 'fractal', 'chaos'],
+      keywords: ['mathematical', 'equation', 'function', 'theorem', 'proof', 'geometry', 'algebra', 'calculus', 'topology', 'fractal', 'chaos', 'matrix', 'solving', 'optimization', 'linear', 'algorithm', 'sublinear', 'portfolio', 'finance', 'trading'],
       reasoning_style: 'formal_reasoning',
       analogy_domains: ['physics', 'art', 'music', 'nature']
+    });
+
+    // Add financial/economic domain with comprehensive financial terms
+    this.domainPatterns.set('finance', {
+      keywords: ['finance', 'financial', 'trading', 'portfolio', 'investment', 'market', 'economic', 'risk', 'return', 'asset', 'optimization', 'allocation', 'hedge', 'quant', 'stock', 'stocks', 'crypto', 'cryptocurrency', 'bitcoin', 'bonds', 'equity', 'derivative', 'futures', 'options', 'forex', 'currency', 'commodity', 'etf', 'mutual', 'fund', 'capital', 'valuation', 'pricing', 'yield', 'dividend', 'volatility', 'sharpe', 'alpha', 'beta', 'correlation', 'covariance', 'diversification', 'arbitrage', 'liquidity', 'leverage', 'margin', 'short', 'long', 'bull', 'bear', 'momentum', 'trend', 'technical', 'fundamental', 'analysis', 'backtesting', 'monte', 'carlo', 'black', 'scholes', 'var', 'credit', 'default', 'swap', 'spread', 'duration', 'convexity'],
+      reasoning_style: 'quantitative_analysis',
+      analogy_domains: ['mathematics', 'computer_science', 'statistics', 'game_theory']
     });
 
     // Add the missing creative_synthesis domain
@@ -138,6 +145,7 @@ class DomainAdaptationEngine {
     this.reasoningStyles.set('conceptual_analysis', 'Examine abstract concepts, logical relationships, and philosophical implications');
     this.reasoningStyles.set('empathetic_reasoning', 'Consider emotional resonance, human feelings, and psychological impact');
     this.reasoningStyles.set('formal_reasoning', 'Apply logical structures, mathematical proofs, and formal methods');
+    this.reasoningStyles.set('quantitative_analysis', 'Apply mathematical models, statistical analysis, and data-driven optimization techniques');
     this.reasoningStyles.set('creative_synthesis', 'Generate novel connections across domains and explore interdisciplinary insights');
   }
 
@@ -152,6 +160,7 @@ class DomainAdaptationEngine {
     this.crossDomainMappings.set('philosophy', ['conceptual_frameworks', 'logical_structures', 'ethical_implications', 'metaphysical_dimensions']);
     this.crossDomainMappings.set('emotion', ['affective_resonance', 'emotional_dynamics', 'empathetic_connections', 'psychological_impact']);
     this.crossDomainMappings.set('mathematics', ['formal_structures', 'logical_proofs', 'geometric_relationships', 'abstract_patterns']);
+    this.crossDomainMappings.set('finance', ['quantitative_models', 'risk_optimization', 'portfolio_theory', 'statistical_arbitrage']);
   }
 
   private buildSemanticClusters() {
@@ -406,6 +415,12 @@ class CreativeReasoningEngine {
     if (conceptLower.includes('quantum')) analogies.push('probabilistic', 'non-local', 'coherent');
     if (conceptLower.includes('neural')) analogies.push('networked', 'adaptive', 'learning');
     if (conceptLower.includes('temporal')) analogies.push('dynamic', 'evolutionary', 'causal');
+
+    // Domain-specific analogies
+    if (conceptLower.includes('matrix')) analogies.push('structured', 'linear', 'computational', 'mathematical');
+    if (conceptLower.includes('trading')) analogies.push('financial', 'economic', 'strategic', 'algorithmic');
+    if (conceptLower.includes('portfolio')) analogies.push('diversified', 'balanced', 'optimized', 'financial');
+    if (conceptLower.includes('optimization')) analogies.push('mathematical', 'algorithmic', 'efficient', 'optimal');
 
     // Semantic analogies for novel concepts
     if (analogies.length === 0) {
