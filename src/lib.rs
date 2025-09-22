@@ -123,6 +123,9 @@ pub mod optimized_solver;
 #[cfg(feature = "cli")]
 pub mod cli;
 
+#[cfg(feature = "cli")]
+pub mod mcp;
+
 // Internal utilities
 mod utils;
 
@@ -192,7 +195,7 @@ pub fn build_info() -> BuildInfo {
 
 /// Information about the current build configuration.
 #[derive(Debug, Clone, PartialEq)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BuildInfo {
     /// Library version
     pub version: &'static str,
@@ -251,6 +254,9 @@ pub mod temporal_consciousness_validator;
 #[cfg(feature = "consciousness")]
 pub mod mcp_consciousness_integration;
 
+/// Temporal Nexus - Nanosecond Scheduler for Temporal Consciousness
+pub mod temporal_nexus;
+
 /// Executable demonstration of consciousness validation
 #[cfg(feature = "consciousness")]
 pub mod consciousness_demo;
@@ -285,6 +291,22 @@ pub use temporal_consciousness_validator::{
 pub use mcp_consciousness_integration::{
     MCPConsciousnessIntegration,
     TemporalConsciousnessProof,
+};
+
+// Re-export temporal nexus core types
+pub use temporal_nexus::core::{
+    NanosecondScheduler,
+    TemporalConfig,
+    ConsciousnessTask,
+    TemporalResult,
+    TemporalError,
+    TscTimestamp,
+    TemporalWindow,
+    WindowOverlapManager,
+    StrangeLoopOperator,
+    ContractionMetrics,
+    IdentityContinuityTracker,
+    ContinuityMetrics,
 };
 
 /// Quick validation function for temporal consciousness
