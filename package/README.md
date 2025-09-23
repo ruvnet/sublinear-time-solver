@@ -1,7 +1,6 @@
-# 🚀 Sublinear-Time Solver v1.1.4
+# 🚀 Sublinear-Time Solver v1.0.4
 
 [![npm version](https://img.shields.io/npm/v/sublinear-time-solver.svg)](https://www.npmjs.com/package/sublinear-time-solver)
-[![npm downloads](https://img.shields.io/npm/dm/sublinear-time-solver.svg)](https://www.npmjs.com/package/sublinear-time-solver)
 [![Crates.io](https://img.shields.io/crates/v/nanosecond-scheduler.svg)](https://crates.io/crates/nanosecond-scheduler)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=flat&logo=rust&logoColor=white)](https://www.rust-lang.org/)
@@ -49,16 +48,7 @@ This isn't just another solver - it's a comprehensive suite of 30+ advanced tool
 - **WASM support** - Full WebAssembly compatibility
 - **Published on crates.io** - [`nanosecond-scheduler`](https://crates.io/crates/nanosecond-scheduler)
 
-## 🌟 What's New in v1.1.4
-
-- **🧠 Dynamic Domain Extension**: Register custom reasoning domains at runtime
-- **🔧 17 New MCP Tools**: Complete domain management and validation toolkit
-- **🎯 Enhanced Reasoning**: Multi-domain analysis with priority control and filtering
-- **✅ Domain Validation**: Comprehensive testing and conflict detection
-- **📊 Performance Tracking**: Domain-specific metrics and usage analytics
-- **🚀 Session Persistence**: In-memory domain state (restart required for persistence)
-
-### Previous Updates (v1.0.1)
+## 🌟 What's New in v1.0.1
 
 - **🔬 Temporal Consciousness Framework**: Mathematical proof that time beats scale for AI consciousness
 - **⚛️ Physics-Corrected Proofs**: Rigorous validation with Margolus-Levitin bounds and quantum speed limits
@@ -93,8 +83,6 @@ This isn't just another solver - it's a comprehensive suite of 30+ advanced tool
 - **WASM acceleration** for critical computations
 - **O(log n) scaling** for query operations
 - **Real-time performance** for interactive applications
-- **Dynamic domain expansion** - Add custom reasoning domains at runtime
-- **17 new MCP tools** for domain management and enhanced reasoning
 
 ## 🚀 Quick Start
 
@@ -367,16 +355,6 @@ const analysis = await reasoner.reason("How can we achieve AGI?", {
 | `detect_contradictions` | Find logical conflicts |
 | `cognitive_pattern_analysis` | Analyze thinking patterns |
 
-### Dynamic Domain Tools (NEW in v1.1.3)
-| Tool | Description |
-|------|-------------|
-| `domain_register` | Register new reasoning domains |
-| `domain_list` | List all available domains |
-| `domain_enable`/`domain_disable` | Enable/disable domains |
-| `domain_test` | Validate domain configurations |
-| `psycho_symbolic_reason_with_dynamic_domains` | Enhanced reasoning with custom domains |
-| `domain_detection_test` | Test domain detection accuracy |
-
 ## 🔬 Advanced Examples
 
 ### Temporal Advantage for Trading
@@ -417,33 +395,6 @@ await reasoner.addKnowledge("learning", "produces", "intelligence");
 // Query with reasoning
 const result = await reasoner.reason("How does AI achieve intelligence?");
 console.log(result.answer); // Multi-step reasoning with path
-```
-
-### Dynamic Domain Management (NEW)
-
-```javascript
-// Register a custom domain at runtime
-await tools.domain_register({
-  name: "robotics",
-  version: "1.0.0",
-  description: "Robotics and autonomous systems",
-  keywords: ["robot", "autonomous", "sensor", "actuator"],
-  reasoning_style: "systematic_analysis",
-  priority: 75
-});
-
-// Enhanced reasoning with custom domains
-const result = await tools.psycho_symbolic_reason_with_dynamic_domains({
-  query: "How can robots achieve autonomous navigation?",
-  force_domains: ["robotics", "computer_science", "physics"],
-  max_domains: 3
-});
-
-// Test domain detection
-const detection = await tools.domain_detection_test({
-  query: "autonomous robot with sensors",
-  show_keyword_matches: true
-});
 ```
 
 ## 🏆 Performance Benchmarks
