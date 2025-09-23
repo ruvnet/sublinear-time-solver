@@ -7,7 +7,11 @@ export declare class SublinearSolverMCPServer {
     private solvers;
     private temporalTools;
     private psychoSymbolicTools;
+    private dynamicPsychoSymbolicTools;
+    private domainManagementTools;
+    private domainValidationTools;
     private consciousnessTools;
+    private emergenceTools;
     private schedulerTools;
     constructor();
     private setupToolHandlers;

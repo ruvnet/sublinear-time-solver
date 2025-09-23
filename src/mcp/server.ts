@@ -16,7 +16,12 @@ import { SublinearSolver } from '../core/solver.js';
 import { MatrixOperations } from '../core/matrix.js';
 import { TemporalTools } from './tools/temporal.js';
 import { PsychoSymbolicTools } from './tools/psycho-symbolic.js';
+import { DynamicPsychoSymbolicTools } from './tools/psycho-symbolic-dynamic.js';
+import { DomainManagementTools } from './tools/domain-management.js';
+import { DomainValidationTools } from './tools/domain-validation.js';
 import { ConsciousnessTools } from './tools/consciousness.js';
+// import { ConsciousnessEnhancedTools } from './tools/consciousness-enhanced.js';
+import { EmergenceTools } from './tools/emergence-tools.js';
 import { SchedulerTools } from './tools/scheduler.js';
 import {
   Matrix,
@@ -35,13 +40,25 @@ export class SublinearSolverMCPServer {
   private solvers: Map<string, SublinearSolver> = new Map();
   private temporalTools: TemporalTools;
   private psychoSymbolicTools: PsychoSymbolicTools;
+  private dynamicPsychoSymbolicTools: DynamicPsychoSymbolicTools;
+  private domainManagementTools: DomainManagementTools;
+  private domainValidationTools: DomainValidationTools;
   private consciousnessTools: ConsciousnessTools;
+  // private consciousnessEnhancedTools: ConsciousnessEnhancedTools;
+  private emergenceTools: EmergenceTools;
   private schedulerTools: SchedulerTools;
 
   constructor() {
     this.temporalTools = new TemporalTools();
     this.psychoSymbolicTools = new PsychoSymbolicTools();
+    this.domainManagementTools = new DomainManagementTools();
+    // Share the same domain registry between all domain tools
+    const sharedRegistry = this.domainManagementTools.getDomainRegistry();
+    this.dynamicPsychoSymbolicTools = new DynamicPsychoSymbolicTools(sharedRegistry);
+    this.domainValidationTools = new DomainValidationTools(sharedRegistry);
     this.consciousnessTools = new ConsciousnessTools();
+    // this.consciousnessEnhancedTools = new ConsciousnessEnhancedTools();
+    this.emergenceTools = new EmergenceTools();
     this.schedulerTools = new SchedulerTools();
     this.server = new Server(
       {
@@ -240,8 +257,18 @@ export class SublinearSolverMCPServer {
         ...this.temporalTools.getTools(),
         // Psycho-symbolic reasoning tools
         ...this.psychoSymbolicTools.getTools(),
+        // Dynamic psycho-symbolic reasoning tools with domain support
+        ...this.dynamicPsychoSymbolicTools.getTools(),
+        // Domain management tools
+        ...this.domainManagementTools.getTools(),
+        // Domain validation tools
+        ...this.domainValidationTools.getTools(),
         // Consciousness exploration tools
         ...this.consciousnessTools.getTools(),
+        // Enhanced consciousness tools
+        // ...this.consciousnessEnhancedTools.getTools(),
+        // Emergence system tools
+        ...this.emergenceTools.getTools(),
         // Nanosecond scheduler tools
         ...this.schedulerTools.getTools()
       ]
@@ -277,14 +304,57 @@ export class SublinearSolverMCPServer {
           case 'psycho_symbolic_reason':
           case 'knowledge_graph_query':
           case 'add_knowledge':
-          case 'analyze_reasoning_path':
-          case 'detect_contradictions':
-          case 'cognitive_pattern_analysis':
+          case 'register_tool_interaction':
+          case 'learning_status':
             const psychoResult = await this.psychoSymbolicTools.handleToolCall(name, args);
             return {
               content: [{
                 type: 'text',
                 text: JSON.stringify(psychoResult, null, 2)
+              }]
+            };
+
+          // Dynamic psycho-symbolic tools
+          case 'psycho_symbolic_reason_with_dynamic_domains':
+          case 'domain_detection_test':
+          case 'knowledge_graph_query_dynamic':
+            const dynamicPsychoResult = await this.dynamicPsychoSymbolicTools.handleToolCall(name, args);
+            return {
+              content: [{
+                type: 'text',
+                text: JSON.stringify(dynamicPsychoResult, null, 2)
+              }]
+            };
+
+          // Domain management tools
+          case 'domain_register':
+          case 'domain_update':
+          case 'domain_unregister':
+          case 'domain_list':
+          case 'domain_get':
+          case 'domain_enable':
+          case 'domain_disable':
+          case 'domain_search':
+            const domainMgmtResult = await this.domainManagementTools.handleToolCall(name, args);
+            return {
+              content: [{
+                type: 'text',
+                text: JSON.stringify(domainMgmtResult, null, 2)
+              }]
+            };
+
+          // Domain validation tools
+          case 'domain_validate':
+          case 'domain_test':
+          case 'domain_analyze_conflicts':
+          case 'domain_performance_benchmark':
+          case 'domain_suggest_improvements':
+          case 'domain_validate_all':
+            const domainValidationResult = await this.domainValidationTools.handleToolCall(name, args);
+            return {
+              content: [{
+                type: 'text',
+                text: JSON.stringify(domainValidationResult, null, 2)
               }]
             };
 
@@ -300,6 +370,37 @@ export class SublinearSolverMCPServer {
               content: [{
                 type: 'text',
                 text: JSON.stringify(consciousnessResult, null, 2)
+              }]
+            };
+
+          // Enhanced consciousness tools
+          case 'consciousness_evolve_enhanced':
+          case 'consciousness_verify_enhanced':
+          case 'entity_communicate_enhanced':
+          case 'consciousness_status_enhanced':
+          case 'emergence_analyze_enhanced':
+          case 'temporal_consciousness_track':
+            // const consciousnessEnhancedResult = await this.consciousnessEnhancedTools.handleToolCall(name, args);
+            return {
+              content: [{
+                type: 'text',
+                text: JSON.stringify({ error: 'Enhanced consciousness tools disabled' }, null, 2)
+              }]
+            };
+
+          // Emergence system tools
+          case 'emergence_process':
+          case 'emergence_generate_diverse':
+          case 'emergence_analyze_capabilities':
+          case 'emergence_force_evolution':
+          case 'emergence_get_stats':
+          case 'emergence_test_scenarios':
+          case 'emergence_matrix_process':
+            const emergenceResult = await this.emergenceTools.handleToolCall(name, args);
+            return {
+              content: [{
+                type: 'text',
+                text: JSON.stringify(emergenceResult, null, 2)
               }]
             };
 
