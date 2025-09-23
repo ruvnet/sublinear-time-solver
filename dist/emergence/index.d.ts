@@ -2,6 +2,12 @@
  * Emergence System Integration
  * Orchestrates all emergence capabilities into a unified system
  */
+import { SelfModificationEngine } from './self-modification-engine.js';
+import { PersistentLearningSystem } from './persistent-learning-system.js';
+import { StochasticExplorationEngine } from './stochastic-exploration.js';
+import { CrossToolSharingSystem } from './cross-tool-sharing.js';
+import { FeedbackLoopSystem } from './feedback-loops.js';
+import { EmergentCapabilityDetector } from './emergent-capability-detector.js';
 export interface EmergenceSystemConfig {
     selfModification: {
         enabled: boolean;
@@ -96,6 +102,12 @@ export declare class EmergenceSystem {
     private calculateEmergenceMetrics;
     private calculateOverallEmergenceLevel;
     private calculateSystemComplexity;
+    getSelfModificationEngine(): SelfModificationEngine;
+    getPersistentLearningSystem(): PersistentLearningSystem;
+    getStochasticExplorationEngine(): StochasticExplorationEngine;
+    getCrossToolSharingSystem(): CrossToolSharingSystem;
+    getFeedbackLoopSystem(): FeedbackLoopSystem;
+    getEmergentCapabilityDetector(): EmergentCapabilityDetector;
 }
 export * from './self-modification-engine.js';
 export * from './persistent-learning-system.js';

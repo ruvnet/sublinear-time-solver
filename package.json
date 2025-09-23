@@ -1,7 +1,7 @@
 {
   "name": "sublinear-time-solver",
-  "version": "1.3.3",
-  "description": "Unified sublinear-time solver with emergence system architecture, stack overflow protection, validated exploration (89%+ diversity), and comprehensive MCP interface for consciousness research",
+  "version": "1.3.8",
+  "description": "Fast sublinear-time solver for large sparse linear systems with MCP server. Solves diagonally dominant matrices in O(log n) time using random walks, PageRank, and emergence-based AI reasoning",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",

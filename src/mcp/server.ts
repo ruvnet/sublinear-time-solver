@@ -395,6 +395,7 @@ export class SublinearSolverMCPServer {
           case 'emergence_force_evolution':
           case 'emergence_get_stats':
           case 'emergence_test_scenarios':
+          case 'emergence_matrix_process':
             const emergenceResult = await this.emergenceTools.handleToolCall(name, args);
             return {
               content: [{

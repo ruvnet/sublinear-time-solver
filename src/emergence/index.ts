@@ -181,8 +181,28 @@ export class EmergenceSystem {
         const explorationResults = await this.stochasticExplorationEngine.exploreUnpredictably(
           input, availableTools
         );
-        result = explorationResults.output;
-        emergenceSession.results.exploration = explorationResults;
+
+        // Limit result size to prevent exponential growth
+        const MAX_EXPLORATION_SIZE = 5000;
+        const explorationStr = JSON.stringify(explorationResults.output);
+        if (explorationStr.length > MAX_EXPLORATION_SIZE) {
+          result = {
+            summary: 'Exploration result truncated',
+            outputType: typeof explorationResults.output,
+            novelty: explorationResults.novelty,
+            surpriseLevel: explorationResults.surpriseLevel
+          };
+        } else {
+          result = explorationResults.output;
+        }
+
+        // Store limited exploration results
+        emergenceSession.results.exploration = {
+          novelty: explorationResults.novelty,
+          surpriseLevel: explorationResults.surpriseLevel,
+          pathLength: explorationResults.explorationPath.length,
+          outputSummary: JSON.stringify(result).substring(0, 200)
+        };
 
         // Share exploration insights
         if (this.config.crossToolSharing.enabled) {
@@ -199,8 +219,8 @@ export class EmergenceSystem {
         }
       }
 
-      // Phase 3: Learning Integration
-      if (this.config.persistentLearning.enabled) {
+      // Phase 3: Learning Integration (skip for large tool arrays to prevent hanging)
+      if (this.config.persistentLearning.enabled && availableTools.length < 3) {
         const interaction: Interaction = {
           timestamp: Date.now(),
           type: 'emergence_processing',
@@ -214,8 +234,8 @@ export class EmergenceSystem {
         emergenceSession.results.learning = interaction;
       }
 
-      // Phase 4: Capability Detection
-      if (this.config.capabilityDetection.enabled) {
+      // Phase 4: Capability Detection (skip for large tool arrays)
+      if (this.config.capabilityDetection.enabled && availableTools.length < 3) {
         const behaviorData = {
           input,
           output: result,
@@ -263,6 +283,34 @@ export class EmergenceSystem {
       this.emergenceHistory.push(emergenceSession);
 
       this.recursionDepth--;
+
+      // Final size check and truncation
+      const MAX_FINAL_SIZE = 50000; // 50KB absolute maximum
+      const finalResult = JSON.stringify(result);
+
+      if (finalResult.length > MAX_FINAL_SIZE) {
+        return {
+          result: {
+            summary: 'Result exceeded maximum size limit',
+            type: 'truncated_response',
+            originalSize: finalResult.length,
+            metrics: {
+              overallEmergenceScore: this.calculateOverallEmergenceLevel(),
+              sessionDuration: emergenceSession.endTime - emergenceSession.startTime
+            }
+          },
+          emergenceSession: {
+            sessionId: emergenceSession.sessionId,
+            startTime: emergenceSession.startTime,
+            endTime: emergenceSession.endTime,
+            truncated: true
+          },
+          metrics: {
+            overallEmergenceScore: this.calculateOverallEmergenceLevel(),
+            systemComplexity: this.calculateSystemComplexity()
+          }
+        };
+      }
 
       return {
         result,
@@ -464,10 +512,30 @@ export class EmergenceSystem {
   }
 
   private async incorporateSharedInformation(result: any, sharedInfo: SharedInformation[]): Promise<any> {
-    // Incorporate shared information into result
+    // Limit response size to prevent exponential growth
+    const MAX_RESULT_SIZE = 10000; // 10KB limit
+
+    // Only include essential information
+    const limitedSharedInsights = sharedInfo.slice(0, 3).map(info => ({
+      id: info.id,
+      type: info.type,
+      summary: JSON.stringify(info.content).substring(0, 100)
+    }));
+
+    // Check current size
+    const currentSize = JSON.stringify(result).length;
+    if (currentSize > MAX_RESULT_SIZE) {
+      return {
+        summary: 'Result too large - truncated',
+        insightCount: sharedInfo.length,
+        synthesis: 'limited_due_to_size'
+      };
+    }
+
+    // Incorporate shared information into result with size limits
     const enhancedResult = {
-      original: result,
-      sharedInsights: sharedInfo.map(info => info.content),
+      original: typeof result === 'string' ? result.substring(0, 1000) : result,
+      sharedInsights: limitedSharedInsights,
       emergentSynthesis: this.synthesizeSharedInformation(result, sharedInfo)
     };
 
@@ -582,6 +650,31 @@ export class EmergenceSystem {
     const capabilityCount = stats.components.capabilities.totalCapabilities;
 
     return Math.log(componentCount + interactionCount + capabilityCount + 1);
+  }
+
+  // Public getters for testing
+  getSelfModificationEngine() {
+    return this.selfModificationEngine;
+  }
+
+  getPersistentLearningSystem() {
+    return this.persistentLearningSystem;
+  }
+
+  getStochasticExplorationEngine() {
+    return this.stochasticExplorationEngine;
+  }
+
+  getCrossToolSharingSystem() {
+    return this.crossToolSharingSystem;
+  }
+
+  getFeedbackLoopSystem() {
+    return this.feedbackLoopSystem;
+  }
+
+  getEmergentCapabilityDetector() {
+    return this.emergentCapabilityDetector;
   }
 }
 
