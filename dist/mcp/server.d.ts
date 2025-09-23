@@ -11,7 +11,7 @@ export declare class SublinearSolverMCPServer {
     private domainManagementTools;
     private domainValidationTools;
     private consciousnessTools;
-    private consciousnessEnhancedTools;
+    private emergenceTools;
     private schedulerTools;
     constructor();
     private setupToolHandlers;

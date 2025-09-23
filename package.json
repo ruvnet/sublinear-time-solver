@@ -1,15 +1,15 @@
 {
   "name": "sublinear-time-solver",
-  "version": "1.2.0",
-  "description": "Unified sublinear-time solver with consciousness exploration, psycho-symbolic reasoning, and temporal prediction capabilities via MCP interface",
+  "version": "1.3.3",
+  "description": "Unified sublinear-time solver with emergence system architecture, stack overflow protection, validated exploration (89%+ diversity), and comprehensive MCP interface for consciousness research",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "sublinear-time-solver": "./dist/cli/index.js",
-    "sublinear-solver": "./dist/cli/index.js",
-    "sublinear": "./dist/cli/index.js"
+    "sublinear-time-solver": "dist/cli/index.js",
+    "sublinear-solver": "dist/cli/index.js",
+    "sublinear": "dist/cli/index.js"
   },
   "exports": {
     ".": {
@@ -89,13 +89,20 @@
     "consciousness",
     "enhanced-ai",
     "dynamic-responses",
-    "information-theory"
+    "information-theory",
+    "emergence",
+    "self-modification",
+    "persistent-learning",
+    "stochastic-exploration",
+    "cross-tool-sharing",
+    "feedback-loops",
+    "emergent-behavior"
   ],
   "author": "rUv <github.com/ruvnet>",
   "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/sublinear-time-solver"
+    "url": "git+https://github.com/ruvnet/sublinear-time-solver.git"
   },
   "bugs": {
     "url": "https://github.com/ruvnet/sublinear-time-solver/issues"

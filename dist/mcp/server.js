@@ -13,7 +13,8 @@ import { DynamicPsychoSymbolicTools } from './tools/psycho-symbolic-dynamic.js';
 import { DomainManagementTools } from './tools/domain-management.js';
 import { DomainValidationTools } from './tools/domain-validation.js';
 import { ConsciousnessTools } from './tools/consciousness.js';
-import { ConsciousnessEnhancedTools } from './tools/consciousness-enhanced.js';
+// import { ConsciousnessEnhancedTools } from './tools/consciousness-enhanced.js';
+import { EmergenceTools } from './tools/emergence-tools.js';
 import { SchedulerTools } from './tools/scheduler.js';
 import { SolverError } from '../core/types.js';
 export class SublinearSolverMCPServer {
@@ -25,7 +26,8 @@ export class SublinearSolverMCPServer {
     domainManagementTools;
     domainValidationTools;
     consciousnessTools;
-    consciousnessEnhancedTools;
+    // private consciousnessEnhancedTools: ConsciousnessEnhancedTools;
+    emergenceTools;
     schedulerTools;
     constructor() {
         this.temporalTools = new TemporalTools();
@@ -36,7 +38,8 @@ export class SublinearSolverMCPServer {
         this.dynamicPsychoSymbolicTools = new DynamicPsychoSymbolicTools(sharedRegistry);
         this.domainValidationTools = new DomainValidationTools(sharedRegistry);
         this.consciousnessTools = new ConsciousnessTools();
-        this.consciousnessEnhancedTools = new ConsciousnessEnhancedTools();
+        // this.consciousnessEnhancedTools = new ConsciousnessEnhancedTools();
+        this.emergenceTools = new EmergenceTools();
         this.schedulerTools = new SchedulerTools();
         this.server = new Server({
             name: 'sublinear-solver',
@@ -239,7 +242,9 @@ export class SublinearSolverMCPServer {
                 // Consciousness exploration tools
                 ...this.consciousnessTools.getTools(),
                 // Enhanced consciousness tools
-                ...this.consciousnessEnhancedTools.getTools(),
+                // ...this.consciousnessEnhancedTools.getTools(),
+                // Emergence system tools
+                ...this.emergenceTools.getTools(),
                 // Nanosecond scheduler tools
                 ...this.schedulerTools.getTools()
             ]
@@ -343,11 +348,25 @@ export class SublinearSolverMCPServer {
                     case 'consciousness_status_enhanced':
                     case 'emergence_analyze_enhanced':
                     case 'temporal_consciousness_track':
-                        const consciousnessEnhancedResult = await this.consciousnessEnhancedTools.handleToolCall(name, args);
+                        // const consciousnessEnhancedResult = await this.consciousnessEnhancedTools.handleToolCall(name, args);
                         return {
                             content: [{
                                     type: 'text',
-                                    text: JSON.stringify(consciousnessEnhancedResult, null, 2)
+                                    text: JSON.stringify({ error: 'Enhanced consciousness tools disabled' }, null, 2)
+                                }]
+                        };
+                    // Emergence system tools
+                    case 'emergence_process':
+                    case 'emergence_generate_diverse':
+                    case 'emergence_analyze_capabilities':
+                    case 'emergence_force_evolution':
+                    case 'emergence_get_stats':
+                    case 'emergence_test_scenarios':
+                        const emergenceResult = await this.emergenceTools.handleToolCall(name, args);
+                        return {
+                            content: [{
+                                    type: 'text',
+                                    text: JSON.stringify(emergenceResult, null, 2)
                                 }]
                         };
                     // Scheduler tools
