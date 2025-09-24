@@ -14,6 +14,7 @@ export declare class SublinearSolverMCPServer {
     private emergenceTools;
     private schedulerTools;
     private wasmSolver;
+    private trueSublinearSolver;
     constructor();
     private setupToolHandlers;
     private setupErrorHandling;
@@ -21,6 +22,13 @@ export declare class SublinearSolverMCPServer {
     private handleEstimateEntry;
     private handleAnalyzeMatrix;
     private handlePageRank;
+    private handleSolveTrueSublinear;
+    private handleAnalyzeTrueSublinearMatrix;
+    private handleGenerateTestVector;
+    private handleSaveVectorToFile;
+    private loadVectorFromFile;
+    private saveVectorToFile;
+    private getFileFormat;
     private generateRecommendations;
     run(): Promise<void>;
 }

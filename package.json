@@ -1,6 +1,6 @@
 {
   "name": "sublinear-time-solver",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "description": "The Ultimate Mathematical & AI Toolkit: Sublinear algorithms, consciousness exploration, psycho-symbolic reasoning, and temporal prediction in one unified MCP interface. WASM-accelerated with emergent behavior analysis.",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -97,7 +97,12 @@
     "stochastic-exploration",
     "cross-tool-sharing",
     "feedback-loops",
-    "emergent-behavior"
+    "emergent-behavior",
+    "johnson-lindenstrauss",
+    "spectral-sparsification",
+    "true-sublinear",
+    "o-log-n",
+    "dimension-reduction"
   ],
   "author": "rUv <github.com/ruvnet>",
   "license": "MIT OR Apache-2.0",
