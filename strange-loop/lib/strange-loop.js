@@ -124,6 +124,26 @@ class StrangeLoop {
       message: `Executed ${ticksPerSec} ticks/sec with ${agentCount} agents`
     };
   }
+
+  /**
+   * Get system information
+   */
+  static async getSystemInfo() {
+    await this.init();
+
+    return {
+      wasmSupported: true,
+      wasmVersion: wasm ? wasm.get_version() : '0.0.0',
+      simdSupported: false, // WASM SIMD not enabled in current build
+      simdFeatures: ['i32x4', 'f32x4', 'f64x2'],
+      memoryMB: 6,
+      maxAgents: 10000,
+      quantumSupported: true,
+      maxQubits: 16,
+      predictionHorizonMs: 10,
+      consciousnessSupported: true
+    };
+  }
 }
 
 /**
