@@ -169,51 +169,12 @@ program
       .option('-p, --port <port>', 'Server port (not used in stdio mode)', '3000')
       .option('-v, --verbose', 'Verbose output')
       .action(async (options) => {
-        showHeader();
-
-        console.log(chalk.cyan('🔌 Starting Strange Loops MCP Server...\n'));
-
-        if (options.verbose) {
-          console.log(chalk.gray('Using stdio transport for JSON-RPC 2.0 communication'));
-          console.log(chalk.gray('Server will communicate via stdin/stdout\n'));
-        }
-
         try {
+          // Directly require and run the MCP server (same as strange-loops-mcp)
           const serverPath = path.join(__dirname, '..', 'mcp', 'server.js');
-
-          // Start the MCP server process
-          const server = spawn('node', [serverPath], {
-            stdio: 'inherit', // Pass through stdin/stdout for MCP communication
-            cwd: path.join(__dirname, '..')
-          });
-
-          // Handle server events
-          server.on('error', (error) => {
-            console.error(chalk.red(`❌ Failed to start MCP server: ${error.message}`));
-            process.exit(1);
-          });
-
-          server.on('exit', (code) => {
-            if (code !== 0) {
-              console.error(chalk.red(`❌ MCP server exited with code ${code}`));
-              process.exit(code);
-            } else {
-              console.log(chalk.green('✅ MCP server stopped'));
-            }
-          });
-
-          // Handle process termination
-          process.on('SIGINT', () => {
-            console.log(chalk.yellow('\n🛑 Stopping MCP server...'));
-            server.kill('SIGTERM');
-          });
-
-          process.on('SIGTERM', () => {
-            server.kill('SIGTERM');
-          });
-
+          require(serverPath);
         } catch (error) {
-          console.error(chalk.red(`❌ Error starting MCP server: ${error.message}`));
+          console.error(`❌ Failed to start MCP server: ${error.message}`);
           process.exit(1);
         }
       })
