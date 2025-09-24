@@ -4,15 +4,12 @@
  */
 import { program } from 'commander';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { resolve, join } from 'path';
 import { SublinearSolverMCPServer } from '../mcp/server.js';
 import { MatrixTools } from '../mcp/tools/matrix.js';
 import { SolverTools } from '../mcp/tools/solver.js';
 import { GraphTools } from '../mcp/tools/graph.js';
 // Version from package.json
-const packagePath = resolve(join(import.meta.url.replace('file://', ''), '../../../package.json'));
-const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
-const VERSION = packageJson.version;
+const VERSION = '1.3.9'; // Hardcoded to avoid path issues
 program
     .name('sublinear-solver-mcp')
     .description('Sublinear-time solver for asymmetric diagonally dominant systems with MCP interface')

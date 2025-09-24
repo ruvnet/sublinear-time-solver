@@ -21,9 +21,7 @@ import {
 } from '../core/types.js';
 
 // Version from package.json
-const packagePath = resolve(join(import.meta.url.replace('file://', ''), '../../../package.json'));
-const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
-const VERSION = packageJson.version;
+const VERSION = '1.3.9'; // Hardcoded to avoid path issues
 
 program
   .name('sublinear-solver-mcp')

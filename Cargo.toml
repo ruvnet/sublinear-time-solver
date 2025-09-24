@@ -1,6 +1,6 @@
 [package]
 name = "sublinear"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["rUv <github.com/ruvnet>"]
 license = "MIT OR Apache-2.0"
@@ -28,11 +28,11 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 # Core dependencies
-nalgebra = { version = "0.32", features = ["serde-serialize"] }
+nalgebra = { version = "0.32", features = ["serde-serialize"], default-features = false }
 serde = { version = "1.0", features = ["derive"], optional = true }
 thiserror = "1.0"
 log = "0.4"
-rand = { version = "0.8", features = ["small_rng"] }
+rand = { version = "0.8", features = ["small_rng"], default-features = false }
 fnv = "1.0"
 num-traits = "0.2"
 num-complex = "0.4"
@@ -46,7 +46,7 @@ js-sys = { version = "0.3", optional = true }
 serde-wasm-bindgen = { version = "0.6", optional = true }
 console_error_panic_hook = { version = "0.1", optional = true }
 wee_alloc = { version = "0.4", optional = true }
-getrandom = { version = "0.2", features = ["js", "wasm-bindgen"], optional = true }
+getrandom = { version = "0.2", features = ["js"], optional = true }
 fastrand = { version = "2.0", optional = true }
 
 # Optional CLI dependencies
@@ -70,7 +70,7 @@ wide = { version = "0.7", optional = true }
 rayon = { version = "1.7", optional = true }
 env_logger = { version = "0.10", optional = true }
 approx = { version = "0.5.1", features = ["std"] }
-nanosecond-scheduler = "0.1.0"
+nanosecond-scheduler = "0.1.1"
 uuid = { version = "1.6", features = ["v4"], optional = true }
 colored = { version = "2.0", optional = true }
 
@@ -78,11 +78,16 @@ colored = { version = "2.0", optional = true }
 criterion = { version = "0.5" }
 proptest = { version = "1.0" }
 
+# Force compatible getrandom version for WASM
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }
+
+
 [features]
 default = ["std", "serde"]
 std = ["env_logger", "lazy_static"]
 serde = ["dep:serde"]
-wasm = ["wasm-bindgen", "web-sys", "js-sys", "serde-wasm-bindgen", "console_error_panic_hook", "getrandom", "fastrand"]
+wasm = ["wasm-bindgen", "web-sys", "js-sys", "serde-wasm-bindgen", "console_error_panic_hook", "getrandom/js", "fastrand", "rand/getrandom"]
 wee_alloc = ["dep:wee_alloc"]
 cli = ["clap", "tokio", "axum", "serde_json", "uuid", "colored"]
 dashboard = ["chrono", "csv", "bincode", "base64", "serde_yaml", "rmp-serde", "hostname", "num_cpus", "tokio", "serde_json"]

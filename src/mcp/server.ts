@@ -23,6 +23,7 @@ import { ConsciousnessTools } from './tools/consciousness.js';
 // import { ConsciousnessEnhancedTools } from './tools/consciousness-enhanced.js';
 import { EmergenceTools } from './tools/emergence-tools.js';
 import { SchedulerTools } from './tools/scheduler.js';
+import { CompleteWasmSublinearSolverTools as WasmSublinearSolverTools } from './tools/wasm-sublinear-complete.js';
 import {
   Matrix,
   Vector,
@@ -47,6 +48,7 @@ export class SublinearSolverMCPServer {
   // private consciousnessEnhancedTools: ConsciousnessEnhancedTools;
   private emergenceTools: EmergenceTools;
   private schedulerTools: SchedulerTools;
+  private wasmSolver: WasmSublinearSolverTools;
 
   constructor() {
     this.temporalTools = new TemporalTools();
@@ -60,6 +62,7 @@ export class SublinearSolverMCPServer {
     // this.consciousnessEnhancedTools = new ConsciousnessEnhancedTools();
     this.emergenceTools = new EmergenceTools();
     this.schedulerTools = new SchedulerTools();
+    this.wasmSolver = new WasmSublinearSolverTools();
     this.server = new Server(
       {
         name: 'sublinear-solver',
@@ -456,6 +459,45 @@ export class SublinearSolverMCPServer {
 
   private async handleSolve(params: any) {
     try {
+      // Priority 1: Try O(log n) WASM solver for true sublinear complexity
+      if (this.wasmSolver.isCompleteWasmAvailable()) {
+        console.log('🚀 Using Complete WASM Solver with auto-selection (Neumann/Push/RandomWalk)');
+
+        try {
+          // Convert matrix format for WASM
+          let matrix: number[][];
+          if (params.matrix.format === 'dense' && Array.isArray(params.matrix.data)) {
+            matrix = params.matrix.data as number[][];
+          } else if (Array.isArray(params.matrix) && Array.isArray(params.matrix[0])) {
+            matrix = params.matrix as number[][];
+          } else {
+            // Try to extract matrix data from various formats
+            if (params.matrix.data && Array.isArray(params.matrix.data) && Array.isArray(params.matrix.data[0])) {
+              matrix = params.matrix.data as number[][];
+            } else {
+              throw new Error('Matrix format not supported for WASM solver');
+            }
+          }
+
+          const wasmResult = await this.wasmSolver.solveComplete(matrix, params.vector, {
+            method: params.method || 'auto',
+            epsilon: params.epsilon || 1e-6,
+            targetIndex: params.targetIndex
+          });
+          return {
+            content: [{
+              type: 'text',
+              text: JSON.stringify(wasmResult, null, 2)
+            }]
+          };
+        } catch (wasmError) {
+          console.warn('⚠️  O(log n) WASM solver failed, falling back to traditional algorithm:', wasmError.message);
+        }
+      } else {
+        console.log('⚠️  Enhanced WASM not available, using traditional algorithm');
+      }
+
+      // Fallback: Traditional solver
       // Enhanced parameter validation
       if (!params.matrix) {
         throw new McpError(ErrorCode.InvalidParams, 'Missing required parameter: matrix');

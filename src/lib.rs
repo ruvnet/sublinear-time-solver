@@ -79,6 +79,12 @@ pub use types::{
     ErrorBounds, SolverStats
 };
 
+// Sublinear algorithms with true O(log n) complexity
+pub use sublinear::{
+    SublinearConfig, SublinearSolver, ComplexityBound,
+};
+pub use sublinear::sublinear_neumann::{SublinearNeumannSolver, SublinearNeumannResult};
+
 // SIMD operations for high performance
 #[cfg(any(feature = "simd", feature = "std"))]
 pub use simd_ops::{matrix_vector_multiply_simd, dot_product_simd, axpy_simd};
@@ -101,6 +107,9 @@ pub mod error;
 pub mod matrix;
 pub mod solver;
 pub mod types;
+
+// Sublinear algorithms with mathematically rigorous O(log n) complexity
+pub mod sublinear;
 
 // Optional modules
 #[cfg(feature = "wasm")]

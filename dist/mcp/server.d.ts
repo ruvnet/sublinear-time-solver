@@ -13,6 +13,7 @@ export declare class SublinearSolverMCPServer {
     private consciousnessTools;
     private emergenceTools;
     private schedulerTools;
+    private wasmSolver;
     constructor();
     private setupToolHandlers;
     private setupErrorHandling;
