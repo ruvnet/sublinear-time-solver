@@ -8,7 +8,10 @@ export declare class SublinearSolver {
     private performanceMonitor;
     private convergenceChecker;
     private timeoutController?;
+    private wasmAccelerated;
+    private wasmModules;
     constructor(config: SolverConfig);
+    private initializeWasm;
     private validateConfig;
     /**
      * Solve ADD system Mx = b using specified method
@@ -21,6 +24,7 @@ export declare class SublinearSolver {
     private solveNeumann;
     /**
      * Compute off-diagonal matrix-vector multiplication: (M - D) * v
+     * This computes R*v where R = M - D (off-diagonal part of matrix)
      */
     private computeOffDiagonalMultiply;
     /**

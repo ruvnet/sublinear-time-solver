@@ -14,7 +14,23 @@ import {
 // Import optimized solver for performance fix
 import { OptimizedSolverTools } from './solver-optimized.js';
 
+// Import enhanced O(log n) WASM solver
+import { WasmSublinearSolverTools } from './wasm-sublinear-solver.js';
+
 export class SolverTools {
+  // Static instance of WASM solver
+  private static wasmSolver: WasmSublinearSolverTools | null = null;
+
+  /**
+   * Get or create WASM solver instance
+   */
+  private static getWasmSolver(): WasmSublinearSolverTools {
+    if (!this.wasmSolver) {
+      this.wasmSolver = new WasmSublinearSolverTools();
+    }
+    return this.wasmSolver;
+  }
+
   /**
    * Determine if we should use the optimized solver
    * Uses optimized solver for dense matrices or when performance is critical
@@ -55,7 +71,29 @@ export class SolverTools {
    * This fixes the 190x slowdown issue (7700ms -> 2.45ms for 1000x1000)
    */
   static async solve(params: SolveParams) {
-    // Check if this is a dense matrix that needs optimization
+    // Priority 1: Try O(log n) WASM solver for true sublinear complexity
+    try {
+      const wasmSolver = new WasmSublinearSolverTools();
+      if (wasmSolver.isEnhancedWasmAvailable()) {
+        console.log('🚀 Using O(log n) WASM solver with Johnson-Lindenstrauss embedding');
+
+        // Convert matrix format if needed
+        let matrix: number[][];
+        if (params.matrix.format === 'dense' && Array.isArray(params.matrix.data)) {
+          matrix = params.matrix.data as number[][];
+        } else if (Array.isArray(params.matrix) && Array.isArray(params.matrix[0])) {
+          matrix = params.matrix as number[][];
+        } else {
+          throw new Error('Matrix format not supported for WASM solver');
+        }
+
+        return await wasmSolver.solveSublinear(matrix, params.vector);
+      }
+    } catch (error) {
+      console.warn('⚠️  O(log n) WASM solver failed, falling back:', error.message);
+    }
+
+    // Priority 2: Check if this is a dense matrix that needs optimization
     const needsOptimization = this.shouldUseOptimizedSolver(params);
 
     if (needsOptimization) {

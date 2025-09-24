@@ -1,8 +1,13 @@
 /**
  * MCP Tools for core solver functionality
  */
-import { SolverConfig, SolveParams, EstimateEntryParams } from '../../core/types.js';
+import { SolveParams, EstimateEntryParams } from '../../core/types.js';
 export declare class SolverTools {
+    private static wasmSolver;
+    /**
+     * Get or create WASM solver instance
+     */
+    private static getWasmSolver;
     /**
      * Determine if we should use the optimized solver
      * Uses optimized solver for dense matrices or when performance is critical
@@ -14,36 +19,7 @@ export declare class SolverTools {
      * PERFORMANCE FIX: Use optimized solver for dense matrices
      * This fixes the 190x slowdown issue (7700ms -> 2.45ms for 1000x1000)
      */
-    static solve(params: SolveParams): Promise<{
-        solution: any[];
-        iterations: number;
-        residual: number;
-        converged: boolean;
-        method: string;
-        computeTime: number;
-        memoryUsed: number;
-    } | {
-        solution: import("../../core/types.js").Vector;
-        iterations: number;
-        residual: number;
-        converged: boolean;
-        method: string;
-        computeTime: number;
-        memoryUsed: number;
-        efficiency: {
-            convergenceRate: number;
-            timePerIteration: number;
-            memoryEfficiency: number;
-        };
-        metadata: {
-            matrixSize: {
-                rows: number;
-                cols: number;
-            };
-            configUsed: SolverConfig;
-            timestamp: string;
-        };
-    }>;
+    static solve(params: SolveParams): Promise<any>;
     /**
      * Estimate single entry tool
      */

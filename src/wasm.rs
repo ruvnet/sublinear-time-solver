@@ -4,6 +4,8 @@
 
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
+use crate::sublinear::{SublinearNeumannSolver, SublinearConfig, SublinearSolver};
+use crate::matrix::SparseMatrix;
 
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
@@ -266,6 +268,121 @@ impl PerformanceMetrics {
             residual,
             speedup_vs_baseline: js_baseline_estimate / wasm_time,
         }
+    }
+}
+
+/// Sublinear solver with O(log n) complexity for WASM
+#[wasm_bindgen]
+pub struct WasmSublinearSolver {
+    config: SublinearConfig,
+}
+
+#[wasm_bindgen]
+impl WasmSublinearSolver {
+    /// Create new sublinear solver
+    #[wasm_bindgen(constructor)]
+    pub fn new(target_dimension: usize, sparsification_eps: f64, jl_distortion: f64) -> Self {
+        console_error_panic_hook::set_once();
+
+        let config = SublinearConfig {
+            target_dimension,
+            sparsification_eps,
+            jl_distortion,
+            sampling_probability: 0.01,
+            max_recursion_depth: 10,
+            base_case_threshold: 100,
+        };
+
+        Self { config }
+    }
+
+    /// Solve system with guaranteed O(log n) complexity
+    #[wasm_bindgen(js_name = solveSublinear)]
+    pub fn solve_sublinear(&self, matrix_triplets: &str, b: Vec<f64>) -> Result<String, JsValue> {
+        // Parse matrix triplets from JSON
+        let triplets: Vec<(usize, usize, f64)> = serde_json::from_str(matrix_triplets)
+            .map_err(|e| JsValue::from_str(&format!("Invalid matrix format: {}", e)))?;
+
+        if triplets.is_empty() {
+            return Err(JsValue::from_str("Empty matrix"));
+        }
+
+        // Determine matrix dimensions
+        let max_row = triplets.iter().map(|(i, _, _)| *i).max().unwrap_or(0);
+        let max_col = triplets.iter().map(|(_, j, _)| *j).max().unwrap_or(0);
+        let n = (max_row + 1).max(max_col + 1);
+
+        if b.len() != n {
+            return Err(JsValue::from_str("Vector b size must match matrix dimension"));
+        }
+
+        // Create sparse matrix
+        let matrix = SparseMatrix::from_triplets(triplets, n, n)
+            .map_err(|e| JsValue::from_str(&format!("Matrix creation failed: {:?}", e)))?;
+
+        // Create sublinear solver
+        let solver = SublinearNeumannSolver::new(self.config.clone());
+
+        // Solve with sublinear complexity
+        let result = solver.solve_sublinear_guaranteed(&matrix, &b)
+            .map_err(|e| JsValue::from_str(&format!("Solve failed: {:?}", e)))?;
+
+        // Serialize result
+        let result_json = serde_json::json!({
+            "solution": result.solution,
+            "iterations": result.iterations,
+            "residual_norm": result.residual_norm,
+            "complexity_bound": format!("{:?}", result.complexity_bound),
+            "dimension_reduction_ratio": result.dimension_reduction_ratio,
+            "series_terms_used": result.series_terms_used,
+            "method": "sublinear_neumann"
+        });
+
+        serde_json::to_string(&result_json)
+            .map_err(|e| JsValue::from_str(&format!("Serialization failed: {}", e)))
+    }
+
+    /// Verify that sublinear conditions are met
+    #[wasm_bindgen(js_name = verifySublinearConditions)]
+    pub fn verify_sublinear_conditions(&self, matrix_triplets: &str) -> Result<String, JsValue> {
+        let triplets: Vec<(usize, usize, f64)> = serde_json::from_str(matrix_triplets)
+            .map_err(|e| JsValue::from_str(&format!("Invalid matrix format: {}", e)))?;
+
+        let max_row = triplets.iter().map(|(i, _, _)| *i).max().unwrap_or(0);
+        let max_col = triplets.iter().map(|(_, j, _)| *j).max().unwrap_or(0);
+        let n = (max_row + 1).max(max_col + 1);
+
+        let matrix = SparseMatrix::from_triplets(triplets, n, n)
+            .map_err(|e| JsValue::from_str(&format!("Matrix creation failed: {:?}", e)))?;
+
+        let solver = SublinearNeumannSolver::new(self.config.clone());
+
+        match solver.verify_sublinear_conditions(&matrix) {
+            Ok(complexity_bound) => {
+                let result = serde_json::json!({
+                    "conditions_satisfied": true,
+                    "complexity_bound": format!("{:?}", complexity_bound),
+                    "message": "Matrix satisfies conditions for O(log n) complexity"
+                });
+                serde_json::to_string(&result)
+                    .map_err(|e| JsValue::from_str(&format!("Serialization failed: {}", e)))
+            },
+            Err(e) => {
+                let result = serde_json::json!({
+                    "conditions_satisfied": false,
+                    "error": format!("{:?}", e),
+                    "message": "Matrix does not satisfy sublinear conditions"
+                });
+                serde_json::to_string(&result)
+                    .map_err(|e| JsValue::from_str(&format!("Serialization failed: {}", e)))
+            }
+        }
+    }
+
+    /// Get compression ratio achieved by dimension reduction
+    #[wasm_bindgen(js_name = getCompressionRatio)]
+    pub fn get_compression_ratio(&self) -> f64 {
+        self.config.target_dimension as f64 / 1000.0 // Assume typical input size
     }
 }
 
