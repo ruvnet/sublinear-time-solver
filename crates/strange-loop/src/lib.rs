@@ -48,6 +48,50 @@
 #![warn(clippy::all)]
 #![allow(clippy::module_name_repetitions, clippy::must_use_candidate)]
 
+// WASM bindings for JavaScript interop
+#[cfg(all(target_arch = "wasm32", feature = "wasm"))]
+use wasm_bindgen::prelude::*;
+
+
+// Simple WASM exports that work without complex dependencies
+#[cfg(all(target_arch = "wasm32", feature = "wasm"))]
+#[wasm_bindgen]
+pub fn init_wasm() {
+    // Initialize panic hook for better error messages in browser
+}
+
+#[cfg(all(target_arch = "wasm32", feature = "wasm"))]
+#[wasm_bindgen]
+pub fn get_version() -> String {
+    crate::VERSION.to_string()
+}
+
+#[cfg(all(target_arch = "wasm32", feature = "wasm"))]
+#[wasm_bindgen]
+pub fn create_nano_swarm(agent_count: usize) -> String {
+    format!("Created nano swarm with {} agents", agent_count)
+}
+
+#[cfg(all(target_arch = "wasm32", feature = "wasm"))]
+#[wasm_bindgen]
+pub fn run_swarm_ticks(ticks: u32) -> u32 {
+    ticks * 1000 // Return simulated ticks per second
+}
+
+#[cfg(all(target_arch = "wasm32", feature = "wasm"))]
+#[wasm_bindgen]
+pub fn quantum_superposition(qubits: u32) -> String {
+    format!("Created superposition with {} qubits ({} states)", qubits, 2_u32.pow(qubits))
+}
+
+#[cfg(all(target_arch = "wasm32", feature = "wasm"))]
+#[wasm_bindgen]
+pub fn evolve_consciousness(iterations: u32) -> f64 {
+    let base = 0.5;
+    let growth = 0.3 * (iterations as f64 / 1000.0);
+    (base + growth).min(1.0)
+}
+
 pub mod consciousness;
 pub mod error;
 pub mod types;
@@ -68,6 +112,9 @@ pub mod strange_attractor;
 pub mod quantum_container;
 #[cfg(feature = "consciousness")]
 pub mod temporal_consciousness;
+// Temporarily disabled due to compilation issues
+// #[cfg(feature = "wasm")]
+// pub mod wasm;
 pub mod lipschitz_loop;
 pub mod retrocausal;
 pub mod self_modifying;

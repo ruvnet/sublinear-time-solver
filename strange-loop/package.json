@@ -1,6 +1,6 @@
 {
   "name": "strange-loops",
-  "version": "0.1.11",
+  "version": "0.2.1",
   "description": "A framework where thousands of tiny agents collaborate in real-time, each operating within nanosecond budgets, forming emergent intelligence through temporal consciousness and quantum-classical hybrid computing",
   "main": "index.js",
   "bin": {
