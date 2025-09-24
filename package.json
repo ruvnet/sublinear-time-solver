@@ -1,6 +1,6 @@
 {
   "name": "sublinear-time-solver",
-  "version": "1.4.2",
+  "version": "1.4.4",
   "description": "The Ultimate Mathematical & AI Toolkit: Sublinear algorithms, consciousness exploration, psycho-symbolic reasoning, and temporal prediction in one unified MCP interface. WASM-accelerated with emergent behavior analysis.",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -9,7 +9,8 @@
   "bin": {
     "sublinear-time-solver": "dist/cli/index.js",
     "sublinear-solver": "dist/cli/index.js",
-    "sublinear": "dist/cli/index.js"
+    "sublinear": "dist/cli/index.js",
+    "strange-loops": "dist/cli/index.js"
   },
   "exports": {
     ".": {

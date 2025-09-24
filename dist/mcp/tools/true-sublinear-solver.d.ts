@@ -30,7 +30,17 @@ interface ComplexityBound {
     description: string;
 }
 interface TrueSublinearResult {
-    solution: number[];
+    solution: number[] | {
+        first_elements: number[];
+        total_elements: number;
+        truncated: boolean;
+        sample_statistics: {
+            min: number;
+            max: number;
+            mean: number;
+            norm: number;
+        };
+    };
     iterations: number;
     residual_norm: number;
     complexity_bound: ComplexityBound;

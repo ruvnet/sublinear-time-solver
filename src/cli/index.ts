@@ -21,10 +21,11 @@ import {
 } from '../core/types.js';
 
 // Version from package.json
-const VERSION = '1.3.9'; // Hardcoded to avoid path issues
+const VERSION = '1.4.4'; // Hardcoded to avoid path issues
 
 program
   .name('sublinear-solver-mcp')
+  .alias('strange-loops')
   .description('Sublinear-time solver for asymmetric diagonally dominant systems with MCP interface')
   .version(VERSION);
 
@@ -32,7 +33,6 @@ program
 program
   .command('serve')
   .alias('mcp-server')
-  .alias('mcp')
   .alias('server')
   .description('Start the MCP server')
   .option('-p, --port <port>', 'Port number (if using HTTP transport)')
@@ -46,6 +46,31 @@ program
       await server.run();
     } catch (error) {
       console.error('Failed to start MCP server:', error);
+      process.exit(1);
+    }
+  });
+
+// MCP command for strange-loops compatibility
+program
+  .command('mcp <action>')
+  .description('MCP server operations (strange-loops compatibility)')
+  .option('-p, --port <port>', 'Port number (if using HTTP transport)')
+  .option('--transport <type>', 'Transport type (stdio|http)', 'stdio')
+  .action(async (action, options) => {
+    if (action === 'start') {
+      try {
+        console.error(`Starting Strange Loops MCP Server v${VERSION}`);
+        console.error(`Transport: ${options.transport}`);
+
+        const server = new SublinearSolverMCPServer();
+        await server.run();
+      } catch (error) {
+        console.error('Failed to start MCP server:', error);
+        process.exit(1);
+      }
+    } else {
+      console.error(`Unknown MCP action: ${action}`);
+      console.error('Available actions: start');
       process.exit(1);
     }
   });

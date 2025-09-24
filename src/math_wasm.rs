@@ -1,4 +1,5 @@
 use std::fmt;
+use rand::Rng;
 
 #[derive(Debug, Clone)]
 pub struct Matrix {

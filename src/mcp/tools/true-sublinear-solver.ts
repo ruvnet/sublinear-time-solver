@@ -36,7 +36,17 @@ interface ComplexityBound {
 }
 
 interface TrueSublinearResult {
-  solution: number[];
+  solution: number[] | {
+    first_elements: number[];
+    total_elements: number;
+    truncated: boolean;
+    sample_statistics: {
+      min: number;
+      max: number;
+      mean: number;
+      norm: number;
+    };
+  };
   iterations: number;
   residual_norm: number;
   complexity_bound: ComplexityBound;
@@ -337,8 +347,28 @@ export class TrueSublinearSolverTools {
     const residual = this.computeResidual(matrix, solution, vector);
     const residualNorm = Math.sqrt(residual.reduce((sum, r) => sum + r * r, 0));
 
+    // Truncate solution for large matrices to prevent MCP token overflow (25k token limit)
+    const maxSolutionElements = 1000;
+    const truncatedSolution = solution.length > maxSolutionElements
+      ? solution.slice(0, maxSolutionElements)
+      : solution;
+
+    const solutionSummary = solution.length > maxSolutionElements
+      ? {
+          first_elements: truncatedSolution,
+          total_elements: solution.length,
+          truncated: true,
+          sample_statistics: {
+            min: Math.min(...solution),
+            max: Math.max(...solution),
+            mean: solution.reduce((sum, val) => sum + val, 0) / solution.length,
+            norm: Math.sqrt(solution.reduce((sum, val) => sum + val * val, 0))
+          }
+        }
+      : solution;
+
     return {
-      solution,
+      solution: solutionSummary,
       iterations: logN,
       residual_norm: residualNorm,
       complexity_bound: {
@@ -596,8 +626,24 @@ export class TrueSublinearSolverTools {
     const residual = this.computeResidual(matrix, solution, vector);
     const residualNorm = Math.sqrt(residual.reduce((sum, r) => sum + r * r, 0));
 
+    // Apply same truncation for base case
+    const maxSolutionElements = 100;
+    const solutionSummary = solution.length > maxSolutionElements
+      ? {
+          first_elements: solution.slice(0, maxSolutionElements),
+          total_elements: solution.length,
+          truncated: true,
+          sample_statistics: {
+            min: Math.min(...solution),
+            max: Math.max(...solution),
+            mean: solution.reduce((sum, val) => sum + val, 0) / solution.length,
+            norm: Math.sqrt(solution.reduce((sum, val) => sum + val * val, 0))
+          }
+        }
+      : solution;
+
     return {
-      solution,
+      solution: solutionSummary,
       iterations: 10,
       residual_norm: residualNorm,
       complexity_bound: { type: 'logarithmic', n, description: `Base case O(${n}) - constant for small matrices` },
