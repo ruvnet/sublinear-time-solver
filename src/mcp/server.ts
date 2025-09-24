@@ -262,7 +262,7 @@ export class SublinearSolverMCPServer {
         // TRUE Sublinear O(log n) algorithms
         {
           name: 'solveTrueSublinear',
-          description: 'Solve with TRUE O(log n) algorithms using Johnson-Lindenstrauss dimension reduction and adaptive Neumann series',
+          description: 'Solve with TRUE O(log n) algorithms using Johnson-Lindenstrauss dimension reduction and adaptive Neumann series. For vectors >500 elements, use vector_file parameter with JSON/CSV/TXT files to avoid MCP truncation. Use generateTestVector + saveVectorToFile for large test vectors.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -281,7 +281,11 @@ export class SublinearSolverMCPServer {
               vector: {
                 type: 'array',
                 items: { type: 'number' },
-                description: 'Right-hand side vector b'
+                description: 'Right-hand side vector b (for small vectors)'
+              },
+              vector_file: {
+                type: 'string',
+                description: 'Path to JSON/CSV file containing vector data (for large vectors)'
               },
               target_dimension: {
                 type: 'number',
@@ -298,7 +302,7 @@ export class SublinearSolverMCPServer {
                 description: 'Johnson-Lindenstrauss distortion parameter'
               }
             },
-            required: ['matrix', 'vector']
+            required: ['matrix']
           }
         },
         {
@@ -321,6 +325,55 @@ export class SublinearSolverMCPServer {
               }
             },
             required: ['matrix']
+          }
+        },
+        {
+          name: 'generateTestVector',
+          description: 'Generate test vectors for matrix solving with various patterns',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              size: {
+                type: 'number',
+                description: 'Size of the vector to generate',
+                minimum: 1
+              },
+              pattern: {
+                type: 'string',
+                enum: ['unit', 'random', 'sparse', 'ones', 'alternating'],
+                default: 'sparse',
+                description: 'Pattern type: unit (e_1), random ([-1,1]), sparse (leading ones), ones (all 1s), alternating (+1/-1)'
+              },
+              seed: {
+                type: 'number',
+                description: 'Optional seed for reproducible random vectors'
+              }
+            },
+            required: ['size']
+          }
+        },
+        {
+          name: 'saveVectorToFile',
+          description: 'Save a generated vector to a file (JSON, CSV, or TXT format)',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              vector: {
+                type: 'array',
+                items: { type: 'number' },
+                description: 'Vector data to save'
+              },
+              file_path: {
+                type: 'string',
+                description: 'Output file path (extension determines format: .json, .csv, .txt)'
+              },
+              format: {
+                type: 'string',
+                enum: ['json', 'csv', 'txt'],
+                description: 'Output format (overrides file extension if specified)'
+              }
+            },
+            required: ['vector', 'file_path']
           }
         },
         // Temporal lead tools
@@ -362,6 +415,10 @@ export class SublinearSolverMCPServer {
             return await this.handleSolveTrueSublinear(args as any);
           case 'analyzeTrueSublinearMatrix':
             return await this.handleAnalyzeTrueSublinearMatrix(args as any);
+          case 'generateTestVector':
+            return await this.handleGenerateTestVector(args as any);
+          case 'saveVectorToFile':
+            return await this.handleSaveVectorToFile(args as any);
           // Temporal tools
           case 'predictWithTemporalAdvantage':
           case 'validateTemporalAdvantage':
@@ -873,11 +930,20 @@ export class SublinearSolverMCPServer {
       if (!params.matrix) {
         throw new McpError(ErrorCode.InvalidParams, 'Missing required parameter: matrix');
       }
-      if (!params.vector) {
-        throw new McpError(ErrorCode.InvalidParams, 'Missing required parameter: vector');
-      }
-      if (!Array.isArray(params.vector)) {
-        throw new McpError(ErrorCode.InvalidParams, 'Parameter vector must be an array of numbers');
+
+      // Support either inline vector or file input
+      let vector: number[];
+      if (params.vector_file) {
+        // Load vector from file
+        vector = await this.loadVectorFromFile(params.vector_file);
+      } else if (params.vector) {
+        // Use inline vector
+        if (!Array.isArray(params.vector)) {
+          throw new McpError(ErrorCode.InvalidParams, 'Parameter vector must be an array of numbers');
+        }
+        vector = params.vector;
+      } else {
+        throw new McpError(ErrorCode.InvalidParams, 'Missing required parameter: either vector or vector_file must be provided');
       }
 
       // Validate matrix format
@@ -891,10 +957,10 @@ export class SublinearSolverMCPServer {
       }
 
       // Validate vector dimensions
-      if (params.vector.length !== matrix.rows) {
+      if (vector.length !== matrix.rows) {
         throw new McpError(
           ErrorCode.InvalidParams,
-          `Vector length ${params.vector.length} does not match matrix rows ${matrix.rows}`
+          `Vector length ${vector.length} does not match matrix rows ${matrix.rows}`
         );
       }
 
@@ -911,7 +977,7 @@ export class SublinearSolverMCPServer {
       console.log(`🚀 Using TRUE O(log n) sublinear solver with dimension reduction ${matrix.rows} → ${config.target_dimension}`);
 
       // Solve using TRUE sublinear algorithms
-      const result = await this.trueSublinearSolver.solveTrueSublinear(matrix, params.vector, config);
+      const result = await this.trueSublinearSolver.solveTrueSublinear(matrix, vector, config);
 
       return {
         content: [{
@@ -995,6 +1061,233 @@ export class SublinearSolverMCPServer {
         `Matrix analysis error: ${error instanceof Error ? error.message : String(error)}`
       );
     }
+  }
+
+  private async handleGenerateTestVector(params: any) {
+    try {
+      // Validate required parameters
+      if (!params.size || typeof params.size !== 'number' || params.size < 1) {
+        throw new McpError(ErrorCode.InvalidParams, 'Missing or invalid required parameter: size (must be positive integer)');
+      }
+
+      const size = Math.floor(params.size);
+      const pattern = params.pattern || 'sparse';
+      const seed = params.seed;
+
+      // Validate pattern
+      const validPatterns = ['unit', 'random', 'sparse', 'ones', 'alternating'];
+      if (!validPatterns.includes(pattern)) {
+        throw new McpError(ErrorCode.InvalidParams, `Invalid pattern. Must be one of: ${validPatterns.join(', ')}`);
+      }
+
+      // Generate the test vector
+      const result = this.trueSublinearSolver.generateTestVector(size, pattern, seed);
+
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            vector: result.vector,
+            description: result.description,
+            size: result.vector.length,
+            pattern_used: pattern,
+            seed_used: seed,
+            statistics: {
+              min: Math.min(...result.vector),
+              max: Math.max(...result.vector),
+              sum: result.vector.reduce((a, b) => a + b, 0),
+              norm: Math.sqrt(result.vector.reduce((sum, x) => sum + x * x, 0)),
+              non_zero_count: result.vector.filter(x => Math.abs(x) > 1e-14).length
+            },
+            metadata: {
+              generator_type: 'TRUE_SUBLINEAR_VECTOR_GENERATOR',
+              timestamp: new Date().toISOString()
+            }
+          }, null, 2)
+        }]
+      };
+
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Vector generation error: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  private async handleSaveVectorToFile(params: any) {
+    try {
+      // Validate required parameters
+      if (!params.vector || !Array.isArray(params.vector)) {
+        throw new McpError(ErrorCode.InvalidParams, 'Missing or invalid required parameter: vector (must be an array of numbers)');
+      }
+      if (!params.file_path || typeof params.file_path !== 'string') {
+        throw new McpError(ErrorCode.InvalidParams, 'Missing or invalid required parameter: file_path (must be a string)');
+      }
+
+      const vector = params.vector;
+      const filePath = params.file_path;
+      const format = params.format;
+
+      // Validate vector contains only numbers
+      if (vector.some((v: any) => typeof v !== 'number' || isNaN(v))) {
+        throw new McpError(ErrorCode.InvalidParams, 'Vector must contain only valid numbers');
+      }
+
+      await this.saveVectorToFile(vector, filePath, format);
+
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            success: true,
+            message: `Vector of size ${vector.length} saved to ${filePath}`,
+            file_path: filePath,
+            vector_size: vector.length,
+            format_used: this.getFileFormat(filePath, format),
+            metadata: {
+              operation: 'SAVE_VECTOR_TO_FILE',
+              timestamp: new Date().toISOString()
+            }
+          }, null, 2)
+        }]
+      };
+
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Save vector to file error: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  private async loadVectorFromFile(filePath: string): Promise<number[]> {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+
+      // Resolve absolute path
+      const absolutePath = path.resolve(filePath);
+
+      // Check if file exists
+      if (!fs.existsSync(absolutePath)) {
+        throw new McpError(ErrorCode.InvalidParams, `Vector file not found: ${absolutePath}`);
+      }
+
+      // Read file content
+      const fileContent = fs.readFileSync(absolutePath, 'utf8');
+      const extension = path.extname(absolutePath).toLowerCase();
+
+      let vector: number[];
+
+      if (extension === '.json') {
+        // Parse JSON format
+        const data = JSON.parse(fileContent);
+        if (Array.isArray(data)) {
+          vector = data.map(Number);
+        } else if (data.vector && Array.isArray(data.vector)) {
+          vector = data.vector.map(Number);
+        } else {
+          throw new Error('JSON file must contain an array or an object with a "vector" property');
+        }
+      } else if (extension === '.csv') {
+        // Parse CSV format (simple comma-separated values)
+        const lines = fileContent.trim().split('\n');
+        if (lines.length === 1) {
+          // Single line CSV
+          vector = lines[0].split(',').map(s => Number(s.trim()));
+        } else {
+          // Multi-line CSV - take first column or first row based on structure
+          vector = lines.map(line => Number(line.split(',')[0].trim()));
+        }
+      } else if (extension === '.txt') {
+        // Parse text format (space or newline separated)
+        vector = fileContent.trim()
+          .split(/\s+/)
+          .map(Number)
+          .filter(n => !isNaN(n));
+      } else {
+        throw new Error(`Unsupported file format: ${extension}. Supported formats: .json, .csv, .txt`);
+      }
+
+      // Validate all values are numbers
+      if (vector.some(isNaN)) {
+        throw new Error('Vector file contains non-numeric values');
+      }
+
+      if (vector.length === 0) {
+        throw new Error('Vector file is empty or contains no valid numbers');
+      }
+
+      console.log(`📁 Loaded vector of size ${vector.length} from ${filePath}`);
+      return vector;
+
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        `Failed to load vector from file: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  private async saveVectorToFile(vector: number[], filePath: string, format?: string): Promise<void> {
+    const fs = await import('fs');
+    const path = await import('path');
+
+    // Determine format from extension or explicit format parameter
+    const fileFormat = this.getFileFormat(filePath, format);
+    const absolutePath = path.resolve(filePath);
+
+    // Ensure directory exists
+    const directory = path.dirname(absolutePath);
+    if (!fs.existsSync(directory)) {
+      fs.mkdirSync(directory, { recursive: true });
+    }
+
+    let content: string;
+
+    switch (fileFormat) {
+      case 'json':
+        content = JSON.stringify(vector, null, 2);
+        break;
+
+      case 'csv':
+        content = vector.join(',');
+        break;
+
+      case 'txt':
+        content = vector.join('\n');
+        break;
+
+      default:
+        throw new Error(`Unsupported format: ${fileFormat}`);
+    }
+
+    fs.writeFileSync(absolutePath, content, 'utf8');
+    console.log(`💾 Saved vector of size ${vector.length} to ${absolutePath} (${fileFormat} format)`);
+  }
+
+  private getFileFormat(filePath: string, explicitFormat?: string): string {
+    if (explicitFormat) {
+      return explicitFormat.toLowerCase();
+    }
+
+    const extension = filePath.split('.').pop()?.toLowerCase();
+    if (extension && ['json', 'csv', 'txt'].includes(extension)) {
+      return extension;
+    }
+
+    // Default to JSON if no valid extension
+    return 'json';
   }
 
   private generateRecommendations(analysis: any): string[] {

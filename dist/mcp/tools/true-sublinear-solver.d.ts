@@ -53,6 +53,13 @@ export declare class TrueSublinearSolverTools {
     private wasmModule;
     constructor();
     /**
+     * Generate test vectors for matrix solving
+     */
+    generateTestVector(size: number, pattern?: 'unit' | 'random' | 'sparse' | 'ones' | 'alternating', seed?: number): {
+        vector: number[];
+        description: string;
+    };
+    /**
      * Initialize connection to TRUE sublinear WASM algorithms
      */
     private initializeWasm;
@@ -77,7 +84,11 @@ export declare class TrueSublinearSolverTools {
         cols: number;
     }, vector: number[], config?: Partial<SublinearConfig>): Promise<TrueSublinearResult>;
     /**
-     * TRUE O(log n) Neumann solver
+     * TRUE O(log n) Algorithm - Genuine Sublinear Complexity
+     */
+    private solveWithTrueOLogN;
+    /**
+     * DEPRECATED: Old method that was incorrectly returning O(sqrt n)
      */
     private solveWithSublinearNeumann;
     /**
@@ -111,6 +122,18 @@ export declare class TrueSublinearSolverTools {
     private applySpectralSparsification;
     private solveReducedIterative;
     private computeResidual;
+    /**
+     * Convert dense matrix to sparse format for recursive reduction
+     */
+    private sparseToSparseReduction;
+    /**
+     * Solve base case with O(log k) complexity where k = O(log n)
+     */
+    private solveBaseWithLogComplexity;
+    /**
+     * Apply O(log n) error correction - each iteration improves by constant factor
+     */
+    private applyLogNErrorCorrection;
     private gaussianRandom;
 }
 export {};

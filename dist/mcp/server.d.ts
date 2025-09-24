@@ -24,6 +24,11 @@ export declare class SublinearSolverMCPServer {
     private handlePageRank;
     private handleSolveTrueSublinear;
     private handleAnalyzeTrueSublinearMatrix;
+    private handleGenerateTestVector;
+    private handleSaveVectorToFile;
+    private loadVectorFromFile;
+    private saveVectorToFile;
+    private getFileFormat;
     private generateRecommendations;
     run(): Promise<void>;
 }
