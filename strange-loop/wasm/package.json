@@ -4,7 +4,7 @@
     "rUv <ruv@ruv.io>"
   ],
   "description": "Hyper-optimized strange loops with temporal consciousness and quantum-classical hybrid computing. NPX: npx strange-loops",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",
