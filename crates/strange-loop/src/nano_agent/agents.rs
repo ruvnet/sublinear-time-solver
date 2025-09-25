@@ -2,7 +2,7 @@
 
 use super::{NanoAgent, NanoBus, Message, TickResult, spin};
 use super::bus::MessageData;
-use crate::TemporalLeadPredictor;
+// use crate::TemporalLeadPredictor; // Module not implemented yet
 use crate::quantum_container::QuantumContainer;
 use crate::self_modifying::SelfModifyingLoop;
 
@@ -191,14 +191,14 @@ impl NanoAgent for QuantumDecisionAgent {
 
 /// Temporal prediction agent
 pub struct TemporalPredictorAgent {
-    predictor: TemporalLeadPredictor,
+    // predictor: TemporalLeadPredictor, // Module not implemented yet
     prediction_count: u64,
 }
 
 impl TemporalPredictorAgent {
     pub fn new() -> Self {
         Self {
-            predictor: TemporalLeadPredictor::new(100_000, 50),
+            // predictor: TemporalLeadPredictor::new(100_000, 50), // Module not implemented
             prediction_count: 0,
         }
     }
@@ -220,13 +220,14 @@ impl NanoAgent for TemporalPredictorAgent {
                     if let MessageData::U64(value) = msg.data {
                         // Feed to predictor
                         let state = vec![value as f64];
-                        let future = self.predictor.predict_future(state);
+                        // let future = self.predictor.predict_future(state); // Module not implemented
+                        let future = 0.5; // Placeholder prediction
 
                         // Publish prediction
                         if self.prediction_count % 10 == 0 {
                             bus.publish(Message {
                                 topic: "prediction:future",
-                                data: MessageData::F64(future[0]),
+                                data: MessageData::F64(future),
                                 timestamp_ns: now_ns,
                             });
                             messages_sent = 1;

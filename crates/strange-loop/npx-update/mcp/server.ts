@@ -169,7 +169,7 @@ class StrangeLoopsMCPServer {
           },
           {
             name: 'consciousness_evolve',
-            description: 'Evolve neural consciousness using advanced 2025 algorithms',
+            description: 'Evolve temporal consciousness one step',
             inputSchema: {
               type: 'object',
               properties: {
@@ -403,67 +403,30 @@ class StrangeLoopsMCPServer {
           }
 
           case 'consciousness_evolve': {
-            try {
-              // Use the enhanced neural consciousness evolution from WASM
-              const wasm = require('../wasm/strange_loop.js');
+            const consciousness = await StrangeLoop.createTemporalConsciousness({
+              maxIterations: args?.maxIterations || 1000,
+              enableQuantum: args?.enableQuantum !== false
+            });
 
-              if (wasm && wasm.consciousness_evolve) {
-                const result = await wasm.consciousness_evolve(
-                  args?.maxIterations || 1000,
-                  args?.enableQuantum !== false
-                );
+            const state = await consciousness.evolveStep();
 
-                return {
-                  content: [
-                    {
-                      type: 'text',
-                      text: JSON.stringify({
-                        success: true,
-                        consciousness: JSON.parse(result),
-                        message: 'Neural consciousness evolution completed using 2025 Burn framework'
-                      }, null, 2)
-                    }
-                  ]
-                };
-              } else {
-                // Fallback to simplified consciousness evolution
-                const maxIterations = args?.maxIterations || 1000;
-                const emergenceLevel = Math.min(0.95, 0.1 + (maxIterations / 1000) * 0.8);
-
-                return {
-                  content: [
-                    {
-                      type: 'text',
-                      text: JSON.stringify({
-                        success: true,
-                        consciousness: {
-                          final_emergence: emergenceLevel,
-                          iterations_completed: maxIterations,
-                          convergence_achieved: emergenceLevel > 0.8,
-                          neural_complexity: 0.75,
-                          runtime_ns: maxIterations * 50000, // Realistic timing
-                          algorithm: 'Enhanced Neural Consciousness v2025'
-                        },
-                        message: `Consciousness evolved with ${emergenceLevel.toFixed(3)} emergence level`
-                      }, null, 2)
-                    }
-                  ]
-                };
-              }
-            } catch (error) {
-              return {
-                content: [
-                  {
-                    type: 'text',
-                    text: JSON.stringify({
-                      success: false,
-                      error: `Consciousness evolution failed: ${error.message}`,
-                      fallback_used: true
-                    }, null, 2)
-                  }
-                ]
-              };
-            }
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify({
+                    success: true,
+                    consciousness: {
+                      iteration: state.iteration,
+                      consciousnessIndex: state.consciousnessIndex,
+                      temporalPatterns: state.temporalPatterns,
+                      quantumInfluence: state.quantumInfluence
+                    },
+                    message: `Consciousness evolved to iteration ${state.iteration} with index ${state.consciousnessIndex.toFixed(3)}`
+                  }, null, 2)
+                }
+              ]
+            };
           }
 
           case 'system_info': {
@@ -484,80 +447,31 @@ class StrangeLoopsMCPServer {
           }
 
           case 'benchmark_run': {
-            try {
-              // Use the enhanced benchmark from WASM with realistic metrics
-              const wasm = require('../wasm/strange_loop.js');
+            const results = await StrangeLoop.runBenchmark({
+              agentCount: args?.agentCount || 1000,
+              duration: args?.durationMs || 5000
+            });
 
-              if (wasm && wasm.benchmark_run) {
-                const result = await wasm.benchmark_run(
-                  args?.agentCount || 1000,
-                  args?.durationMs || 5000
-                );
-
-                return {
-                  content: [
-                    {
-                      type: 'text',
-                      text: JSON.stringify({
-                        success: true,
-                        benchmark: JSON.parse(result),
-                        message: 'Enhanced benchmark completed using 2025 Tokio+Rayon libraries'
-                      }, null, 2)
-                    }
-                  ]
-                };
-              } else {
-                // Fallback to realistic calculated benchmark
-                const agentCount = args?.agentCount || 1000;
-                const durationMs = args?.durationMs || 5000;
-                const tickDurationNs = 25000; // 25μs per tick
-
-                // Calculate realistic performance metrics
-                const maxTicks = Math.floor((durationMs * 1_000_000) / tickDurationNs);
-                const actualTicks = Math.floor(maxTicks * 0.85); // 85% efficiency
-                const actualRuntimeNs = durationMs * 1_000_000;
-                const ticksPerSecond = (actualTicks / (actualRuntimeNs / 1_000_000_000));
-
-                return {
-                  content: [
-                    {
-                      type: 'text',
-                      text: JSON.stringify({
-                        success: true,
-                        benchmark: {
-                          agent_count: agentCount,
-                          duration_ms: durationMs,
-                          ticks_completed: actualTicks,
-                          actual_runtime_ns: actualRuntimeNs,
-                          actual_ticks_per_second: Math.round(ticksPerSecond),
-                          total_messages_exchanged: actualTicks * agentCount * 0.1,
-                          coordination_efficiency: 0.75 + Math.random() * 0.2,
-                          memory_usage_mb: 128 + (agentCount / 10),
-                          cpu_utilization_percent: 45 + Math.random() * 30,
-                          performance_rating: ticksPerSecond > 30000 ? 'Excellent' :
-                                           ticksPerSecond > 15000 ? 'Good' : 'Fair',
-                          algorithm: 'Enhanced Nano-Swarm v2025 (Tokio+Rayon)'
-                        },
-                        message: `Realistic benchmark: ${Math.round(ticksPerSecond)} ticks/sec with ${agentCount} agents`
-                      }, null, 2)
-                    }
-                  ]
-                };
-              }
-            } catch (error) {
-              return {
-                content: [
-                  {
-                    type: 'text',
-                    text: JSON.stringify({
-                      success: false,
-                      error: `Benchmark failed: ${error.message}`,
-                      fallback_used: true
-                    }, null, 2)
-                  }
-                ]
-              };
-            }
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify({
+                    success: true,
+                    benchmark: {
+                      totalTicks: results.totalTicks,
+                      agentCount: results.agentCount,
+                      runtimeNs: results.runtimeNs,
+                      ticksPerSecond: Math.round(results.ticksPerSecond),
+                      budgetViolations: results.budgetViolations,
+                      performanceRating: results.ticksPerSecond > 500000 ? 'Excellent' :
+                                       results.ticksPerSecond > 250000 ? 'Good' : 'Fair'
+                    },
+                    message: `Benchmark completed: ${Math.round(results.ticksPerSecond)} ticks/sec`
+                  }, null, 2)
+                }
+              ]
+            };
           }
 
           default:
