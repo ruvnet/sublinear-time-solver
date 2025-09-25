@@ -1,10 +1,12 @@
-# Strange Loop
+# Strange Loops v0.3.0 🌀
+
+## Hyper-optimized temporal consciousness and quantum-classical hybrid computing
 
 [![Crates.io](https://img.shields.io/crates/v/strange-loop.svg)](https://crates.io/crates/strange-loop)
 [![Documentation](https://docs.rs/strange-loop/badge.svg)](https://docs.rs/strange-loop)
-[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/crates/l/strange-loop.svg)](https://github.com/ruvnet/sublinear-time-solver/blob/main/LICENSE)
 
-**A framework where thousands of tiny agents collaborate in real-time, each operating within nanosecond budgets, forming emergent intelligence through temporal feedback loops and quantum-classical hybrid computing.**
+**Strange Loops** is a high-performance Rust library for consciousness simulation, quantum computing, and nano-agent swarm intelligence. Built with authentic algorithms and realistic performance characteristics.
 
 ## 🌐 NPX CLI Available
 

@@ -1,6 +1,6 @@
 {
   "name": "sublinear-time-solver",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "The Ultimate Mathematical & AI Toolkit: Sublinear algorithms, consciousness exploration, psycho-symbolic reasoning, and temporal prediction in one unified MCP interface. WASM-accelerated with emergent behavior analysis.",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -54,6 +54,8 @@
     "wasm-pack": "^0.12.1"
   },
   "dependencies": {
+    "@ruvnet/strange-loop": "^0.3.0",
+    "strange-loops": "^0.5.1",
     "@modelcontextprotocol/sdk": "^1.18.1",
     "@ruvnet/bmssp": "^1.0.0",
     "@types/node": "^24.5.2",

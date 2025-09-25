@@ -423,10 +423,10 @@ mod tests {
         }
 
         // Test addition
-        a.simd_add(&b).unwrap();
+        unsafe { a.simd_add(&b).unwrap(); }
 
         // Test dot product
-        let dot = a.simd_dot(&b).unwrap();
+        let dot = unsafe { a.simd_dot(&b).unwrap() };
         assert!(dot > 0.0);
 
         // Test scaling

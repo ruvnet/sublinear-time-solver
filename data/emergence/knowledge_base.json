@@ -58,11 +58,17 @@
     "subject": "test_entity",
     "predicate": "has_property",
     "object": "test_value",
-    "confidence": 0.919,
-    "timestamp": 1758599214984,
+    "confidence": 0.956953279,
+    "timestamp": 1758823806307,
     "sessionId": "test_session",
     "sources": [
       "test",
+      "test_session",
+      "test_session",
+      "test_session",
+      "test_session",
+      "test_session",
+      "test_session",
       "test_session",
       "test_session"
     ]

@@ -30,6 +30,20 @@ pub fn init() {
     console_error_panic_hook::set_once();
 }
 
+/// Test function to verify WASM exports are working
+#[cfg(feature = "wasm")]
+#[wasm_bindgen]
+pub fn test_wasm_export() -> String {
+    "WASM exports working!".to_string()
+}
+
+/// Get version of strange-loop crate
+#[cfg(feature = "wasm")]
+#[wasm_bindgen]
+pub fn get_version() -> String {
+    "0.1.2".to_string()
+}
+
 /// WASM-compatible consciousness configuration
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
