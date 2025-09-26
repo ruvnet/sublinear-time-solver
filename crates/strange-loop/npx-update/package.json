@@ -1,6 +1,6 @@
 {
   "name": "strange-loops",
-  "version": "0.5.1",
+  "version": "0.5.4",
   "description": "A framework where thousands of tiny agents collaborate in real-time with authentic 500K+ ticks/sec performance, forming emergent intelligence through temporal consciousness and quantum-classical hybrid computing",
   "main": "index.js",
   "bin": {
@@ -42,7 +42,6 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
-    "@ruvnet/strange-loop": "^0.3.0",
     "@modelcontextprotocol/sdk": "^1.18.1",
     "@types/node": "^24.5.2",
     "boxen": "^5.1.2",
@@ -62,6 +61,11 @@
     "lib/",
     "mcp/",
     "wasm/",
+    "strange_loop_bg.wasm",
+    "strange_loop.js",
+    "strange_loop.d.ts",
+    "strange_loop_bg.js",
+    "strange_loop_bg.wasm.d.ts",
     "templates/",
     "README.md",
     "LICENSE-MIT",

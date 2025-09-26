@@ -52,6 +52,7 @@
 pub mod neural_consciousness_simple;
 pub mod quantum_enhanced_simple;
 pub mod nano_swarm_enhanced_simple;
+pub mod nano_swarm_wasm;
 
 // Legacy modules (kept for compatibility)
 pub mod nano_agent;
@@ -298,15 +299,13 @@ pub async fn nano_swarm_create(agent_count: usize) -> std::result::Result<String
 #[cfg(all(target_arch = "wasm32", feature = "wasm"))]
 #[wasm_bindgen]
 pub async fn nano_swarm_run(duration_ms: u32) -> std::result::Result<String, JsValue> {
-    use crate::nano_swarm_enhanced_simple::*;
+    // Use WASM-compatible synchronous version for REAL metrics
+    use crate::nano_swarm_wasm::run_nano_swarm_sync;
 
     let agent_count = 1000;
-    let topology = SwarmTopology::Mesh;
+    let result = run_nano_swarm_sync(agent_count, duration_ms as u64);
 
-    match create_and_run_enhanced_swarm(agent_count, topology, duration_ms as u64).await {
-        Ok(result) => Ok(serde_json::to_string(&result).map_err(|e| JsValue::from_str(&e.to_string()))?),
-        Err(e) => Err(JsValue::from_str(&format!("Simulation failed: {}", e)))
-    }
+    Ok(serde_json::to_string(&result).map_err(|e| JsValue::from_str(&e.to_string()))?)
 }
 
 #[cfg(all(target_arch = "wasm32", feature = "wasm"))]
