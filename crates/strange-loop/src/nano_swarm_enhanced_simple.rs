@@ -3,7 +3,9 @@
 //! This module implements a high-performance nano-agent swarm using Tokio for async
 //! coordination and Rayon for parallel processing, with realistic performance metrics.
 
-use tokio::time::{Duration, Instant, sleep_until};
+#[cfg(not(target_arch = "wasm32"))]
+use tokio::time::sleep_until;
+use std::time::{Duration, Instant};
 use std::sync::{Arc, atomic::{AtomicU64, AtomicUsize, Ordering}};
 use serde::{Deserialize, Serialize};
 use rand::{thread_rng, Rng};
@@ -163,10 +165,18 @@ impl EnhancedNanoSwarm {
             // Execute agent tick in parallel
             self.execute_parallel_agent_tick(tick_count).await?;
 
-            // Precise timing control
-            let next_tick = tick_start + tick_duration;
-            if Instant::now() < next_tick {
-                sleep_until(next_tick).await;
+            // Precise timing control (WASM-compatible)
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                let next_tick = tick_start + tick_duration;
+                if Instant::now() < next_tick {
+                    sleep_until(tokio::time::Instant::from(next_tick)).await;
+                }
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                // For WASM, we can't use async sleep, just continue
+                let _ = tick_start + tick_duration;
             }
 
             tick_count += 1;
@@ -182,7 +192,13 @@ impl EnhancedNanoSwarm {
             }
         }
 
+        // Get ACTUAL runtime, ensuring minimum measurable time for REAL metrics
         let total_runtime = simulation_start.elapsed();
+        let total_runtime = if total_runtime.as_nanos() < 1_000_000 {
+            Duration::from_millis(1)  // Minimum 1ms for meaningful metrics
+        } else {
+            total_runtime
+        };
 
         // Generate comprehensive results
         self.generate_results(tick_count, total_runtime, tick_durations).await
@@ -333,10 +349,15 @@ impl EnhancedNanoSwarm {
         let total_energy: f64 = self.agents.iter().map(|a| a.energy).sum();
         let avg_energy = total_energy / self.config.agent_count as f64;
 
-        let actual_ticks_per_second = if total_runtime.as_secs_f64() > 0.0 {
-            tick_count as f64 / total_runtime.as_secs_f64()
+        // Calculate REAL performance - no BS!
+        let runtime_secs = total_runtime.as_secs_f64();
+        let actual_ticks_per_second = if runtime_secs > 0.001 {  // At least 1ms
+            tick_count as f64 / runtime_secs
+        } else if tick_count > 0 {
+            // If runtime too small but we did work, estimate based on minimum measurable time
+            tick_count as f64 / 0.001  // Assume at least 1ms
         } else {
-            0.0
+            0.0  // No ticks = no performance
         };
 
         let total_messages = self.agents.iter().map(|a| a.messages_sent).sum::<u64>();
