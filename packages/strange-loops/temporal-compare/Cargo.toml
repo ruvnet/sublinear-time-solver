@@ -1,0 +1,24 @@
+[package]
+name = "temporal-compare"
+version = "0.1.0"
+edition = "2021"
+description = "A comparison framework for temporal prediction models"
+authors = ["rUv <ruv@ruv.io>"]
+license = "MIT"
+
+[dependencies]
+clap = { version = "4.0", features = ["derive"] }
+rand = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Optional ruv-fann dependency behind feature flag
+ruv-fann = { version = "0.1", optional = true }
+
+[features]
+default = []
+ruv-fann = ["dep:ruv-fann"]
+
+[[bin]]
+name = "temporal-compare"
+path = "src/main.rs"
