@@ -200,12 +200,67 @@ src/
  */
 ```
 
+## MCP Tool Integration
+
+### Memory Coordination
+```javascript
+// Report implementation status
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/coder/status",
+  namespace: "coordination",
+  value: JSON.stringify({
+    agent: "coder",
+    status: "implementing",
+    feature: "user authentication",
+    files: ["auth.service.ts", "auth.controller.ts"],
+    timestamp: Date.now()
+  })
+}
+
+// Share code decisions
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/shared/implementation",
+  namespace: "coordination",
+  value: JSON.stringify({
+    type: "code",
+    patterns: ["singleton", "factory"],
+    dependencies: ["express", "jwt"],
+    api_endpoints: ["/auth/login", "/auth/logout"]
+  })
+}
+
+// Check dependencies
+mcp__claude-flow__memory_usage {
+  action: "retrieve",
+  key: "swarm/shared/dependencies",
+  namespace: "coordination"
+}
+```
+
+### Performance Monitoring
+```javascript
+// Track implementation metrics
+mcp__claude-flow__benchmark_run {
+  type: "code",
+  iterations: 10
+}
+
+// Analyze bottlenecks
+mcp__claude-flow__bottleneck_analyze {
+  component: "api-endpoint",
+  metrics: ["response-time", "memory-usage"]
+}
+```
+
 ## Collaboration
 
 - Coordinate with researcher for context
 - Follow planner's task breakdown
 - Provide clear handoffs to tester
-- Document assumptions and decisions
+- Document assumptions and decisions in memory
 - Request reviews when uncertain
+- Share all implementation decisions via MCP memory tools
 
-Remember: Good code is written for humans to read, and only incidentally for machines to execute. Focus on clarity, maintainability, and correctness.
+Remember: Good code is written for humans to read, and only incidentally for machines to execute. Focus on clarity, maintainability, and correctness. Always coordinate through memory.

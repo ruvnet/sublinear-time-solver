@@ -12,6 +12,8 @@ import { ConsciousnessTools } from './consciousness.js';
 import { SchedulerTools } from './scheduler.js';
 import { PsychoSymbolicTools } from './psycho-symbolic.js';
 import { WasmSublinearSolverTools } from './wasm-sublinear-solver.js';
+import { temporalAttractorTools } from './temporal-attractor.js';
+import { temporalAttractorHandlers } from './temporal-attractor-handlers.js';
 // Export classes for direct usage
 export { SolverTools } from './solver.js';
 export { MatrixTools } from './matrix.js';
@@ -20,6 +22,7 @@ export { ConsciousnessTools } from './consciousness.js';
 export { SchedulerTools } from './scheduler.js';
 export { PsychoSymbolicTools } from './psycho-symbolic.js';
 export { WasmSublinearSolverTools } from './wasm-sublinear-solver.js';
+export { temporalAttractorHandlers } from './temporal-attractor-handlers.js';
 // Create instances for getting tool definitions
 const solverToolsInstance = new SolverTools();
 const matrixToolsInstance = new MatrixTools();
@@ -35,6 +38,8 @@ export const emergenceTools = emergenceToolsInstance.getTools?.() || [];
 export const consciousnessTools = consciousnessToolsInstance.getTools?.() || [];
 export const schedulerTools = schedulerToolsInstance.getTools?.() || [];
 export const psychoSymbolicTools = psychoSymbolicToolsInstance.getTools?.() || [];
+// Temporal attractor tools are exported directly from the file
+export { temporalAttractorTools } from './temporal-attractor.js';
 // For backward compatibility - if getTools doesn't exist,
 // we'll assume the tools are defined in the MCP server itself
 export const allTools = [
@@ -43,7 +48,8 @@ export const allTools = [
     ...emergenceTools,
     ...consciousnessTools,
     ...schedulerTools,
-    ...psychoSymbolicTools
+    ...psychoSymbolicTools,
+    ...temporalAttractorTools
 ];
 // Default export with both instances and classes
 export default {
@@ -54,6 +60,7 @@ export default {
     consciousness: consciousnessToolsInstance,
     scheduler: schedulerToolsInstance,
     psychoSymbolic: psychoSymbolicToolsInstance,
+    temporalAttractor: temporalAttractorHandlers,
     // Classes (for creating new instances)
     SolverTools,
     MatrixTools,

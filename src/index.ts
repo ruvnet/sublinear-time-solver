@@ -14,6 +14,9 @@ export { SolverTools } from './mcp/tools/solver.js';
 export { MatrixTools } from './mcp/tools/matrix.js';
 export { GraphTools } from './mcp/tools/graph.js';
 
+// Temporal Attractor exports
+export { temporalAttractorTools, temporalAttractorHandlers } from './mcp/tools/temporal-attractor.js';
+
 // Types
 export * from './core/types.js';
 

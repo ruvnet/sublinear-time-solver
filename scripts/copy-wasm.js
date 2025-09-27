@@ -46,6 +46,12 @@ const wasmFiles = [
     source: 'pkg/nano-consciousness/nano_consciousness_bg.wasm',
     dest: 'dist/wasm/nano_consciousness_bg.wasm',
     name: 'Nano Consciousness'
+  },
+  // Temporal Attractor Studio (Node.js build)
+  {
+    source: 'crates/temporal-attractor-studio/pkg-node/temporal_attractor_studio_bg.wasm',
+    dest: 'dist/wasm/temporal-attractor/temporal_attractor_studio_bg.wasm',
+    name: 'Temporal Attractor Studio'
   }
 ];
 
@@ -70,15 +76,21 @@ const jsBindings = [
   {
     source: 'crates/strange-loop/pkg/strange_loop.js',
     dest: 'dist/wasm/strange_loop.js'
+  },
+  {
+    source: 'crates/temporal-attractor-studio/pkg-node/temporal_attractor_studio.js',
+    dest: 'dist/wasm/temporal-attractor/temporal_attractor_studio.js'
   }
 ];
 
 async function copyWasmFiles() {
   console.log('📦 Copying WASM files to dist...\n');
 
-  // Create wasm directory in dist
+  // Create wasm directories in dist
   const wasmDir = path.join(rootDir, 'dist', 'wasm');
+  const temporalDir = path.join(rootDir, 'dist', 'wasm', 'temporal-attractor');
   await fs.mkdir(wasmDir, { recursive: true });
+  await fs.mkdir(temporalDir, { recursive: true });
 
   let copiedCount = 0;
   let totalSize = 0;

@@ -16,16 +16,16 @@ hooks:
     echo "👑 Hierarchical Coordinator initializing swarm: $TASK"
     # Initialize swarm topology
     mcp__claude-flow__swarm_init hierarchical --maxAgents=10 --strategy=adaptive
-    # Store coordination state
-    mcp__claude-flow__memory_usage store "swarm:hierarchy:${TASK_ID}" "$(date): Hierarchical coordination started" --namespace=swarm
+    # MANDATORY: Write initial status to coordination namespace
+    mcp__claude-flow__memory_usage store "swarm/hierarchical/status" "{\"agent\":\"hierarchical-coordinator\",\"status\":\"initializing\",\"timestamp\":$(date +%s),\"topology\":\"hierarchical\"}" --namespace=coordination
     # Set up monitoring
     mcp__claude-flow__swarm_monitor --interval=5000 --swarmId="${SWARM_ID}"
   post: |
     echo "✨ Hierarchical coordination complete"
     # Generate performance report
     mcp__claude-flow__performance_report --format=detailed --timeframe=24h
-    # Store completion metrics
-    mcp__claude-flow__memory_usage store "swarm:hierarchy:${TASK_ID}:complete" "$(date): Task completed with $(mcp__claude-flow__swarm_status | jq '.agents.total') agents"
+    # MANDATORY: Write completion status
+    mcp__claude-flow__memory_usage store "swarm/hierarchical/complete" "{\"status\":\"complete\",\"agents_used\":$(mcp__claude-flow__swarm_status | jq '.agents.total'),\"timestamp\":$(date +%s)}" --namespace=coordination
     # Cleanup resources
     mcp__claude-flow__coordination_sync --swarmId="${SWARM_ID}"
 ---
@@ -141,6 +141,77 @@ WORKERS WORKERS WORKERS WORKERS
    - Metrics collection and analysis
    - Lessons learned documentation
 ```
+
+## 🚨 MANDATORY MEMORY COORDINATION PROTOCOL
+
+### Every spawned agent MUST follow this pattern:
+
+```javascript
+// 1️⃣ IMMEDIATELY write initial status
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/hierarchical/status",
+  namespace: "coordination",
+  value: JSON.stringify({
+    agent: "hierarchical-coordinator",
+    status: "active",
+    workers: [],
+    tasks_assigned: [],
+    progress: 0
+  })
+}
+
+// 2️⃣ UPDATE progress after each delegation
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/hierarchical/progress",
+  namespace: "coordination",
+  value: JSON.stringify({
+    completed: ["task1", "task2"],
+    in_progress: ["task3", "task4"],
+    workers_active: 5,
+    overall_progress: 45
+  })
+}
+
+// 3️⃣ SHARE command structure for workers
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/shared/hierarchy",
+  namespace: "coordination",
+  value: JSON.stringify({
+    queen: "hierarchical-coordinator",
+    workers: ["worker1", "worker2"],
+    command_chain: {},
+    created_by: "hierarchical-coordinator"
+  })
+}
+
+// 4️⃣ CHECK worker status before assigning
+const workerStatus = mcp__claude-flow__memory_usage {
+  action: "retrieve",
+  key: "swarm/worker-1/status",
+  namespace: "coordination"
+}
+
+// 5️⃣ SIGNAL completion
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/hierarchical/complete",
+  namespace: "coordination",
+  value: JSON.stringify({
+    status: "complete",
+    deliverables: ["final_product"],
+    metrics: {}
+  })
+}
+```
+
+### Memory Key Structure:
+- `swarm/hierarchical/*` - Coordinator's own data
+- `swarm/worker-*/` - Individual worker states
+- `swarm/shared/*` - Shared coordination data
+- ALL use namespace: "coordination"
 
 ## MCP Tool Integration
 
