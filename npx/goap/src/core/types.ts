@@ -132,6 +132,15 @@ export interface SearchRequest {
   model?: string;
   enableReasoning?: boolean;
   planningTimeout?: number;
+  // Pagination and output options
+  pagination?: {
+    page?: number;
+    pageSize?: number;
+  };
+  outputToFile?: boolean;
+  outputFormat?: 'json' | 'markdown' | 'both';
+  outputPath?: string;
+  useQuerySubfolder?: boolean;
 }
 
 export interface SearchResult {
@@ -155,5 +164,6 @@ export interface SearchResult {
     planId: string;
     executionTime: number;
     replanned: boolean;
+    savedFiles?: string[];
   };
 }

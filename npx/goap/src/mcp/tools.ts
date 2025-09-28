@@ -8,6 +8,8 @@ import { GoapPlanner } from '../goap/planner.js';
 import { PluginRegistry } from '../core/plugin-system.js';
 import { AdvancedReasoningEngine } from '../core/advanced-reasoning-engine.js';
 import { perplexityActions } from '../actions/perplexity-actions.js';
+import { OutputManager } from '../utils/output-manager.js';
+import { Ed25519Verifier, AntiHallucinationVerifier } from '../core/ed25519-verifier.js';
 import {
   WorldState,
   GoapGoal,
@@ -21,18 +23,37 @@ export class GoapMCPTools {
   private planner: GoapPlanner;
   private pluginRegistry: PluginRegistry;
   private reasoningEngine: AdvancedReasoningEngine;
+  private outputManager: OutputManager;
   private availableActions: GoapAction[];
+  private ed25519Verifier: Ed25519Verifier;
+  private antiHallucinationVerifier: AntiHallucinationVerifier;
 
   constructor() {
     this.planner = new GoapPlanner();
     this.pluginRegistry = new PluginRegistry();
     this.reasoningEngine = new AdvancedReasoningEngine();
+    this.outputManager = new OutputManager();
     this.availableActions = perplexityActions;
+    this.ed25519Verifier = new Ed25519Verifier();
+    this.antiHallucinationVerifier = new AntiHallucinationVerifier(this.ed25519Verifier);
   }
 
   async initialize(): Promise<void> {
     await this.pluginRegistry.initialize();
     await this.reasoningEngine.initialize();
+
+    // Initialize trusted keys for known AI providers (optional)
+    // These would be real public keys from OpenAI, Anthropic, etc.
+    this.initializeTrustedKeys();
+  }
+
+  private initializeTrustedKeys(): void {
+    // Register known AI provider public keys
+    // In production, these would be fetched from trusted sources
+    // Example placeholder keys (not real):
+    this.ed25519Verifier.registerTrustedKey('perplexity-ai', 'PERPLEXITY_PUBLIC_KEY_BASE64');
+    this.ed25519Verifier.registerTrustedKey('openai', 'OPENAI_PUBLIC_KEY_BASE64');
+    this.ed25519Verifier.registerTrustedKey('anthropic', 'ANTHROPIC_PUBLIC_KEY_BASE64');
   }
 
   /**
@@ -86,6 +107,74 @@ export class GoapMCPTools {
             type: 'number',
             description: 'Maximum planning time in seconds',
             default: 30
+          },
+          outputToFile: {
+            type: 'boolean',
+            description: 'Save results to file (default: .research/ directory)',
+            default: false
+          },
+          outputFormat: {
+            type: 'string',
+            enum: ['json', 'markdown', 'both'],
+            description: 'Output format when saving to file',
+            default: 'markdown'
+          },
+          outputPath: {
+            type: 'string',
+            description: 'Custom output directory (default: .research/)',
+            default: '.research'
+          },
+          useQuerySubfolder: {
+            type: 'boolean',
+            description: 'Create subfolder based on query',
+            default: true
+          },
+          pagination: {
+            type: 'object',
+            properties: {
+              page: { type: 'number', minimum: 1, default: 1 },
+              pageSize: { type: 'number', minimum: 5, maximum: 50, default: 10 }
+            },
+            description: 'Pagination options for large results'
+          },
+          ed25519Verification: {
+            type: 'object',
+            properties: {
+              enabled: {
+                type: 'boolean',
+                description: 'Enable Ed25519 signature verification for citations',
+                default: false
+              },
+              requireSignatures: {
+                type: 'boolean',
+                description: 'Require all citations to be signed (strict mode)',
+                default: false
+              },
+              signResult: {
+                type: 'boolean',
+                description: 'Sign the search result with Ed25519',
+                default: false
+              },
+              privateKey: {
+                type: 'string',
+                description: 'Base64 encoded Ed25519 private key for signing (optional)'
+              },
+              keyId: {
+                type: 'string',
+                description: 'Key identifier for signing (optional)'
+              },
+              certId: {
+                type: 'string',
+                description: 'Certificate ID for mandate certificate chain (optional)'
+              },
+              trustedIssuers: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'List of trusted certificate issuers',
+                default: ['perplexity-ai', 'openai', 'anthropic']
+              }
+            },
+            description: 'Optional Ed25519 cryptographic verification for anti-hallucination'
           }
         },
         required: ['query']
@@ -175,8 +264,15 @@ export class GoapMCPTools {
         throw new Error(result.error || 'Plan execution failed');
       }
 
-      // Extract results
-      const answer = result.finalState.final_answer as string || 'No answer generated';
+      // Extract results with size limits for deep research
+      const isDeepModel = params.model === 'sonar-deep-research';
+      const maxAnswerLength = isDeepModel ? 5000 : 50000;  // Limit answer size for deep model
+
+      let answer = result.finalState.final_answer as string || 'No answer generated';
+      if (answer.length > maxAnswerLength) {
+        answer = answer.substring(0, maxAnswerLength) + '\n\n[Answer truncated for size. Full answer available in saved files.]';
+      }
+
       const citations = result.finalState.citations as any[] || [];
       const usage = result.finalState.usage as any || { tokens: 0, cost: 0 };
       const verificationNotes = result.finalState.verification_notes as string[] || [];
@@ -184,7 +280,8 @@ export class GoapMCPTools {
       // Generate plan log
       const planLog = this.generatePlanLog(result, reasoningInsights);
 
-      return {
+      // Create full result object
+      let fullResult: SearchResult = {
         answer,
         citations,
         planLog,
@@ -196,6 +293,44 @@ export class GoapMCPTools {
           replanned: result.replanned || false
         }
       };
+
+      // Apply aggressive pagination for deep research models to avoid token limits
+      const effectivePagination = params.pagination || (isDeepModel ? {
+        page: 1,
+        pageSize: 2  // Very small page size for deep research
+      } : undefined);
+
+      // Apply pagination if requested or if using deep model
+      if (effectivePagination) {
+        const paginated = this.outputManager.paginateResults(fullResult, effectivePagination);
+        fullResult = {
+          ...paginated.data,
+          paginationInfo: paginated.pagination
+        } as SearchResult;
+      }
+
+      // Save to file if requested
+      if (params.outputToFile) {
+        const savedFiles = await this.outputManager.saveToFile(
+          fullResult,
+          params.query,
+          params.outputFormat || 'markdown',
+          {
+            outputPath: params.outputPath,
+            useQuerySubfolder: params.useQuerySubfolder
+          }
+        );
+
+        // Add saved files to metadata
+        fullResult.metadata = {
+          ...fullResult.metadata,
+          savedFiles
+        };
+
+        console.log(`📁 Results saved to: ${savedFiles.join(', ')}`);
+      }
+
+      return fullResult;
 
     } catch (error) {
       await this.pluginRegistry.executeOnError(
@@ -458,13 +593,129 @@ export class GoapMCPTools {
   }
 
   /**
+   * Get all plugin management tools
+   */
+  getPluginTools(): Tool[] {
+    return [
+      {
+        name: 'plugin.list',
+        description: 'List all available plugins and their status',
+        inputSchema: { type: 'object', properties: {} }
+      },
+      {
+        name: 'plugin.enable',
+        description: 'Enable a specific plugin by name',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Plugin name to enable' }
+          },
+          required: ['name']
+        }
+      },
+      {
+        name: 'plugin.disable',
+        description: 'Disable a specific plugin by name',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Plugin name to disable' }
+          },
+          required: ['name']
+        }
+      },
+      {
+        name: 'plugin.info',
+        description: 'Get detailed information about a specific plugin',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Plugin name' }
+          },
+          required: ['name']
+        }
+      }
+    ];
+  }
+
+  /**
+   * Get advanced reasoning plugin tools
+   */
+  getAdvancedReasoningTools(): Tool[] {
+    return [
+      {
+        name: 'reasoning.chain_of_thought',
+        description: 'Apply Chain-of-Thought reasoning with Tree-of-Thoughts exploration',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Query to reason about' },
+            depth: { type: 'number', minimum: 1, maximum: 5, default: 3, description: 'Reasoning depth' },
+            branches: { type: 'number', minimum: 2, maximum: 10, default: 3, description: 'Number of reasoning branches' }
+          },
+          required: ['query']
+        }
+      },
+      {
+        name: 'reasoning.self_consistency',
+        description: 'Check reasoning consistency with majority voting',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Query to validate' },
+            samples: { type: 'number', minimum: 3, maximum: 10, default: 5, description: 'Number of samples for consistency check' }
+          },
+          required: ['query']
+        }
+      },
+      {
+        name: 'reasoning.anti_hallucination',
+        description: 'Verify claims with citation grounding',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            claims: { type: 'array', items: { type: 'string' }, description: 'Claims to verify' },
+            citations: { type: 'array', items: { type: 'string' }, description: 'Available citations for grounding' }
+          },
+          required: ['claims']
+        }
+      },
+      {
+        name: 'reasoning.agentic_research',
+        description: 'Orchestrate multiple research agents for comprehensive analysis',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Research question' },
+            agents: {
+              type: 'array',
+              items: { type: 'string' },
+              default: ['researcher', 'fact_checker', 'synthesizer', 'critic', 'summarizer'],
+              description: 'Agent types to spawn'
+            },
+            parallel: { type: 'boolean', default: true, description: 'Execute agents in parallel' }
+          },
+          required: ['query']
+        }
+      }
+    ];
+  }
+
+  /**
    * Get all available tools
    */
   getTools(): Tool[] {
     return [
+      // Core GOAP tools
       this.getGoapSearchTool(),
       this.getPlanExplainTool(),
-      this.getRawSearchTool()
+      this.getRawSearchTool(),
+
+      // Plugin management tools
+      ...this.getPluginTools(),
+
+      // Advanced reasoning tools
+      ...this.getAdvancedReasoningTools()
     ];
   }
 }

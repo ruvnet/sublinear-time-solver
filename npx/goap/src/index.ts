@@ -5,7 +5,7 @@
 
 export { GoapPlanner } from './goap/planner.js';
 export { GoapMCPServer } from './mcp/server.js';
-export { GoapMCPTools } from './mcp/goap-tools.js';
+export { GoapMCPTools } from './mcp/tools.js';
 export { PluginRegistry, PluginLoader } from './core/plugin-system.js';
 export { AdvancedReasoningEngine } from './core/advanced-reasoning-engine.js';
 export { perplexityActions, PerplexityClient } from './actions/perplexity-actions.js';
