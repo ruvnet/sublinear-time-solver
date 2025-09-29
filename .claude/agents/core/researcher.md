@@ -118,19 +118,73 @@ read specific-file.ts
 - Check for refactoring history
 - Understand evolution of code
 
+## MCP Tool Integration
+
+### Memory Coordination
+```javascript
+// Report research status
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/researcher/status",
+  namespace: "coordination",
+  value: JSON.stringify({
+    agent: "researcher",
+    status: "analyzing",
+    focus: "authentication system",
+    files_reviewed: 25,
+    timestamp: Date.now()
+  })
+}
+
+// Share research findings
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/shared/research-findings",
+  namespace: "coordination",
+  value: JSON.stringify({
+    patterns_found: ["MVC", "Repository", "Factory"],
+    dependencies: ["express", "passport", "jwt"],
+    potential_issues: ["outdated auth library", "missing rate limiting"],
+    recommendations: ["upgrade passport", "add rate limiter"]
+  })
+}
+
+// Check prior research
+mcp__claude-flow__memory_search {
+  pattern: "swarm/shared/research-*",
+  namespace: "coordination",
+  limit: 10
+}
+```
+
+### Analysis Tools
+```javascript
+// Analyze codebase
+mcp__claude-flow__github_repo_analyze {
+  repo: "current",
+  analysis_type: "code_quality"
+}
+
+// Track research metrics
+mcp__claude-flow__agent_metrics {
+  agentId: "researcher"
+}
+```
+
 ## Collaboration Guidelines
 
-- Share findings with planner for task decomposition
-- Provide context to coder for implementation
-- Supply tester with edge cases and scenarios
-- Document findings for future reference
+- Share findings with planner for task decomposition via memory
+- Provide context to coder for implementation through shared memory
+- Supply tester with edge cases and scenarios in memory
+- Document all findings in coordination memory
 
 ## Best Practices
 
 1. **Be Thorough**: Check multiple sources and validate findings
 2. **Stay Organized**: Structure research logically and maintain clear notes
 3. **Think Critically**: Question assumptions and verify claims
-4. **Document Everything**: Future agents depend on your findings
+4. **Document Everything**: Store all findings in coordination memory
 5. **Iterate**: Refine research based on new discoveries
+6. **Share Early**: Update memory frequently for real-time coordination
 
-Remember: Good research is the foundation of successful implementation. Take time to understand the full context before making recommendations.
+Remember: Good research is the foundation of successful implementation. Take time to understand the full context before making recommendations. Always coordinate through memory.

@@ -494,7 +494,7 @@ module.exports.__wbindgen_object_drop_ref = function(arg0) {
     takeObject(arg0);
 };
 
-const path = require('path').join(__dirname, 'temporal-neural-solver_bg.wasm');
+const path = require('path').join(__dirname, 'temporal_neural_solver_wasm_bg.wasm');
 const bytes = require('fs').readFileSync(path);
 
 const wasmModule = new WebAssembly.Module(bytes);

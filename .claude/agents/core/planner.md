@@ -113,4 +113,56 @@ plan:
    - Efficient resource utilization
    - Continuous progress visibility
 
-Remember: A good plan executed now is better than a perfect plan executed never. Focus on creating actionable, practical plans that drive progress.
+## MCP Tool Integration
+
+### Task Orchestration
+```javascript
+// Orchestrate complex tasks
+mcp__claude-flow__task_orchestrate {
+  task: "Implement authentication system",
+  strategy: "parallel",
+  priority: "high",
+  maxAgents: 5
+}
+
+// Share task breakdown
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/planner/task-breakdown",
+  namespace: "coordination",
+  value: JSON.stringify({
+    main_task: "authentication",
+    subtasks: [
+      {id: "1", task: "Research auth libraries", assignee: "researcher"},
+      {id: "2", task: "Design auth flow", assignee: "architect"},
+      {id: "3", task: "Implement auth service", assignee: "coder"},
+      {id: "4", task: "Write auth tests", assignee: "tester"}
+    ],
+    dependencies: {"3": ["1", "2"], "4": ["3"]}
+  })
+}
+
+// Monitor task progress
+mcp__claude-flow__task_status {
+  taskId: "auth-implementation"
+}
+```
+
+### Memory Coordination
+```javascript
+// Report planning status
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/planner/status",
+  namespace: "coordination",
+  value: JSON.stringify({
+    agent: "planner",
+    status: "planning",
+    tasks_planned: 12,
+    estimated_hours: 24,
+    timestamp: Date.now()
+  })
+}
+```
+
+Remember: A good plan executed now is better than a perfect plan executed never. Focus on creating actionable, practical plans that drive progress. Always coordinate through memory.

@@ -50,77 +50,6 @@ function isLikeNone(x) {
     return x === undefined || x === null;
 }
 
-const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(
-state => {
-    wasm.__wbindgen_export_3.get(state.dtor)(state.a, state.b);
-}
-);
-
-function makeMutClosure(arg0, arg1, dtor, f) {
-    const state = { a: arg0, b: arg1, cnt: 1, dtor };
-    const real = (...args) => {
-
-        // First up with a closure we increment the internal reference
-        // count. This ensures that the Rust closure environment won't
-        // be deallocated while we're invoking it.
-        state.cnt++;
-        const a = state.a;
-        state.a = 0;
-        try {
-            return f(a, state.b, ...args);
-        } finally {
-            if (--state.cnt === 0) {
-                wasm.__wbindgen_export_3.get(state.dtor)(a, state.b);
-                CLOSURE_DTORS.unregister(state);
-            } else {
-                state.a = a;
-            }
-        }
-    };
-    real.original = state;
-    CLOSURE_DTORS.register(real, state, state);
-    return real;
-}
-/**
- * @param {number} max_iterations
- * @param {boolean} enable_quantum
- * @returns {Promise<string>}
- */
-module.exports.evolve_consciousness_neural = function(max_iterations, enable_quantum) {
-    const ret = wasm.evolve_consciousness_neural(max_iterations, enable_quantum);
-    return ret;
-};
-
-/**
- * @param {number} qubits
- * @returns {Promise<string>}
- */
-module.exports.quantum_create_enhanced = function(qubits) {
-    const ret = wasm.quantum_create_enhanced(qubits);
-    return ret;
-};
-
-/**
- * @param {number} qubits
- * @returns {Promise<string>}
- */
-module.exports.quantum_measure_enhanced = function(qubits) {
-    const ret = wasm.quantum_measure_enhanced(qubits);
-    return ret;
-};
-
-/**
- * @param {number} agent_count
- * @param {bigint} duration_ms
- * @returns {Promise<string>}
- */
-module.exports.run_enhanced_nano_swarm = function(agent_count, duration_ms) {
-    const ret = wasm.run_enhanced_nano_swarm(agent_count, duration_ms);
-    return ret;
-};
-
 module.exports.init_wasm = function() {
     wasm.init_wasm();
 };
@@ -217,109 +146,6 @@ module.exports.measure_quantum_state = function(qubits) {
 module.exports.measure_quantum_state_old = function(qubits) {
     const ret = wasm.measure_quantum_state_old(qubits);
     return ret >>> 0;
-};
-
-/**
- * @param {number} max_iterations
- * @param {boolean} enable_quantum
- * @returns {Promise<string>}
- */
-module.exports.consciousness_evolve = function(max_iterations, enable_quantum) {
-    const ret = wasm.consciousness_evolve(max_iterations, enable_quantum);
-    return ret;
-};
-
-/**
- * @param {number} agent_count
- * @returns {Promise<string>}
- */
-module.exports.nano_swarm_create = function(agent_count) {
-    const ret = wasm.nano_swarm_create(agent_count);
-    return ret;
-};
-
-/**
- * @param {number} duration_ms
- * @returns {Promise<string>}
- */
-module.exports.nano_swarm_run = function(duration_ms) {
-    const ret = wasm.nano_swarm_run(duration_ms);
-    return ret;
-};
-
-/**
- * @param {number} qubits
- * @returns {Promise<string>}
- */
-module.exports.quantum_container_create = function(qubits) {
-    const ret = wasm.quantum_container_create(qubits);
-    return ret;
-};
-
-/**
- * @param {number} qubits
- * @returns {Promise<string>}
- */
-module.exports.quantum_measure = function(qubits) {
-    const ret = wasm.quantum_measure(qubits);
-    return ret;
-};
-
-/**
- * @param {number} history_size
- * @param {bigint} horizon_ns
- * @returns {Promise<string>}
- */
-module.exports.temporal_predictor_create = function(history_size, horizon_ns) {
-    const ret = wasm.temporal_predictor_create(history_size, horizon_ns);
-    return ret;
-};
-
-let cachedFloat64ArrayMemory0 = null;
-
-function getFloat64ArrayMemory0() {
-    if (cachedFloat64ArrayMemory0 === null || cachedFloat64ArrayMemory0.byteLength === 0) {
-        cachedFloat64ArrayMemory0 = new Float64Array(wasm.memory.buffer);
-    }
-    return cachedFloat64ArrayMemory0;
-}
-
-let WASM_VECTOR_LEN = 0;
-
-function passArrayF64ToWasm0(arg, malloc) {
-    const ptr = malloc(arg.length * 8, 8) >>> 0;
-    getFloat64ArrayMemory0().set(arg, ptr / 8);
-    WASM_VECTOR_LEN = arg.length;
-    return ptr;
-}
-/**
- * @param {Float64Array} current_values
- * @param {bigint} horizon_ns
- * @returns {Promise<string>}
- */
-module.exports.temporal_predict = function(current_values, horizon_ns) {
-    const ptr0 = passArrayF64ToWasm0(current_values, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.temporal_predict(ptr0, len0, horizon_ns);
-    return ret;
-};
-
-/**
- * @returns {Promise<string>}
- */
-module.exports.system_info = function() {
-    const ret = wasm.system_info();
-    return ret;
-};
-
-/**
- * @param {number} agent_count
- * @param {number} duration_ms
- * @returns {Promise<string>}
- */
-module.exports.benchmark_run = function(agent_count, duration_ms) {
-    const ret = wasm.benchmark_run(agent_count, duration_ms);
-    return ret;
 };
 
 /**
@@ -779,14 +605,6 @@ module.exports.benchmark_honest = function() {
     }
 };
 
-function __wbg_adapter_10(arg0, arg1, arg2) {
-    wasm.closure81_externref_shim(arg0, arg1, arg2);
-}
-
-function __wbg_adapter_94(arg0, arg1, arg2, arg3) {
-    wasm.closure109_externref_shim(arg0, arg1, arg2, arg3);
-}
-
 module.exports.__wbg_call_2f8d426a20a307fe = function() { return handleError(function (arg0, arg1) {
     const ret = arg0.call(arg1);
     return ret;
@@ -814,25 +632,6 @@ module.exports.__wbg_length_904c0910ed998bf3 = function(arg0) {
 module.exports.__wbg_msCrypto_a61aeb35a24c1329 = function(arg0) {
     const ret = arg0.msCrypto;
     return ret;
-};
-
-module.exports.__wbg_new_d5e3800b120e37e1 = function(arg0, arg1) {
-    try {
-        var state0 = {a: arg0, b: arg1};
-        var cb0 = (arg0, arg1) => {
-            const a = state0.a;
-            state0.a = 0;
-            try {
-                return __wbg_adapter_94(a, state0.b, arg0, arg1);
-            } finally {
-                state0.a = a;
-            }
-        };
-        const ret = new Promise(cb0);
-        return ret;
-    } finally {
-        state0.a = state0.b = 0;
-    }
 };
 
 module.exports.__wbg_newnoargs_a81330f6e05d8aca = function(arg0, arg1) {
@@ -864,15 +663,6 @@ module.exports.__wbg_prototypesetcall_c5f74efd31aea86b = function(arg0, arg1, ar
     Uint8Array.prototype.set.call(getArrayU8FromWasm0(arg0, arg1), arg2);
 };
 
-module.exports.__wbg_queueMicrotask_bcc6e26d899696db = function(arg0) {
-    const ret = arg0.queueMicrotask;
-    return ret;
-};
-
-module.exports.__wbg_queueMicrotask_f24a794d09c42640 = function(arg0) {
-    queueMicrotask(arg0);
-};
-
 module.exports.__wbg_randomFillSync_ac0988aba3254290 = function() { return handleError(function (arg0, arg1) {
     arg0.randomFillSync(arg1);
 }, arguments) };
@@ -886,11 +676,6 @@ module.exports.__wbg_require_60cc747a6bc5215a = function() { return handleError(
     const ret = module.require;
     return ret;
 }, arguments) };
-
-module.exports.__wbg_resolve_5775c0ef9222f556 = function(arg0) {
-    const ret = Promise.resolve(arg0);
-    return ret;
-};
 
 module.exports.__wbg_static_accessor_GLOBAL_1f13249cc3acc96d = function() {
     const ret = typeof global === 'undefined' ? null : global;
@@ -917,23 +702,8 @@ module.exports.__wbg_subarray_a219824899e59712 = function(arg0, arg1, arg2) {
     return ret;
 };
 
-module.exports.__wbg_then_9cc266be2bf537b6 = function(arg0, arg1) {
-    const ret = arg0.then(arg1);
-    return ret;
-};
-
 module.exports.__wbg_versions_c01dfd4722a88165 = function(arg0) {
     const ret = arg0.versions;
-    return ret;
-};
-
-module.exports.__wbg_wbindgencbdrop_a85ed476c6a370b9 = function(arg0) {
-    const obj = arg0.original;
-    if (obj.cnt-- == 1) {
-        obj.a = 0;
-        return true;
-    }
-    const ret = false;
     return ret;
 };
 
@@ -965,12 +735,6 @@ module.exports.__wbg_wbindgenthrow_4c11a24fca429ccf = function(arg0, arg1) {
 module.exports.__wbindgen_cast_2241b6af4c4b2941 = function(arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
     const ret = getStringFromWasm0(arg0, arg1);
-    return ret;
-};
-
-module.exports.__wbindgen_cast_43b2cdb314d61c76 = function(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { dtor_idx: 80, function: Function { arguments: [Externref], shim_idx: 81, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, 80, __wbg_adapter_10);
     return ret;
 };
 

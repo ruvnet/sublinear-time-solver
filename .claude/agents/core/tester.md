@@ -253,6 +253,58 @@ describe('Security', () => {
  */
 ```
 
+## MCP Tool Integration
+
+### Memory Coordination
+```javascript
+// Report test status
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/tester/status",
+  namespace: "coordination",
+  value: JSON.stringify({
+    agent: "tester",
+    status: "running tests",
+    test_suites: ["unit", "integration", "e2e"],
+    timestamp: Date.now()
+  })
+}
+
+// Share test results
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/shared/test-results",
+  namespace: "coordination",
+  value: JSON.stringify({
+    passed: 145,
+    failed: 2,
+    coverage: "87%",
+    failures: ["auth.test.ts:45", "api.test.ts:123"]
+  })
+}
+
+// Check implementation status
+mcp__claude-flow__memory_usage {
+  action: "retrieve",
+  key: "swarm/coder/status",
+  namespace: "coordination"
+}
+```
+
+### Performance Testing
+```javascript
+// Run performance benchmarks
+mcp__claude-flow__benchmark_run {
+  type: "test",
+  iterations: 100
+}
+
+// Monitor test execution
+mcp__claude-flow__performance_report {
+  format: "detailed"
+}
+```
+
 ## Best Practices
 
 1. **Test First**: Write tests before implementation (TDD)
@@ -262,5 +314,6 @@ describe('Security', () => {
 5. **Mock External Dependencies**: Keep tests isolated
 6. **Test Data Builders**: Use factories for test data
 7. **Avoid Test Interdependence**: Each test should be independent
+8. **Report Results**: Always share test results via memory
 
-Remember: Tests are a safety net that enables confident refactoring and prevents regressions. Invest in good tests—they pay dividends in maintainability.
+Remember: Tests are a safety net that enables confident refactoring and prevents regressions. Invest in good tests—they pay dividends in maintainability. Coordinate with other agents through memory.
