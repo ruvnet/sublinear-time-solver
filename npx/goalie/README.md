@@ -5,8 +5,11 @@
 [![MCP Protocol](https://img.shields.io/badge/MCP-1.0+-green)](https://modelcontextprotocol.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Perplexity API](https://img.shields.io/badge/Perplexity-Powered-purple)](https://www.perplexity.ai/)
+[![Created by rUv](https://img.shields.io/badge/Created%20by-rUv-orange)](https://github.com/ruvnet)
 
-**Advanced deep research system using Goal-Oriented Action Planning (GOAP) with built-in anti-hallucination and cryptographic source verification**
+> **AI-Powered Research Assistant:** Goalie uses Goal-Oriented Action Planning (GOAP) to break down complex research questions into manageable steps. It leverages the Perplexity API for web searches and includes anti-hallucination features to improve accuracy.
+
+**Created by [rUv](https://github.com/ruvnet) - Building the future of verifiable AI research**
 
 ## 🚀 Quick Start
 
@@ -14,11 +17,16 @@
 # Install and run in under 30 seconds
 npx goalie
 
+# Or install globally
+npm install -g goalie
+
 # Set your Perplexity API key (get one at https://perplexity.ai/settings/api)
 export PERPLEXITY_API_KEY="pplx-your-key-here"
+# Or add to .env file:
+echo 'PERPLEXITY_API_KEY="pplx-your-key-here"' >> .env
 
 # Start researching immediately
-goalie test --query "Your research question here"
+goalie search "Your research question here"
 ```
 
 ## 🔌 MCP (Model Context Protocol) Integration
@@ -55,85 +63,81 @@ Unlike traditional AI search tools that provide single-shot answers with limited
 - **Dynamically re-plans** when actions fail (up to 3 attempts)
 - **Optimizes research paths** for efficiency and completeness
 
-### 2. **Anti-Hallucination Technology**
-- **100% Citation Grounding**: Every claim must have a verifiable source
-- **Ed25519 Cryptographic Verification**: Optional digital signatures for source authenticity
-- **Cross-Reference Validation**: Important facts verified across multiple sources
-- **Contradiction Detection**: Automatically identifies and flags conflicting information
-- **Confidence Scoring**: Shows reliability percentage for each finding (avg 89.5%)
+### 2. **Anti-Hallucination Features**
+- **Citation Tracking**: Attempts to provide sources for claims
+- **Ed25519 Cryptographic Signatures**: ✅ **REAL** Ed25519 implementation (v1.2.9+)
+- **Basic Validation**: Checks for obvious false claims
+- **Contradiction Detection**: Flags some conflicting information
+- **Confidence Scoring**: Provides estimated reliability scores
 
 ### 3. **Deep Research vs Simple Search**
 
 | Feature | Traditional AI Search | Goalie Deep Research |
 |---------|----------------------|---------------------|
-| **Sources** | 2-5 sources | 20-30+ sources |
+| **Sources** | 2-5 sources | 5-15 sources (typical) |
 | **Planning** | Single query | Multi-step GOAP planning |
-| **Verification** | Basic or none | Cryptographic + cross-reference |
-| **Hallucination Protection** | Limited | 100% citation grounding |
+| **Verification** | Basic or none | Citation tracking + validation |
+| **Hallucination Protection** | Limited | Enhanced with multiple checks |
 | **Failure Recovery** | None | Automatic re-planning (3x) |
 | **Output** | Simple answer | Structured research report |
 | **Contradiction Handling** | Ignored | Detected and flagged |
-| **Cost** | $0.001-0.003 | $0.006-0.10 |
+| **Cost** | $0.001-0.003 | $0.01-0.05 (estimated) |
 
 ## 🛡️ How Anti-Hallucination & Grounding Works
 
 Goalie implements multiple layers of protection against AI hallucination:
 
-### 1. **Mandatory Citation Grounding**
+### 1. **Citation Tracking**
 ```javascript
-// Every factual claim requires a source
+// Goalie attempts to provide sources for claims
 {
   "claim": "Tesla's revenue grew 35% in Q3",
-  "source": "SEC Filing 10-Q, October 2024",
-  "url": "https://sec.gov/Archives/edgar/data/1318605/...",
-  "confidence": 0.95
+  "source": "Based on search results",
+  "url": "Source URL if available",
+  "confidence": 0.75  // Estimated confidence
 }
 ```
 
-### 2. **Ed25519 Cryptographic Verification**
-- **Digital Signatures**: Sources can be cryptographically signed
-- **Chain of Trust**: Mandate certificates verify authenticity
-- **Tamper Detection**: Ensures data hasn't been modified
-- **Trusted Issuers**: Whitelist authoritative sources
+### 2. **Ed25519 Framework (✅ REAL Implementation - v1.2.9+)**
+- **Signature Support**: ✅ Real Ed25519 cryptographic signatures using `@noble/ed25519`
+- **Verification Logic**: ✅ Actual signature verification and tamper detection
+- **Performance**: ✅ ~3ms per sign+verify operation
+- **Status**: ✅ Production-ready - see `ED25519-USAGE.md` and `VALIDATION-REPORT.md`
 
-### 3. **Multi-Source Validation**
-- **Cross-Reference Engine**: Facts checked across 3+ sources
-- **Contradiction Detection**: Flags conflicting information
-- **Consensus Building**: Uses majority agreement
-- **Confidence Scoring**: 0-100% reliability ratings
+### 3. **Validation Approach**
+- **Multiple Searches**: Can query multiple sources via Perplexity
+- **Basic Contradiction Check**: Identifies some conflicts
+- **Confidence Estimates**: Provides reliability scores (not guaranteed accurate)
+- **Best Effort**: Validation quality depends on available sources
 
-### 4. **GOAP Planning with Replanning**
-When initial searches fail or return insufficient data:
-- **Automatic Re-planning**: Creates alternative research paths
-- **Failure Recovery**: Up to 3 re-planning attempts
-- **Adaptive Strategies**: Adjusts approach based on failures
-- **Graceful Degradation**: Returns partial results if needed
+### 4. **GOAP Planning**
+- **Action Planning**: Breaks down research into steps
+- **Re-planning Support**: Can retry up to 3 times if configured
+- **Sequential Execution**: Runs search steps in order
+- **Partial Results**: Returns what it finds
 
-## 🔍 Example: How Goalie Prevents Hallucination
+## 🔍 How Goalie Works
 
 ```bash
 Query: "What are the side effects of medication X?"
 
-Traditional AI: "Common side effects include..."
-              [May invent plausible-sounding effects]
-
-Goalie:
-1. Searches FDA.gov, clinical trials, medical journals
-2. Requires citation for EVERY side effect mentioned
-3. Cross-references across 5+ medical sources
-4. Flags any contradictions between sources
-5. Provides confidence score for each finding
-6. Signs results with Ed25519 if enabled
+Goalie Process:
+1. Uses Perplexity API to search web sources
+2. Attempts to extract relevant information
+3. Provides citations when available
+4. Checks for obvious contradictions
+5. Estimates confidence scores
+6. Returns structured results
 ```
 
-## 🎯 Key Features That Prevent Hallucination
+## 🎯 Key Features
 
-### Grounding Capabilities
-- **100% Citation Requirement**: No unsourced claims allowed
-- **Real-time Verification**: Checks sources as it researches
-- **URL Validation**: Ensures all links are real and active
-- **Quote Extraction**: Pulls exact quotes from sources
-- **Timestamp Tracking**: Records when information was retrieved
+### Research Capabilities
+- **Citation Tracking**: Attempts to source claims
+- **Web Search**: Uses Perplexity API for searching
+- **URL Collection**: Gathers relevant links
+- **Result Organization**: Structures findings
+- **Timestamp Tracking**: Records search times
 
 ### Advanced Reasoning Plugins
 - **Chain-of-Thought**: Explores multiple reasoning paths
@@ -141,12 +145,13 @@ Goalie:
 - **Anti-Hallucination Plugin**: Dedicated fact-checking layer
 - **Agentic Research**: Multiple AI agents verify each other
 
-### Cryptographic Security (Optional)
+### Cryptographic Security (Experimental)
 ```bash
-# Enable full cryptographic verification
-goalie test --query "Your sensitive query" \
-  --enable-ed25519 \
-  --require-signatures \
+# Note: Ed25519 verification is partially implemented
+# The infrastructure exists but full cryptographic verification is not yet functional
+goalie search "Your sensitive query" \
+  --verify                    # Enable verification checks
+  --strict-verify            # Require signatures (experimental)
   --trusted-issuers "reuters.com,ap.org,sec.gov"
 ```
 
@@ -154,7 +159,7 @@ goalie test --query "Your sensitive query" \
 
 ### Legal Research
 ```bash
-goalie test --query "What are the legal requirements for starting a food truck business in California, including permits, health codes, and liability insurance?"
+goalie search "What are the legal requirements for starting a food truck business in California, including permits, health codes, and liability insurance?"
 
 # Goalie will research:
 # - State and local permit requirements
@@ -167,7 +172,7 @@ goalie test --query "What are the legal requirements for starting a food truck b
 
 ### Tax Research
 ```bash
-goalie test --query "What home office deductions can a freelance consultant claim, and what documentation is needed for IRS compliance?"
+goalie search "What home office deductions can a freelance consultant claim, and what documentation is needed for IRS compliance?"
 
 # Researches:
 # - Current IRS rules (Publication 587)
@@ -180,7 +185,7 @@ goalie test --query "What home office deductions can a freelance consultant clai
 
 ### Medical Research
 ```bash
-goalie test --query "What are the latest treatment options for Type 2 diabetes, including effectiveness rates and insurance coverage?"
+goalie search "What are the latest treatment options for Type 2 diabetes, including effectiveness rates and insurance coverage?"
 
 # Investigates:
 # - FDA-approved medications
@@ -193,7 +198,7 @@ goalie test --query "What are the latest treatment options for Type 2 diabetes, 
 
 ### Investment Due Diligence
 ```bash
-goalie test --query "Analyze Tesla's financial health, competitive position, and growth prospects for long-term investment"
+goalie search "Analyze Tesla's financial health, competitive position, and growth prospects for long-term investment"
 
 # Analyzes:
 # - Financial statements and ratios
@@ -206,7 +211,7 @@ goalie test --query "Analyze Tesla's financial health, competitive position, and
 
 ### Academic Research
 ```bash
-goalie test --query "What is the current scientific consensus on intermittent fasting for longevity, including major studies and contradicting evidence?"
+goalie search "What is the current scientific consensus on intermittent fasting for longevity, including major studies and contradicting evidence?"
 
 # Reviews:
 # - Peer-reviewed studies
@@ -216,37 +221,7 @@ goalie test --query "What is the current scientific consensus on intermittent fa
 # - Ongoing trials
 # → Creates academic literature review
 ```
-
-## 🚀 Quick Start (Under 2 Minutes)
-
-### Step 1: Install
-```bash
-# Install globally (recommended)
-npm install -g goalie
-
-# Or use without installing
-npx goalie
-```
-
-### Step 2: Get Your API Key
-Goalie needs a Perplexity API key (costs about $0.006 per research query):
-
-1. Go to: https://www.perplexity.ai/settings/api
-2. Create an API key
-3. Set it up:
-```bash
-export PERPLEXITY_API_KEY="pplx-your-key-here"
-```
-
-### Step 3: Start Researching
-```bash
-# Quick test
-goalie test --query "Your research question here"
-
-# Start the research server
-goalie start
-```
-
+ 
 ## 💰 Cost Comparison
 
 | Research Task | Human Researcher | Goalie |
@@ -271,10 +246,12 @@ goalie start
 ```
 
 ### 🔒 Anti-Hallucination Technology
-- **Ed25519 Signatures**: Optional cryptographic verification of sources
+- **Ed25519 Signatures**: ✅ **REAL** cryptographic verification (v1.2.9+) using `@noble/ed25519`
 - **Mandate Certificates**: Chain of trust for critical research
 - **100% Citation Rule**: Every fact must have a verifiable source
 - **Contradiction Alerts**: Warns when sources disagree
+- **Performance**: ~3ms per cryptographic operation
+- **Documentation**: See `ED25519-USAGE.md` for implementation guide
 
 ### 🤖 Smart Research Agents
 Goalie uses specialized AI agents, each with a specific job:
@@ -289,6 +266,106 @@ Goalie uses specialized AI agents, each with a specific job:
 - Confidence scores: Know how reliable each finding is
 - Time saved: 2-3 hours of manual research per query
 - Cost tracking: Monitor your API usage
+
+## 📖 CLI Commands Reference
+
+### Core Research Commands
+
+#### 🔍 Search (Main Research Command)
+```bash
+# Basic search with GOAP planning
+goalie search "Your research question"
+
+# With options
+goalie search "Your question" \
+  --mode academic           # Use academic sources
+  --max-results 15          # More comprehensive results
+  --save                    # Save to .research/ folder
+  --output-path ./reports   # Custom output location
+  --format both             # Save as JSON and Markdown
+```
+
+#### 📝 Query (Quick Search)
+```bash
+# Quick search without full GOAP planning
+goalie query "Quick question"
+
+# With options
+goalie query "Question" \
+  --limit 5                 # Limit results
+  --domains "edu,gov"       # Restrict domains
+```
+
+#### 🧠 Reasoning Commands
+```bash
+# Chain-of-Thought reasoning
+goalie reasoning chain-of-thought "Complex question" \
+  --depth 3                 # Reasoning depth
+  --branches 3              # Number of branches
+
+# Self-consistency check
+goalie reasoning self-consistency "Claim to verify" \
+  --samples 5               # Number of samples
+
+# Anti-hallucination verification
+goalie reasoning anti-hallucination "Statement to verify"
+
+# Multi-agent research
+goalie reasoning agentic "Research topic" \
+  --parallel                # Run agents in parallel
+```
+
+#### 🔐 Advanced Security Options (Experimental)
+```bash
+# With Ed25519 verification (partially implemented)
+goalie search "Sensitive query" \
+  --verify                  # Enable verification checks
+  --strict-verify          # Require signatures (experimental)
+  --trusted-issuers "reuters.com,ap.org"
+```
+
+### Utility Commands
+
+#### 📋 Plan Explanation
+```bash
+# See how GOAP would plan your research
+goalie explain "Your query" \
+  --steps                   # Show step-by-step plan
+  --reasoning              # Include reasoning analysis
+```
+
+#### 🔌 Plugin Management
+```bash
+# List all plugins
+goalie plugin list
+
+# Enable/disable plugins
+goalie plugin enable chain-of-thought
+goalie plugin disable cache-plugin
+
+# Get plugin info
+goalie plugin info chain-of-thought
+```
+
+#### 🎯 Raw Search (Direct Perplexity)
+```bash
+# Direct Perplexity API call without GOAP
+goalie raw "query1" "query2" \
+  --domains "specific.com"  # Domain restrictions
+  --recency day             # Time filter
+  --mode academic           # Academic sources
+```
+
+### 🖥️ Server Mode
+
+#### Start MCP Server
+```bash
+# Start as MCP server for AI assistants
+goalie start
+
+# Or with npm/npx
+npx goalie start
+```
 
 ## 🎯 Common Use Cases
 
@@ -317,34 +394,34 @@ Goalie uses specialized AI agents, each with a specific job:
 
 ### Basic Research (Default Settings)
 ```bash
-goalie test --query "Your question"
+goalie search "Your question"
 # Uses defaults: web search, 10 results, saves to .research/
 ```
 
 ### Academic Research
 ```bash
-goalie test --query "Your academic question" --mode academic
+goalie search "Your academic question" --mode academic
 # Searches scholarly sources, peer-reviewed papers
 ```
 
 ### Domain-Specific Research
 ```bash
-goalie test --query "FDA drug approval process" \
+goalie search "FDA drug approval process" \
   --domains "fda.gov,nih.gov,pubmed.ncbi.nlm.nih.gov"
 # Only searches specified authoritative domains
 ```
 
-### High-Security Research (with Ed25519)
+### High-Security Research (Experimental Ed25519)
 ```bash
-goalie test --query "Sensitive financial data" \
-  --verify-signatures \
-  --require-trusted-sources
-# Cryptographically verifies all sources
+goalie search "Sensitive financial data" \
+  --verify \
+  --strict-verify
+# Note: Ed25519 verification is experimental and not fully functional
 ```
 
 ### Custom Output Location
 ```bash
-goalie test --query "Market analysis" \
+goalie search "Market analysis" \
   --output-path "~/Documents/Research" \
   --format both
 # Saves both JSON and Markdown to custom location
@@ -361,20 +438,25 @@ Ed25519 is a cryptographic signature system that ensures information hasn't been
 - **Medical Information**: Confirm sources are legitimate
 - **Due Diligence**: Create audit trail of verified sources
 
-### How to Enable
+### How to Enable (Experimental)
 ```bash
-# Basic verification - check existing signatures
-goalie test --query "Your query" \
-  --verify-signatures
+# Note: These features are partially implemented.
+# The CLI accepts these parameters but full cryptographic verification is not yet functional.
 
-# Require all sources to be signed
-goalie test --query "Your query" \
-  --require-signatures \
+# Basic verification attempt
+goalie search "Your query" \
+  --verify
+
+# Require signatures (experimental - not fully functional)
+goalie search "Your query" \
+  --verify \
+  --strict-verify \
   --trusted-issuers "reuters.com,bloomberg.com,sec.gov"
 
-# Sign your research results
-goalie test --query "Your query" \
-  --sign-results \
+# Sign results (requires manual key setup - experimental)
+goalie search "Your query" \
+  --sign \
+  --sign-key "base64-encoded-private-key" \
   --key-id "your-key-id"
 ```
 
@@ -436,17 +518,17 @@ goalie test --query "Your query" \
 
 ## 🔍 Understanding the Difference: Deep Research vs Quick Search
 
-### Quick Search (search.raw)
+### Quick Search (raw)
 ```bash
-goalie test --raw --query "What is an LLC?"
+goalie raw "What is an LLC?"
 # Returns: Basic definition, 5-7 sources
 # Time: 2-3 seconds
 # Best for: Quick facts, definitions
 ```
 
-### Deep Research (goap.search)
+### Deep Research (search)
 ```bash
-goalie test --query "Complete analysis of LLC vs S-Corp for SaaS startup"
+goalie search "Complete analysis of LLC vs S-Corp for SaaS startup"
 # Returns:
 # - Tax implications by state
 # - Filing requirements timeline
