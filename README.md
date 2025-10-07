@@ -11,6 +11,42 @@
 
 > **The Ultimate Mathematical & AI Toolkit: Sublinear algorithms, consciousness exploration, psycho-symbolic reasoning, and temporal prediction in one unified MCP interface. WASM-accelerated with emergent behavior analysis.**
 
+
+## 🚀 Quick Start
+
+### Install
+
+```bash
+# Serve the solver as an MCP tool - no installation required!
+npx sublinear-time-solver mcp
+# Or use the serve alias
+npx sublinear-time-solver serve
+```
+
+### Direct CLI Usage
+```bash
+# Generate a diagonally dominant test matrix (1000x1000)
+npx sublinear-time-solver generate -t diagonally-dominant -s 1000 -o matrix.json
+
+# Create a matching vector of size 1000
+node -e "console.log(JSON.stringify(Array(1000).fill(1)))" > vector.json
+
+# Solve the linear system
+npx sublinear-time-solver solve -m matrix.json -b vector.json -o solution.json
+
+# Analyze matrix properties (condition number, diagonal dominance, etc.)
+npx sublinear-time-solver analyze -m matrix.json --full
+
+# Compare different solver methods
+npx sublinear-time-solver solve -m matrix.json -b vector.json --method neumann
+npx sublinear-time-solver solve -m matrix.json -b vector.json --method forward-push
+npx sublinear-time-solver solve -m matrix.json -b vector.json --method random-walk
+
+# Show usage examples
+npx sublinear-time-solver help-examples
+```
+
+
 ## 🎯 What Can This Do?
 
 This is a revolutionary self-modifying AI system with 40+ advanced tools:
@@ -142,40 +178,6 @@ This is a revolutionary self-modifying AI system with 40+ advanced tools:
 - **Mathematical guarantees**: Convergence proofs, error bounds, and complexity verification
 - **Dynamic domain expansion** - Add custom reasoning domains at runtime
 - **40+ MCP tools** for comprehensive mathematical and AI capabilities
-
-## 🚀 Quick Start
-
-### Install
-
-```bash
-# Serve the solver as an MCP tool - no installation required!
-npx sublinear-time-solver mcp
-# Or use the serve alias
-npx sublinear-time-solver serve
-```
-
-### Direct CLI Usage
-```bash
-# Generate a diagonally dominant test matrix (1000x1000)
-npx sublinear-time-solver generate -t diagonally-dominant -s 1000 -o matrix.json
-
-# Create a matching vector of size 1000
-node -e "console.log(JSON.stringify(Array(1000).fill(1)))" > vector.json
-
-# Solve the linear system
-npx sublinear-time-solver solve -m matrix.json -b vector.json -o solution.json
-
-# Analyze matrix properties (condition number, diagonal dominance, etc.)
-npx sublinear-time-solver analyze -m matrix.json --full
-
-# Compare different solver methods
-npx sublinear-time-solver solve -m matrix.json -b vector.json --method neumann
-npx sublinear-time-solver solve -m matrix.json -b vector.json --method forward-push
-npx sublinear-time-solver solve -m matrix.json -b vector.json --method random-walk
-
-# Show usage examples
-npx sublinear-time-solver help-examples
-```
 
 ### Real-World Applications
 
