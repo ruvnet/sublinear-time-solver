@@ -344,14 +344,23 @@ impl IdentityContinuityTracker {
         Ok(())
     }
     
-    /// Validate current identity continuity
+    /// Validate current identity continuity.
+    ///
+    /// Returns Ok with too little history to judge (fewer than 2 snapshots) —
+    /// otherwise the very first scheduler tick that runs an
+    /// `IdentityPreservation { continuity_check: true }` task would fail
+    /// because `continuity_score` is still at its `0.0` initial value,
+    /// below any sensible threshold.
     pub fn validate_continuity(&self) -> TemporalResult<()> {
+        if self.snapshots.len() < 2 {
+            return Ok(());
+        }
         if self.metrics.continuity_score < self.continuity_threshold {
             return Err(TemporalError::IdentityContinuityBreak {
                 gap_ns: self.metrics.max_gap_duration_ns,
             });
         }
-        
+
         Ok(())
     }
     
