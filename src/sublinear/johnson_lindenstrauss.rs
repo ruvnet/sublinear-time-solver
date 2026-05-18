@@ -63,12 +63,23 @@ impl JLEmbedding {
         })
     }
 
-    /// Compute target dimension based on Johnson-Lindenstrauss lemma
+    /// Compute target dimension based on the Johnson-Lindenstrauss lemma.
+    ///
+    /// The classical JL bound for embedding N points with (1±ε) distance
+    /// preservation is `k = Θ(log N / ε²)`. For tight ε and modest N the
+    /// raw bound can exceed `N` itself — at which point the "embedding"
+    /// would be a dimensional expansion, not a reduction.
+    ///
+    /// Cap at `n.saturating_sub(1)` so a JL projection is always strictly
+    /// dimension-reducing, and floor at 10 for numerical stability.
     fn compute_target_dimension(n: usize, eps: Precision) -> usize {
-        // Conservative bound: k = 8 * ln(n) / eps^2
+        // Theoretical bound (Achlioptas/Dasgupta-Gupta): k = 4 * ln(n) / ε²
         let ln_n = (n as Precision).ln();
-        let k = (8.0 * ln_n / (eps * eps)).ceil() as usize;
-        k.max(10) // Minimum dimension for numerical stability
+        let raw_k = (4.0 * ln_n / (eps * eps)).ceil() as usize;
+
+        // Cap so the embedding is always a reduction, never an expansion.
+        let max_useful = n.saturating_sub(1).max(10);
+        raw_k.clamp(10, max_useful)
     }
 
     /// Project a vector to the lower-dimensional space
