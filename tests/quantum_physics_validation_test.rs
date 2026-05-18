@@ -53,10 +53,15 @@ fn validate_codata_2018_constants() -> Result<(), String> {
     }
     println!("✓ eV to Joules: {:.10e}", CODATA_EV_TO_JOULES);
 
-    // Test fundamental relationships
-    let relationship_error = (CODATA_PLANCK_HBAR - CODATA_PLANCK_H / (2.0 * PI)).abs();
-    if relationship_error > 1e-50 {
-        return Err(format!("Planck constant relationship error: {:.2e}", relationship_error));
+    // Test fundamental relationships. The previous tolerance of 1e-50 was
+    // tighter than f64 can represent at the ~1e-34 scale (ULP at 1e-34 is
+    // ≈2e-50), and the stored ℏ has only ~10 significant digits so the
+    // real round-off is ~6e-44 — five orders of magnitude over the
+    // threshold. Use a relative tolerance instead.
+    let calculated_hbar = CODATA_PLANCK_H / (2.0 * PI);
+    let relationship_error = (CODATA_PLANCK_HBAR - calculated_hbar).abs() / calculated_hbar;
+    if relationship_error > 1e-9 {
+        return Err(format!("Planck constant relative error: {:.2e}", relationship_error));
     }
     println!("✓ Planck relationship: ℏ = h/(2π)");
 

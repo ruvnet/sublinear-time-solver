@@ -9,7 +9,7 @@
 //! The theorem states that the minimum time required for a quantum system
 //! to evolve from one state to an orthogonal state is:
 //!
-//! ```
+//! ```text
 //! τ_min = h / (4 * ΔE)
 //! ```
 //!

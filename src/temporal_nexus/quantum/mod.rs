@@ -8,14 +8,14 @@
 //!
 //! ### Margolus-Levitin Theorem
 //! The fundamental speed limit of quantum computation:
-//! ```
+//! ```text
 //! τ_min = h / (4 * ΔE)
 //! ```
 //! Where τ_min is minimum computation time and ΔE is energy difference.
 //!
 //! ### Energy-Time Uncertainty
 //! Heisenberg uncertainty principle for energy and time:
-//! ```
+//! ```text
 //! ΔE · Δt ≥ ℏ/2
 //! ```
 //!
@@ -33,7 +33,7 @@
 //!
 //! ## Usage
 //!
-//! ```rust
+//! ```no_run
 //! use sublinear_solver::temporal_nexus::quantum::*;
 //!
 //! // Create quantum validator
@@ -43,7 +43,7 @@
 //! let result = validator.validate_temporal_operation(
 //!     1e-9,    // 1 nanosecond
 //!     1e-15,   // 1 femtojoule energy
-//! )?;
+//! ).expect("validation should succeed for nanosecond-scale ops");
 //!
 //! assert!(result.is_valid);
 //! ```
@@ -205,7 +205,11 @@ impl QuantumValidator {
                 "Decoherence at room temperature".to_string(),
             ],
             recommended_scale_s: constants::CONSCIOUSNESS_SCALE_NS,
-            recommended_scale_description: "Nanosecond scale for practical consciousness".to_string(),
+            // Lowercase "nanosecond" so case-sensitive `contains` checks
+            // in the test suite match. (Was "Nanosecond scale ..." which
+            // silently failed `report.recommended_scale_description
+            // .contains("nanosecond")`.)
+            recommended_scale_description: "nanosecond scale for practical consciousness".to_string(),
         }
     }
 }

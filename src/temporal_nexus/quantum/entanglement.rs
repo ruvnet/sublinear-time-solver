@@ -109,13 +109,13 @@ impl EntanglementValidator {
             && bell_parameter > self.bell_threshold
             && survival > 0.1; // 10% minimum survival
 
-        if !is_valid && concurrence < self.min_entanglement_threshold {
-            return Err(QuantumError::EntanglementLost {
-                correlation: concurrence,
-                threshold: self.min_entanglement_threshold,
-            });
-        }
-
+        // "Entanglement below threshold" is a legitimate result state,
+        // not an exception — the caller already gets `is_valid: false`
+        // and the exact concurrence value to decide on. The previous
+        // early `Err(EntanglementLost)` prevented callers from comparing
+        // concurrences across decoherence regimes (e.g. test_edge_cases:
+        // "shorter decoherence time should reduce entanglement
+        // preservation" needs to read concurrence from both results).
         Ok(EntanglementResult {
             is_valid,
             operation_time_s,

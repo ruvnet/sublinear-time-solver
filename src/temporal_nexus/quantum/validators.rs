@@ -7,7 +7,7 @@
 //! ## Heisenberg Uncertainty Principle
 //!
 //! The energy-time uncertainty relation states:
-//! ```
+//! ```text
 //! ΔE · Δt ≥ ℏ/2
 //! ```
 //!
