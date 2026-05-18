@@ -18,6 +18,9 @@ import { EmergenceTools } from './tools/emergence-tools.js';
 import { SchedulerTools } from './tools/scheduler.js';
 import { CompleteWasmSublinearSolverTools as WasmSublinearSolverTools } from './tools/wasm-sublinear-complete.js';
 import { TrueSublinearSolverTools } from './tools/true-sublinear-solver.js';
+// SECURITY (issue #19, CWE-73): confine attacker-controlled file_path
+// arguments (saveVectorToFile / vector_file) to a dedicated vector dir.
+import { safeWriteVector, safeReadVector, resolveVectorPath, SafePathError, DEFAULT_VECTOR_DIR, } from './safe-path.js';
 import { SolverError } from '../core/types.js';
 export class SublinearSolverMCPServer {
     server;
@@ -330,7 +333,7 @@ export class SublinearSolverMCPServer {
                 },
                 {
                     name: 'saveVectorToFile',
-                    description: 'Save a generated vector to a file (JSON, CSV, or TXT format)',
+                    description: 'Save a generated vector to a file (JSON, CSV, or TXT format) inside the dedicated vector directory ($SUBLINEAR_SOLVER_VECTOR_DIR or ~/.sublinear-time-solver/vectors).',
                     inputSchema: {
                         type: 'object',
                         properties: {
@@ -341,7 +344,10 @@ export class SublinearSolverMCPServer {
                             },
                             file_path: {
                                 type: 'string',
-                                description: 'Output file path (extension determines format: .json, .csv, .txt)'
+                                description: 'Basename of the output file. Must NOT contain path separators, "..", or absolute paths — only a filename (e.g. "v.json"). Extension determines format if `format` is not specified.',
+                                pattern: '^[^/\\\\\\x00]+$',
+                                minLength: 1,
+                                maxLength: 255
                             },
                             format: {
                                 type: 'string',
@@ -1029,16 +1035,28 @@ export class SublinearSolverMCPServer {
     }
     async loadVectorFromFile(filePath) {
         try {
-            const fs = await import('fs');
-            const path = await import('path');
-            // Resolve absolute path
-            const absolutePath = path.resolve(filePath);
-            // Check if file exists
-            if (!fs.existsSync(absolutePath)) {
-                throw new McpError(ErrorCode.InvalidParams, `Vector file not found: ${absolutePath}`);
+            // SECURITY (issue #19, CWE-73): same sink class as saveVectorToFile —
+            // filePath was attacker-controlled and used to read arbitrary files
+            // visible to the MCP process. Read only basenames from the configured
+            // vector dir, with O_NOFOLLOW so a planted symlink can't redirect us.
+            let absolutePath;
+            let fileContent;
+            try {
+                absolutePath = resolveVectorPath(filePath);
+                fileContent = safeReadVector(filePath);
             }
-            // Read file content
-            const fileContent = fs.readFileSync(absolutePath, 'utf8');
+            catch (err) {
+                if (err instanceof SafePathError) {
+                    throw new McpError(ErrorCode.InvalidParams, `Vector file path rejected (${err.code}): ${err.message}. ` +
+                        `Use a basename only; files are read from ${DEFAULT_VECTOR_DIR} ` +
+                        `(override with $SUBLINEAR_SOLVER_VECTOR_DIR).`);
+                }
+                if (err?.code === 'ENOENT') {
+                    throw new McpError(ErrorCode.InvalidParams, `Vector file not found in vector dir`);
+                }
+                throw err;
+            }
+            const path = await import('path');
             const extension = path.extname(absolutePath).toLowerCase();
             let vector;
             if (extension === '.json') {
@@ -1094,16 +1112,13 @@ export class SublinearSolverMCPServer {
         }
     }
     async saveVectorToFile(vector, filePath, format) {
-        const fs = await import('fs');
-        const path = await import('path');
-        // Determine format from extension or explicit format parameter
+        // SECURITY (issue #19, CWE-73): file_path is attacker-controlled via the
+        // saveVectorToFile MCP tool. Previously this called path.resolve(filePath)
+        // + fs.writeFileSync, letting any caller write anywhere the MCP process
+        // could touch. We now force the write into the configured vector dir
+        // (DEFAULT_VECTOR_DIR or $SUBLINEAR_SOLVER_VECTOR_DIR) using a
+        // basename-only contract enforced by `safe-path`.
         const fileFormat = this.getFileFormat(filePath, format);
-        const absolutePath = path.resolve(filePath);
-        // Ensure directory exists
-        const directory = path.dirname(absolutePath);
-        if (!fs.existsSync(directory)) {
-            fs.mkdirSync(directory, { recursive: true });
-        }
         let content;
         switch (fileFormat) {
             case 'json':
@@ -1118,8 +1133,9 @@ export class SublinearSolverMCPServer {
             default:
                 throw new Error(`Unsupported format: ${fileFormat}`);
         }
-        fs.writeFileSync(absolutePath, content, 'utf8');
+        const absolutePath = safeWriteVector(filePath, content);
         console.log(`💾 Saved vector of size ${vector.length} to ${absolutePath} (${fileFormat} format)`);
+        return absolutePath;
     }
     getFileFormat(filePath, explicitFormat) {
         if (explicitFormat) {
