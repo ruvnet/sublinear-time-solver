@@ -101,6 +101,13 @@ pub struct NeumannState {
     solution: Vec<Precision>,
     /// Right-hand side vector (D^(-1)b)
     rhs: Vec<Precision>,
+    /// Original (un-scaled) right-hand side `b`. Kept so `update_residual`
+    /// can compute the residual of `A x = b` correctly — the previous
+    /// implementation used `rhs = D⁻¹b` and the resulting "residual norm"
+    /// was the residual of `A x = D⁻¹b`, a different equation, so
+    /// convergence checks fired too late at larger n (visible as the
+    /// bench divergence at n=64).
+    original_rhs: Vec<Precision>,
     /// Current residual
     residual: Vec<Precision>,
     /// Residual norm
@@ -234,6 +241,7 @@ impl NeumannState {
             dimension,
             solution,
             rhs,
+            original_rhs: b.to_vec(),
             residual,
             residual_norm: Precision::INFINITY,
             diagonal_inv,
@@ -303,19 +311,24 @@ impl NeumannState {
     }
 
     /// Update the residual and its norm.
+    ///
+    /// Computes `r = A·x − b` against the ORIGINAL RHS, not the scaled
+    /// `D⁻¹b` we keep around for Neumann iteration. The previous
+    /// implementation compared against `self.rhs = D⁻¹b`, which means
+    /// the "residual" being driven to zero was for the equation
+    /// `A·x = D⁻¹b`, not the system we're actually solving. That made
+    /// convergence checks late and caused the solver to diverge at
+    /// larger n where the scaled-residual heuristic stopped tracking
+    /// the true residual (visible in the bench harness at n ≥ 64).
     fn update_residual(&mut self, matrix: &dyn Matrix) -> Result<()> {
-        // Compute residual: r = A*x - b
+        // r = A·x
         matrix.multiply_vector(&self.solution, &mut self.residual)?;
         self.matvec_count += 1;
 
-        // r = A*x - b
-        for (r, &b_val) in self.residual.iter_mut().zip(self.rhs.iter()) {
-            *r = *r - b_val; // Compute residual
+        // r ← A·x − b   (against the original, un-scaled RHS)
+        for (r, &b_val) in self.residual.iter_mut().zip(self.original_rhs.iter()) {
+            *r -= b_val;
         }
-
-        // Actually, let's compute it correctly: r = Ax - b where b is original RHS
-        // We need access to original b, but we only have D^(-1)b
-        // For now, compute scaled residual in the Neumann iteration space
 
         self.residual_norm = utils::l2_norm(&self.residual);
         Ok(())

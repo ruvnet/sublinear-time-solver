@@ -37,11 +37,11 @@ fn build_test_triplets(n: usize) -> Vec<(usize, usize, f64)> {
 
 fn bench_neumann_series(c: &mut Criterion) {
     let mut group = c.benchmark_group("neumann_series");
-    // Neumann needs `spectral_radius(I − D⁻¹A) < 1`. The 4-off-diagonal
-    // pattern in `build_test_triplets` is borderline at large n in the
-    // current scaled-residual-norm implementation, so we bench it at small
-    // n only and bench the optimized CG below for the larger sizes.
-    for &n in &[8usize, 16, 32] {
+    // With the correct-residual fix landed (update_residual compares
+    // against the original `b`, not `D⁻¹b`), Neumann converges at the
+    // larger sizes too. Bench across the same three n's as CG so the
+    // numbers line up.
+    for &n in &[16usize, 64, 256] {
         let triplets = build_test_triplets(n);
         let matrix = SparseMatrix::from_triplets(triplets, n, n).unwrap();
         let b: Vec<f64> = (0..n).map(|i| (i as f64) + 1.0).collect();
@@ -55,9 +55,9 @@ fn bench_neumann_series(c: &mut Criterion) {
         group.throughput(Throughput::Elements(n as u64));
         group.bench_with_input(BenchmarkId::from_parameter(n), &n, |bh, _| {
             bh.iter(|| {
-                // Treat non-convergence as "best effort" — we're benchmarking
-                // throughput of the iteration loop, not solver correctness
-                // (which is covered by the unit tests).
+                // Tolerate non-convergence at the bench's `tolerance =
+                // 1e-4`; we're measuring iteration throughput, not
+                // strict convergence (correctness covered by tests).
                 let r = solver
                     .solve(black_box(&matrix), black_box(&b), black_box(&opts));
                 black_box(r.is_ok());
