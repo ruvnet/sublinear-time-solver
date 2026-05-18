@@ -82,15 +82,61 @@ pub enum TemporalError {
 
 pub type TemporalResult<T> = Result<T, TemporalError>;
 
+/// Fallback timestamp source for non-x86/non-arm64 targets. Returns
+/// nanoseconds since a fixed reference point (the static `START`).
+/// Not as fast as RDTSC but portable.
+#[cfg(any(
+    not(any(target_arch = "x86_64", target_arch = "aarch64")),
+    all(target_arch = "aarch64", not(target_feature = "neon")),
+))]
+fn generic_now_ns() -> u64 {
+    use std::sync::OnceLock;
+    use std::time::Instant;
+    static START: OnceLock<Instant> = OnceLock::new();
+    let start = START.get_or_init(Instant::now);
+    start.elapsed().as_nanos() as u64
+}
+
 /// High-precision timestamp using TSC
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TscTimestamp(pub u64);
 
 impl TscTimestamp {
-    /// Read current TSC timestamp
+    /// Read current TSC timestamp.
+    ///
+    /// - **x86_64**: `RDTSC` — bias 0, latency a few cycles.
+    /// - **aarch64**: `CNTVCT_EL0` (the virtual count register) — same
+    ///   wall-clock semantics as RDTSC but at the system counter
+    ///   frequency (typically 24 MHz on Apple Silicon, exposed via
+    ///   `CNTFRQ_EL0`). Callers must pass the right `tsc_freq_hz` to
+    ///   `nanos_since` for portability.
+    /// - **other**: fall back to `Instant::now()` so the crate still
+    ///   compiles on wasm32 / riscv64 / etc. The returned u64 is
+    ///   nanoseconds since program start, and `nanos_since` should be
+    ///   called with `tsc_freq_hz = 1_000_000_000` on these targets.
     #[inline]
     pub fn now() -> Self {
-        Self(unsafe { core::arch::x86_64::_rdtsc() })
+        #[cfg(target_arch = "x86_64")]
+        unsafe {
+            Self(core::arch::x86_64::_rdtsc())
+        }
+        #[cfg(all(target_arch = "aarch64", target_feature = "neon"))]
+        unsafe {
+            let val: u64;
+            core::arch::asm!("mrs {0}, cntvct_el0", out(reg) val);
+            Self(val)
+        }
+        #[cfg(all(target_arch = "aarch64", not(target_feature = "neon")))]
+        unsafe {
+            // No `target_feature = "neon"` (rare on stable arm64 toolchains
+            // but possible on some embedded triples) — fall through to the
+            // generic path.
+            Self(generic_now_ns())
+        }
+        #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+        {
+            Self(generic_now_ns())
+        }
     }
     
     /// Calculate nanoseconds since another timestamp
