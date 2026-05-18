@@ -314,7 +314,7 @@ mod physics_compliance_tests {
 
         println!("Quantum energy vs thermal noise:");
         println!("  Average quantum energy: {:.2e} eV", analysis.avg_energy_ev);
-        println!("  Thermal energy (room temp): {:.3f} eV", thermal_energy_ev);
+        println!("  Thermal energy (room temp): {:.3} eV", thermal_energy_ev);
 
         // Quantum operations should be comparable to or below thermal scale
         if analysis.avg_energy_ev > thermal_energy_ev * 10.0 {

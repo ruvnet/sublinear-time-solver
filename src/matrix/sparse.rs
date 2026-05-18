@@ -953,12 +953,20 @@ mod tests {
         let csc = CSCStorage::from_csr(&csr, 2, 3).unwrap();
         let triplets2 = csc.to_triplets().unwrap();
         
-        // Sort both for comparison
+        // Sort both for comparison. `f64` does not implement `Ord` because of
+        // NaN, so sort lexicographically on (row, col) — the values are
+        // already exact small integers here, but we route them through
+        // `total_cmp` rather than relying on PartialOrd.
+        fn cmp_triplet(a: &(usize, usize, f64), b: &(usize, usize, f64)) -> std::cmp::Ordering {
+            a.0.cmp(&b.0)
+                .then_with(|| a.1.cmp(&b.1))
+                .then_with(|| a.2.total_cmp(&b.2))
+        }
         let mut t1 = triplets.clone();
         let mut t2 = triplets2;
-        t1.sort();
-        t2.sort();
-        
+        t1.sort_by(cmp_triplet);
+        t2.sort_by(cmp_triplet);
+
         assert_eq!(t1, t2);
     }
 }
