@@ -268,6 +268,12 @@ export class ConsciousnessExplorer {
      * Export consciousness state
      */
     async exportState(filepath) {
+        // SECURITY (issue #19, CWE-73): `filepath` arrives from an MCP caller
+        // and used to land straight in fs.writeFileSync — allowing arbitrary
+        // file writes. Force it through resolveStatePath so it can only
+        // resolve to a basename inside the dedicated state directory.
+        const { safeWriteState } = await import('./lib/safe-path.js');
+
         const state = {
             version: VERSION,
             timestamp: Date.now(),
@@ -284,8 +290,9 @@ export class ConsciousnessExplorer {
             state.reasoner_state = this.reasoner.exportState();
         }
 
-        const fs = await import('fs');
-        fs.writeFileSync(filepath, JSON.stringify(state, null, 2));
+        const absPath = safeWriteState(filepath, JSON.stringify(state, null, 2));
+        // Surface the path actually written so callers/observers can audit it.
+        state._writtenTo = absPath;
         return state;
     }
 
@@ -293,8 +300,12 @@ export class ConsciousnessExplorer {
      * Import consciousness state
      */
     async importState(filepath) {
-        const fs = await import('fs');
-        const state = JSON.parse(fs.readFileSync(filepath, 'utf-8'));
+        // SECURITY (issue #19, CWE-73): same path-traversal sink as exportState.
+        // safeReadState enforces basename-only inside the state directory and
+        // opens with O_NOFOLLOW so a symlink at the final component can't
+        // redirect us to /etc/shadow or similar.
+        const { safeReadState } = await import('./lib/safe-path.js');
+        const state = JSON.parse(safeReadState(filepath));
 
         // Restore consciousness with saved state
         await this.initialize();
