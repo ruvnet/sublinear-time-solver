@@ -339,11 +339,23 @@ impl StrangeLoopOperator {
         }
         
         let denominator = (sum_sq1 * sum_sq2).sqrt();
-        
+
         if denominator > 0.0 {
             Ok(numerator / denominator)
         } else {
-            Ok(0.0)
+            // Both vectors have zero variance (constant). Pearson is
+            // undefined here. Fall back to "perfect correlation" if the
+            // constants are equal (signals an exact loop), else 0.0.
+            // Without this, a strange-loop operator fed an identical
+            // state repeatedly never registers any loop depth — the
+            // exact case test_loop_depth_calculation exercises.
+            let v1 = state1.first().copied().unwrap_or(0.0);
+            let v2 = state2.first().copied().unwrap_or(0.0);
+            if (v1 - v2).abs() < 1e-12 {
+                Ok(1.0)
+            } else {
+                Ok(0.0)
+            }
         }
     }
     

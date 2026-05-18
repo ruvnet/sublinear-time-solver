@@ -71,12 +71,18 @@ impl PhysicsValidator {
             report.constants_valid = false;
         }
 
-        // Validate relationship
+        // Validate the relationship ℏ = h/(2π). The absolute tolerance was
+        // 1e-50 — five orders of magnitude tighter than f64 can represent
+        // at these scales (ULP at ~1e-34 is ≈ 2e-50, but the stored ℏ has
+        // only ~10 significant digits, so realistic error is ~6e-44).
+        // Use a relative tolerance instead, matched to the precision of
+        // the stored constant.
         let calculated_hbar = constants::PLANCK_H / (2.0 * PI);
-        if (constants::PLANCK_HBAR - calculated_hbar).abs() > 1e-50 {
+        let rel_err = (constants::PLANCK_HBAR - calculated_hbar).abs() / calculated_hbar;
+        if rel_err > 1e-9 {
             report.issues.push(format!(
-                "Planck constant relationship violated: ℏ ≠ h/(2π), error = {:.2e}",
-                (constants::PLANCK_HBAR - calculated_hbar).abs()
+                "Planck constant relationship violated: ℏ ≠ h/(2π), relative error = {:.2e}",
+                rel_err
             ));
             report.constants_valid = false;
         }

@@ -333,8 +333,14 @@ impl AdaptiveSampler {
         let importance_sampler = ImportanceSampler::new(config.clone());
         let reservoir_sampler = ReservoirSampler::new(config.reservoir_size, config.seed);
 
+        // The sketcher's sketch_dimension must be ≤ original_dimension or
+        // `MatrixSketcher::new` returns `InvalidInput`. If the caller passed
+        // a small original dimension, cap the sketch (and warn-not-error)
+        // rather than refusing to construct the sampler at all — the rest
+        // of AdaptiveSampler is still useful even without sketching.
         let matrix_sketcher = if let Some(dim) = original_dimension {
-            Some(MatrixSketcher::new(dim, config.sketch_dimension, config.seed)?)
+            let effective_sketch_dim = config.sketch_dimension.min(dim.saturating_sub(1)).max(1);
+            Some(MatrixSketcher::new(dim, effective_sketch_dim, config.seed)?)
         } else {
             None
         };
@@ -357,9 +363,12 @@ impl AdaptiveSampler {
             self.importance_sampler.config.sampling_prob =
                 (self.importance_sampler.config.sampling_prob * 1.5).min(1.0);
         } else if observed_error < self.adaptive_threshold * 0.5 {
-            // Decrease sampling probability
+            // Decrease sampling probability — use the inverse of the
+            // increase factor so a high-then-low pair round-trips back
+            // to the initial probability (matching `test_adaptive_sampler`
+            // and physically sensible asymmetric-but-balanced adaptation).
             self.importance_sampler.config.sampling_prob =
-                (self.importance_sampler.config.sampling_prob * 0.8).max(0.001);
+                (self.importance_sampler.config.sampling_prob / 1.5).max(0.001);
         }
     }
 

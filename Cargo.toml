@@ -1,6 +1,6 @@
 [package]
 name = "sublinear"
-version = "0.1.3"
+version = "0.2.0"
 edition = "2021"
 authors = ["rUv <github.com/ruvnet>"]
 license = "MIT OR Apache-2.0"
@@ -97,7 +97,10 @@ parallel = ["rayon", "std"]
 [[bench]]
 name = "solver_benchmarks"
 harness = false
-required-features = ["criterion"]
+# Criterion is a dev-dependency, not a feature — the previous
+# `required-features = ["criterion"]` was a silent no-op that
+# cargo warned about ("invalid feature `criterion`"). Benchmarks
+# always link criterion via dev-dependencies, so no gate is needed.
 
 [profile.release]
 lto = true

@@ -1,8 +1,8 @@
 //! Performance benchmarks to validate optimizations against Python baselines
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
-use sublinear_time_solver::fast_solver::{FastCSRMatrix, FastConjugateGradient};
-use sublinear_time_solver::types::Precision;
+use sublinear_solver::fast_solver::{FastCSRMatrix, FastConjugateGradient};
+use sublinear_solver::types::Precision;
 
 fn generate_sparse_matrix(size: usize, sparsity: f64) -> (FastCSRMatrix, Vec<Precision>) {
     let mut triplets = Vec::new();

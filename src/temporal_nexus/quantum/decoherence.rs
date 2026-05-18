@@ -47,10 +47,18 @@ impl DecoherenceTracker {
     pub fn with_temperature(temperature_k: f64) -> Self {
         let thermal_rate = Self::calculate_thermal_decoherence_rate(temperature_k);
         
+        // Pure dephasing is dominated by interactions with the thermal
+        // environment, so it must scale with temperature too — otherwise
+        // a 10 mK cryogenic tracker reports the same coherence time as a
+        // 300 K room-temp tracker (test_cryogenic_environment regression).
+        // Use 1 GHz at room temperature (300 K) as the anchor and scale
+        // linearly; clamped to a 1 Hz floor so f64 inverses stay finite.
+        let dephasing_rate = (1.0e9 * (temperature_k / 300.0)).max(1.0);
+
         Self {
             temperature: temperature_k,
             thermal_rate,
-            dephasing_rate: 1e9, // 1 GHz typical dephasing
+            dephasing_rate,
             coupling_strength: 1e-3, // Weak coupling
             noise_spectrum: NoiseSpectrum::new(temperature_k),
         }
@@ -73,7 +81,12 @@ impl DecoherenceTracker {
         
         // Decoherence rate ∝ coupling² × thermal energy / ℏ
         let rate = (coupling_j.powi(2) * thermal_energy) / constants::PLANCK_HBAR;
-        rate.max(1e3) // Minimum 1 kHz even at very low temperature
+        // No artificial floor: the previous `rate.max(1e3)` clamped both
+        // 300 K and 10 mK runs to 1 kHz, making temperature-ordering
+        // assertions (test_thermal_decoherence_rate) flap. Return the
+        // physical value; downstream callers add their own coherence-time
+        // floors where appropriate.
+        rate
     }
 
     /// Calculate coherence time from decoherence rates
@@ -461,10 +474,12 @@ mod tests {
     fn test_noise_spectrum_analysis() {
         let tracker = DecoherenceTracker::new();
         let noise = tracker.noise_spectrum.analyze_at_time(1e-9);
-        
+
         assert!(noise.total_noise_density > 0.0);
         assert!(!noise.dominant_source.is_empty());
-        assert_eq!(noise.frequency_hz, 1e9); // 1 GHz for 1 ns
+        // `1.0 / 1e-9` is not exactly `1e9` in f64 (1e-9 is not exactly
+        // representable). Use a relative epsilon instead of `assert_eq!`.
+        assert_relative_eq!(noise.frequency_hz, 1e9, epsilon = 1e-6);
     }
 
     #[test]

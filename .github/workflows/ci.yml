@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  test:
+    name: cargo test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo build
+        run: cargo build --workspace --all-targets
+      - name: cargo test (lib + integration + doc)
+        run: cargo test --workspace --all-targets
+      - name: cargo test --doc
+        run: cargo test --doc
+
+  fmt-clippy:
+    name: fmt + clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo fmt --check
+        run: cargo fmt --all -- --check
+        continue-on-error: true   # existing tree has cosmetic drift; will tighten later
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets --no-deps
+        continue-on-error: true   # existing tree has 400+ pre-existing lints; tracked separately
+
+  # Issue #19 (CWE-73 path traversal). The new safe-path tests pin the
+  # MCP export_state / import_state contract — basename only, O_NOFOLLOW,
+  # no escapes from the dedicated state directory. If these regress,
+  # the same attack reopens.
+  security-safe-path:
+    name: safe-path regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: node --test tests/consciousness/safe-path.test.mjs
+        run: node --test tests/consciousness/safe-path.test.mjs
+
+  bench-smoke:
+    name: cargo bench --quick (smoke)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo bench --bench solver_benchmarks (smoke)
+        run: cargo bench --bench solver_benchmarks -- --quick

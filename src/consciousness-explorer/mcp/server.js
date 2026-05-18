@@ -237,13 +237,16 @@ export class ConsciousnessMCPServer {
                 },
                 {
                     name: 'export_state',
-                    description: 'Export consciousness state',
+                    description: 'Export consciousness state to a file in the dedicated state directory ($CONSCIOUSNESS_EXPLORER_STATE_DIR or ~/.consciousness-explorer/state).',
                     inputSchema: {
                         type: 'object',
                         properties: {
                             filepath: {
                                 type: 'string',
-                                description: 'Path to save state file'
+                                description: 'Basename of the state file. Must NOT contain path separators, "..", or absolute paths — only a filename (e.g. "snapshot.json"). Writes are confined to the state directory.',
+                                pattern: '^[^/\\\\\\x00]+$',
+                                minLength: 1,
+                                maxLength: 255
                             }
                         },
                         required: ['filepath']
@@ -251,13 +254,16 @@ export class ConsciousnessMCPServer {
                 },
                 {
                     name: 'import_state',
-                    description: 'Import consciousness state',
+                    description: 'Import consciousness state from a file in the dedicated state directory.',
                     inputSchema: {
                         type: 'object',
                         properties: {
                             filepath: {
                                 type: 'string',
-                                description: 'Path to state file'
+                                description: 'Basename of the state file (same constraints as export_state).',
+                                pattern: '^[^/\\\\\\x00]+$',
+                                minLength: 1,
+                                maxLength: 255
                             }
                         },
                         required: ['filepath']

@@ -211,11 +211,9 @@ impl OptimizedConjugateGradientSolver {
         let tolerance_sq = self.config.tolerance * self.config.tolerance;
         let mut converged = false;
 
-        // Conjugate gradient iteration
-        let mut rsold = 0.0;
-        for &ri in r.iter() {
-            rsold += ri * ri;
-        }
+        // Conjugate gradient iteration — every dot product and AXPY goes
+        // through the instrumented helpers so `performance_stats` is correct.
+        let mut rsold = self.dot_product(&r, &r);
         p.copy_from_slice(&r);
 
         while iteration < self.config.max_iterations {
@@ -229,10 +227,7 @@ impl OptimizedConjugateGradientSolver {
             self.stats.matvec_count += 1;
 
             // alpha = rsold / (p^T * ap)
-            let mut pap = 0.0;
-            for (&pi, &api) in p.iter().zip(ap.iter()) {
-                pap += pi * api;
-            }
+            let pap = self.dot_product(&p, &ap);
 
             if pap.abs() < 1e-16 {
                 break; // Avoid division by zero
@@ -241,23 +236,16 @@ impl OptimizedConjugateGradientSolver {
             let alpha = rsold / pap;
 
             // x = x + alpha * p
-            for (xi, &pi) in x.iter_mut().zip(p.iter()) {
-                *xi += alpha * pi;
-            }
+            self.axpy(alpha, &p, &mut x);
 
             // r = r - alpha * ap
-            for (ri, &api) in r.iter_mut().zip(ap.iter()) {
-                *ri -= alpha * api;
-            }
+            self.axpy(-alpha, &ap, &mut r);
 
-            let mut rsnew = 0.0;
-            for &ri in r.iter() {
-                rsnew += ri * ri;
-            }
+            let rsnew = self.dot_product(&r, &r);
 
             let beta = rsnew / rsold;
 
-            // p = r + beta * p
+            // p = r + beta * p  (scale p in place, then add r)
             for (pi, &ri) in p.iter_mut().zip(r.iter()) {
                 *pi = ri + beta * *pi;
             }

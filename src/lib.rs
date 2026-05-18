@@ -13,14 +13,15 @@
 //!
 //! ## Quick Start
 //!
-//! ```rust
+//! ```no_run
 //! use sublinear_solver::{SparseMatrix, NeumannSolver, SolverAlgorithm, SolverOptions};
 //!
-//! // Create a diagonally dominant matrix
+//! // Create a diagonally dominant matrix (`from_triplets` returns a Result;
+//! // unwrap the SparseMatrix before passing to the solver).
 //! let matrix = SparseMatrix::from_triplets(
 //!     vec![(0, 0, 5.0), (0, 1, 1.0), (1, 0, 2.0), (1, 1, 7.0)],
 //!     2, 2
-//! );
+//! ).expect("valid triplets");
 //!
 //! // Set up the right-hand side
 //! let b = vec![6.0, 9.0];

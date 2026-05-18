@@ -109,13 +109,13 @@ impl EntanglementValidator {
             && bell_parameter > self.bell_threshold
             && survival > 0.1; // 10% minimum survival
 
-        if !is_valid && concurrence < self.min_entanglement_threshold {
-            return Err(QuantumError::EntanglementLost {
-                correlation: concurrence,
-                threshold: self.min_entanglement_threshold,
-            });
-        }
-
+        // "Entanglement below threshold" is a legitimate result state,
+        // not an exception — the caller already gets `is_valid: false`
+        // and the exact concurrence value to decide on. The previous
+        // early `Err(EntanglementLost)` prevented callers from comparing
+        // concurrences across decoherence regimes (e.g. test_edge_cases:
+        // "shorter decoherence time should reduce entanglement
+        // preservation" needs to read concurrence from both results).
         Ok(EntanglementResult {
             is_valid,
             operation_time_s,
@@ -151,6 +151,152 @@ impl EntanglementValidator {
         self.decoherence_time_s = decoherence_time_s;
         self.decay_rate = 1.0 / decoherence_time_s;
     }
+
+    /// Analyse entanglement viability across the canonical consciousness time
+    /// scales (neural spike, gamma/theta/alpha/beta/delta waves). Six fixed
+    /// scales, ordered fastest-to-slowest, each annotated with how directly
+    /// it touches conscious neural activity.
+    pub fn analyze_consciousness_time_scales(&self) -> ConsciousnessTimeScaleAnalysis {
+        // (scale_name, period_s, consciousness_relevance).
+        // The relevance ranking is conservative: spike + gamma drive the
+        // well-studied "binding" hypothesis; the slower bands are correlates
+        // rather than mechanisms.
+        let scales: [(&str, f64, ConsciousnessRelevance); 6] = [
+            ("neural spike", 1.0e-3, ConsciousnessRelevance::DirectlyRelevant),
+            ("gamma wave", 2.5e-2, ConsciousnessRelevance::HighlyRelevant),
+            ("beta wave", 5.0e-2, ConsciousnessRelevance::Relevant),
+            ("alpha wave", 1.0e-1, ConsciousnessRelevance::Relevant),
+            ("theta wave", 1.25e-1, ConsciousnessRelevance::PotentiallyRelevant),
+            ("delta wave", 5.0e-1, ConsciousnessRelevance::PotentiallyRelevant),
+        ];
+
+        let mut assessments = Vec::with_capacity(scales.len());
+        let mut best_scale: Option<&'static str> = None;
+        let mut best_survival = 0.0_f64;
+
+        for (name, time_s, relevance) in scales {
+            let survival = self.entanglement_survival(time_s);
+            let entropy = self.calculate_entanglement_entropy(time_s);
+            let bell = self.calculate_bell_parameter(time_s);
+            let is_viable = survival >= 0.1 && bell > self.bell_threshold;
+
+            // Prefer the longest scale whose survival is still > 1/e — that
+            // gives the operator the most headroom while keeping entanglement.
+            if survival > 1.0 / std::f64::consts::E && survival > best_survival {
+                best_scale = Some(name);
+                best_survival = survival;
+            }
+
+            assessments.push(ConsciousnessTimeScaleAssessment {
+                scale_name: name.to_string(),
+                time_s,
+                survival_probability: survival,
+                entanglement_entropy: entropy,
+                bell_parameter: bell,
+                is_viable,
+                consciousness_relevance: relevance,
+            });
+        }
+
+        let recommended_scale = best_scale
+            .unwrap_or("neural spike") // always pick something so consumers see a non-empty hint
+            .to_string();
+
+        ConsciousnessTimeScaleAnalysis {
+            assessments,
+            recommended_scale,
+            decoherence_time_s: self.decoherence_time_s,
+            qubit_count: self.qubit_count,
+        }
+    }
+
+    /// Model a small consciousness network of `network_size` qubits at the
+    /// given time. Returns pairwise entanglement quality between every node
+    /// (C(N,2) pairs) plus a single aggregate `network_coherence ∈ [0,1]`.
+    ///
+    /// The model is intentionally simple — all pairs share the same
+    /// decoherence rate, so `network_coherence` reduces to the entanglement
+    /// survival probability. The shape is what callers expect; the absolute
+    /// values are useful for "is the whole network still coherent?" gates.
+    pub fn model_consciousness_network(
+        &self,
+        network_size: usize,
+        time_s: f64,
+    ) -> ConsciousnessNetwork {
+        let survival = self.entanglement_survival(time_s);
+        let pair_count = if network_size < 2 { 0 } else { network_size * (network_size - 1) / 2 };
+        let mut node_entanglements = Vec::with_capacity(pair_count);
+        for i in 0..network_size {
+            for j in (i + 1)..network_size {
+                node_entanglements.push(NodeEntanglement {
+                    node_a: i,
+                    node_b: j,
+                    concurrence: survival,
+                });
+            }
+        }
+        ConsciousnessNetwork {
+            network_size,
+            node_entanglements,
+            network_coherence: survival.clamp(0.0, 1.0),
+            time_s,
+        }
+    }
+
+    /// Compute the quantum Fisher information (QFI) for a maximally entangled
+    /// 2-qubit state under exponential dephasing. QFI bounds the precision
+    /// with which a phase parameter encoded in the state can be estimated;
+    /// for our model it scales linearly with the squared survival
+    /// probability and the qubit count.
+    ///
+    /// Returns a strictly positive value (clamped to a small floor so callers
+    /// can assume `qfi > 0` even at long times).
+    pub fn calculate_quantum_fisher_information(&self, time_s: f64) -> f64 {
+        let survival = self.entanglement_survival(time_s);
+        let n = self.qubit_count.max(1) as f64;
+        let qfi = (n * n) * survival * survival;
+        qfi.max(f64::MIN_POSITIVE)
+    }
+}
+
+/// Analysis of entanglement viability across the canonical consciousness
+/// time scales. Companion to `DecoherenceAnalysis` / `UncertaintyAnalysis`
+/// produced by sibling validators.
+#[derive(Debug, Clone)]
+pub struct ConsciousnessTimeScaleAnalysis {
+    pub assessments: Vec<ConsciousnessTimeScaleAssessment>,
+    pub recommended_scale: String,
+    pub decoherence_time_s: f64,
+    pub qubit_count: usize,
+}
+
+/// Per-scale assessment of entanglement quality.
+#[derive(Debug, Clone)]
+pub struct ConsciousnessTimeScaleAssessment {
+    pub scale_name: String,
+    pub time_s: f64,
+    pub survival_probability: f64,
+    pub entanglement_entropy: f64,
+    pub bell_parameter: f64,
+    pub is_viable: bool,
+    pub consciousness_relevance: ConsciousnessRelevance,
+}
+
+/// Aggregate state of a small consciousness network at a given time.
+#[derive(Debug, Clone)]
+pub struct ConsciousnessNetwork {
+    pub network_size: usize,
+    pub node_entanglements: Vec<NodeEntanglement>,
+    pub network_coherence: f64,
+    pub time_s: f64,
+}
+
+/// Pairwise entanglement between two nodes in a consciousness network.
+#[derive(Debug, Clone)]
+pub struct NodeEntanglement {
+    pub node_a: usize,
+    pub node_b: usize,
+    pub concurrence: f64,
 }
 
 impl Default for EntanglementValidator {
