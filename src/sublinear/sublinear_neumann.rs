@@ -236,15 +236,26 @@ impl SublinearNeumannSolver {
         matrix: &dyn Matrix,
         b: &[Precision],
     ) -> Result<SublinearNeumannResult> {
-        // For small problems, use standard Neumann iteration
+        // For small problems, use Jacobi iteration. The previous version
+        // hard-capped at 10 iterations, which for the standard 2x2 test
+        // matrix (A=[[3,1],[1,3]], b=[4,4]) gives a residual of ~1e-5,
+        // well above the 1e-10 the test asserts. Bump the cap to
+        // `max_iterations` so the convergence step-size check actually
+        // controls termination on small diagonally dominant systems.
         let n = matrix.rows();
-        let mut solution = b.to_vec();
+        let mut solution = vec![0.0; n];
+        // Bump to a value that lets convergence step-size actually drive
+        // termination on small diagonally dominant systems. Picks a cap
+        // proportional to `max_recursion_depth` (so callers can still tune
+        // it down) with a hard floor of 64 — enough for (1/3)^64 ≪ 1e-30.
+        let max_iters = (self.config.max_recursion_depth * 16).max(64);
+        let mut iterations_used = 0usize;
 
-        // Simple iterative refinement
-        for iteration in 0..10 {
+        for _ in 0..max_iters {
+            iterations_used += 1;
             let mut new_solution = vec![0.0; n];
 
-            // One Neumann step
+            // One Jacobi step: new[i] = (b[i] - Σ_{j≠i} A[i,j]·x[j]) / A[i,i]
             for i in 0..n {
                 if let Some(diag) = matrix.get(i, i) {
                     if diag.abs() > 1e-14 {
@@ -260,7 +271,7 @@ impl SublinearNeumannSolver {
                 }
             }
 
-            // Check convergence
+            // Check convergence on step size.
             let diff: Precision = solution.iter()
                 .zip(&new_solution)
                 .map(|(old, new)| (old - new).powi(2))
@@ -269,7 +280,7 @@ impl SublinearNeumannSolver {
 
             solution = new_solution;
 
-            if diff < 1e-12 {
+            if diff < 1e-14 {
                 break;
             }
         }
@@ -289,11 +300,11 @@ impl SublinearNeumannSolver {
 
         Ok(SublinearNeumannResult {
             solution,
-            iterations: 10,
+            iterations: iterations_used,
             residual_norm,
             complexity_bound: ComplexityBound::Logarithmic(n),
             dimension_reduction_ratio: 1.0,
-            series_terms_used: 10,
+            series_terms_used: iterations_used,
             reconstruction_error: 0.0,
         })
     }
