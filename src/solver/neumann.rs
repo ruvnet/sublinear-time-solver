@@ -193,7 +193,11 @@ impl NeumannState {
             .map(|(&b_val, &d_inv)| b_val * d_inv)
             .collect();
 
-        // Initialize solution based on options
+        // Initialize solution. `compute_next_term` adds term k = M^k · D⁻¹b
+        // starting at k=0, so the solution must start at zero — otherwise the
+        // k=0 term `D⁻¹b` is double-counted and a 2×2 diagonally dominant
+        // toy system that should converge to ~[1, 1] ends up at ~[2, 2].
+        // (Caller-supplied initial guesses are still honoured.)
         let solution = if let Some(ref initial) = options.initial_guess {
             if initial.len() != dimension {
                 return Err(SolverError::DimensionMismatch {
@@ -204,7 +208,7 @@ impl NeumannState {
             }
             initial.clone()
         } else {
-            rhs.clone() // Start with x_0 = D^(-1)b
+            vec![0.0; dimension]
         };
 
         let residual = vec![0.0; dimension];
