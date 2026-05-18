@@ -53,9 +53,11 @@ impl TemporalWindow {
         }
     }
     
-    /// Get window size in ticks
+    /// Get window size in ticks. `end_tick` is inclusive (see
+    /// `contains_tick` which compares with `<=`), so a window
+    /// `(start=0, end=999)` covers 1000 ticks — fence-post counting.
     pub fn size(&self) -> u64 {
-        self.info.end_tick - self.info.start_tick
+        self.info.end_tick - self.info.start_tick + 1
     }
     
     /// Check if tick is within this window

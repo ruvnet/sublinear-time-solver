@@ -142,33 +142,62 @@ impl IdentitySnapshot {
         (-variance).exp().min(1.0)
     }
     
-    /// Calculate similarity with another snapshot
+    /// Calculate similarity with another snapshot.
+    ///
+    /// Pure cosine similarity is scale-invariant and the feature
+    /// extractor tanh-normalises every component, so a small state and
+    /// a 10× larger one with the same shape both saturate near
+    /// `(1, 1, 1, …)` and look identical (similarity ≈ 1.0). That
+    /// silently swallows the "very different states" case the
+    /// continuity tracker is supposed to flag (test_continuity_break_detection).
+    ///
+    /// Combine cosine with a mean-L1 dissimilarity so component-wise
+    /// differences register even after saturation, then weight to keep
+    /// behavior similar for genuinely-similar states.
     fn calculate_similarity(&self, other: &IdentitySnapshot) -> f64 {
-        if self.feature_vector.len() != other.feature_vector.len() {
+        if self.feature_vector.len() != other.feature_vector.len() || self.feature_vector.is_empty() {
             return 0.0;
         }
-        
-        // Cosine similarity between feature vectors
+
         let dot_product: f64 = self.feature_vector.iter()
             .zip(other.feature_vector.iter())
             .map(|(a, b)| a * b)
             .sum();
-        
-        let magnitude_self: f64 = self.feature_vector.iter()
-            .map(|x| x * x)
-            .sum::<f64>()
-            .sqrt();
-        
-        let magnitude_other: f64 = other.feature_vector.iter()
-            .map(|x| x * x)
-            .sum::<f64>()
-            .sqrt();
-        
-        if magnitude_self > 0.0 && magnitude_other > 0.0 {
+        let magnitude_self: f64 = self.feature_vector.iter().map(|x| x * x).sum::<f64>().sqrt();
+        let magnitude_other: f64 = other.feature_vector.iter().map(|x| x * x).sum::<f64>().sqrt();
+
+        let cosine = if magnitude_self > 0.0 && magnitude_other > 0.0 {
             dot_product / (magnitude_self * magnitude_other)
         } else {
             0.0
+        };
+
+        // Mean L1 + Chebyshev (max-per-component) over tanh-bounded
+        // features. Mean L1 alone isn't strong enough under tanh
+        // saturation: when one state is a 10× rescale of another, most
+        // features look identical near ±1 and the mean stays small.
+        // Chebyshev fires on the *worst* single component, which gives
+        // a clean break signal when any spectral/statistical feature
+        // genuinely differs. Both metrics are bounded to [0, 1].
+        let mut mean_l1 = 0.0;
+        let mut max_diff: f64 = 0.0;
+        for (a, b) in self.feature_vector.iter().zip(other.feature_vector.iter()) {
+            let d = (a - b).abs();
+            mean_l1 += d;
+            if d > max_diff {
+                max_diff = d;
+            }
         }
+        mean_l1 /= self.feature_vector.len() as f64;
+        let l1_similarity = (1.0 - mean_l1 / 2.0).max(0.0);
+        // Features are tanh-bounded in [-1, 1] so max_diff is in [0, 2].
+        let chebyshev_similarity = (1.0 - max_diff / 2.0).max(0.0);
+
+        // Weighted blend: cosine 30%, mean-L1 30%, Chebyshev 40%. Identical
+        // states score 1.0; substantially different states (one large
+        // Chebyshev diff) drop well below 0.9 without breaking the
+        // "slightly different" test_continuity_tracker case.
+        0.3 * cosine + 0.3 * l1_similarity + 0.4 * chebyshev_similarity
     }
     
     // Helper methods for feature extraction
