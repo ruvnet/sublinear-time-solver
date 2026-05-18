@@ -123,12 +123,17 @@ impl UncertaintyValidator {
         self.minimum_uncertainty_product() / time_constraint_s
     }
 
-    /// Calculate maximum time for given energy budget
+    /// Calculate maximum time for given energy budget.
+    ///
+    /// From ΔE · Δt ≥ ℏ/2: t_max = (ℏ/2) / E. The previous implementation
+    /// divided in the opposite direction, which has units of 1/time (a
+    /// frequency-like quantity), so a 1 ns target round-tripped to 1 GHz
+    /// instead of 1 ns and `test_energy_time_consistency` would fail.
     pub fn calculate_maximum_time(&self, energy_budget_j: f64) -> f64 {
         if energy_budget_j <= 0.0 {
             return 0.0;
         }
-        energy_budget_j / self.minimum_uncertainty_product()
+        self.minimum_uncertainty_product() / energy_budget_j
     }
 
     /// Validate nanosecond consciousness energy requirements
@@ -313,14 +318,28 @@ mod tests {
     fn test_energy_scale_classification() {
         let validator = UncertaintyValidator::new();
 
-        // Test different energy scales
-        let atto_ev_energy = 1e-21; // 1 aeV in joules
+        // Test different energy scales. The previous version used
+        // `1e-21` as "1 aeV in joules", but 1 aeV = 1e-18 eV which is
+        // EV_TO_JOULES * 1e-18 ≈ 1.6e-37 J. 1e-21 J is actually ≈6.2 meV,
+        // which the classifier correctly bucketed as MilliElectronVolt.
+        // Compute the joule values from the eV constant so the labels
+        // match the classifier thresholds.
+        let sub_atto_energy = constants::EV_TO_JOULES * 1e-18; // 1 aeV in J (sub-atto bucket)
         let ev_energy = constants::EV_TO_JOULES; // 1 eV
         let kev_energy = 1000.0 * constants::EV_TO_JOULES; // 1 keV
 
-        assert_eq!(validator.classify_energy_scale(atto_ev_energy), EnergyScale::SubAttoElectronVolt);
-        assert_eq!(validator.classify_energy_scale(ev_energy), EnergyScale::ElectronVolt);
-        assert_eq!(validator.classify_energy_scale(kev_energy), EnergyScale::KiloElectronVolt);
+        assert_eq!(
+            validator.classify_energy_scale(sub_atto_energy),
+            EnergyScale::SubAttoElectronVolt,
+        );
+        assert_eq!(
+            validator.classify_energy_scale(ev_energy),
+            EnergyScale::ElectronVolt,
+        );
+        assert_eq!(
+            validator.classify_energy_scale(kev_energy),
+            EnergyScale::KiloElectronVolt,
+        );
     }
 
     #[test]
