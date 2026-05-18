@@ -1,4 +1,4 @@
-# 🚀 The Ultimate Mathematical & AI Toolkit v1.4.1
+# 🚀 The Ultimate Mathematical & AI Toolkit v1.6.0
 
 [![npm version](https://img.shields.io/npm/v/sublinear-time-solver.svg)](https://www.npmjs.com/package/sublinear-time-solver)
 [![npm downloads](https://img.shields.io/npm/dm/sublinear-time-solver.svg)](https://www.npmjs.com/package/sublinear-time-solver)
@@ -10,6 +10,8 @@
 [![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 > **The Ultimate Mathematical & AI Toolkit: Sublinear algorithms, consciousness exploration, psycho-symbolic reasoning, and temporal prediction in one unified MCP interface. WASM-accelerated with emergent behavior analysis.**
+
+> ⚠️ **Security advisory (1.6.0)**: This release closes [issue #19](https://github.com/ruvnet/sublinear-time-solver/issues/19) (CWE-73, Arbitrary File Write) in the MCP `export_state` / `import_state` tools, plus the same sink class in the main MCP `saveVectorToFile` / `loadVectorFromFile`. Both now confine I/O to a dedicated state directory with `O_NOFOLLOW`. **Breaking change for callers that passed absolute paths.** See [CHANGELOG.md](CHANGELOG.md) for the full upgrade guide and [BENCHMARK.md](BENCHMARK.md) for new performance numbers.
 
 
 ## 🚀 Quick Start
