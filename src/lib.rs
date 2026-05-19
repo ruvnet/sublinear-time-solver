@@ -129,6 +129,12 @@ pub use coherence::{coherence_score, check_coherence_or_reject};
 pub mod incremental;
 pub use incremental::{IncrementalSolver, SparseDelta, IncrementalConfig};
 
+// Contrastive search (ADR-001 roadmap item #6). Boundary-crossing primitive
+// for change-driven activation: which rows of the current solution diverged
+// most from baseline? Backbone of RuView / Cognitum wake-on-event.
+pub mod contrastive;
+pub use contrastive::{find_anomalous_rows, find_rows_above_threshold, AnomalyRow};
+
 // Sublinear algorithms with mathematically rigorous O(log n) complexity
 pub mod sublinear;
 

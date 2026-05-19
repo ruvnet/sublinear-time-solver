@@ -24,9 +24,10 @@
 //! # use sublinear_solver::incremental::{IncrementalSolver, SparseDelta};
 //! # fn run(matrix: &SparseMatrix, prev_solution: Vec<f64>) -> sublinear_solver::Result<()> {
 //! let solver = NeumannSolver::new(64, 1e-10);
-//! let delta = SparseDelta::new(vec![3, 17], vec![0.5, -0.2]); // 2 entries of b changed
+//! // 2 entries of b changed:
+//! let delta = SparseDelta::new(vec![3, 17], vec![0.5, -0.2])?;
 //! let result = solver.solve_on_change(
-//!     matrix,
+//!     matrix as &dyn Matrix,
 //!     &prev_solution,
 //!     &delta,
 //!     &SolverOptions::default(),
