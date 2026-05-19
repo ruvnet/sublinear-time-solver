@@ -69,3 +69,28 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: cargo bench --bench solver_benchmarks (smoke)
         run: cargo bench --bench solver_benchmarks -- --quick
+
+  # ADR-001 §SOTA: closes the last gap by exercising the
+  # joules_per_decision example on every PR. GH Actions doesn't expose
+  # per-job power counters (no RAPL access), so the run uses the
+  # time-only fallback — but it still proves the energy-measurement code
+  # path compiles, links, and runs end-to-end. A future self-hosted
+  # runner on Linux-RAPL hardware or a Pi Zero 2W will surface real
+  # J/solve numbers in the same job.
+  joules-per-decision-smoke:
+    name: joules_per_decision smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo run --release --example joules_per_decision
+        # Tight workload so the smoke job finishes in seconds. The point is
+        # to catch bitrot (broken arch-gate, removed module path, etc.),
+        # not to measure energy.
+        run: |
+          out=$(cargo run --release --example joules_per_decision -- --n 64 --iters 500 2>&1)
+          echo "$out"
+          # Assert the script produced the expected output structure.
+          echo "$out" | grep -q "joules_per_decision" || (echo "::error::Missing run header"; exit 1)
+          echo "$out" | grep -q "per_solve:" || (echo "::error::Missing per_solve line"; exit 1)
