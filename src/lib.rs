@@ -109,6 +109,14 @@ pub mod matrix;
 pub mod solver;
 pub mod types;
 
+// Complexity-class declarations — every public solver / sampler / analyser
+// declares its worst-case class via the `Complexity` trait. See
+// `docs/adr/ADR-001-complexity-as-architecture.md` for the strategic
+// context (complexity classes as architectural primitives in the broader
+// RuVector / RuView / Cognitum / Ruflo stack).
+pub mod complexity;
+pub use complexity::{Complexity, ComplexityClass, ComplexityIntrospect};
+
 // Sublinear algorithms with mathematically rigorous O(log n) complexity
 pub mod sublinear;
 
