@@ -427,6 +427,31 @@ export class SublinearSolverMCPServer {
             required: ['method'],
           },
         },
+        // ADR-001 roadmap item #3 (Rust src/coherence.rs). Wire-
+        // callable coherence-score tool. Lets agents check matrix
+        // feasibility BEFORE invoking a solver — completes the
+        // predict → check → budget → solve → audit wire pipeline.
+        {
+          name: 'coherenceScore',
+          description:
+            'Return the diagonal-dominance margin of a matrix: `min_i (|A[i,i]| - Σ_{j≠i}|A[i,j]|) / |A[i,i]|`. Strictly DD matrices score in (0, 1]; the boundary case scores 0; non-DD matrices score negative. Use this BEFORE invoking a solver: positive scores guarantee Neumann-series convergence; scores below a threshold (default ~0.05) indicate the solver will waste J/decision budget on a near-singular system. Cost: O(nnz(A)) — Linear class but typically dwarfed by the solve it gates.',
+          'x-complexity': {
+            class: 'Linear',
+            detail:
+              'O(nnz(A)) — one pass through the matrix row iterator. Same class as the solvers that consume it.',
+            edgeSafe: false,
+          },
+          inputSchema: {
+            type: 'object',
+            properties: {
+              matrix: {
+                type: 'object',
+                description: 'Matrix A in dense or sparse-COO format. Same shape accepted by `solve`.',
+              },
+            },
+            required: ['matrix'],
+          },
+        },
         // ADR-001 open Q#3 / PR #41: closure-restricted residual audit.
         // Wire-callable witness for SubLinear orchestrator outputs.
         // SubLinear in n — same complexity class as the solve it audits.
@@ -578,6 +603,8 @@ export class SublinearSolverMCPServer {
             return await this.handleEstimateComplexityClass(args as any);
           case 'verifySparseSolution':
             return await this.handleVerifySparseSolution(args as any);
+          case 'coherenceScore':
+            return await this.handleCoherenceScore(args as any);
           // Temporal tools
           case 'predictWithTemporalAdvantage':
           case 'validateTemporalAdvantage':
@@ -1683,6 +1710,135 @@ export class SublinearSolverMCPServer {
       throw new McpError(
         ErrorCode.InternalError,
         `verifySparseSolution error: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Wire-callable coherence-score primitive. Mirrors Rust's
+   * `coherence::coherence_score(matrix)`:
+   *
+   *   margin(i) = (|A[i,i]| - Σ_{j ≠ i} |A[i,j]|) / |A[i,i]|
+   *   coherence(A) = min_i margin(i)
+   *
+   * Strictly DD matrices score in (0, 1]; the boundary case scores 0;
+   * non-DD scores negative; rows with zero diagonal score -Infinity.
+   *
+   * Pure-TS — no WASM bridge needed. Cost O(nnz(A)).
+   */
+  private async handleCoherenceScore(params: any) {
+    try {
+      if (!params.matrix) {
+        throw new McpError(ErrorCode.InvalidParams, 'Missing required parameter: matrix');
+      }
+      const matrix = params.matrix;
+      const n: number = matrix.rows ?? 0;
+      const cols: number = matrix.cols ?? n;
+      if (n === 0) {
+        // Vacuous: an empty matrix is "perfectly coherent" by convention.
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  coherence: 1.0,
+                  worst_row: null,
+                  is_strict_dd: true,
+                  note: 'Empty matrix; coherence reported as 1.0 by convention.',
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      // Build a per-row sum-of-off-diagonals + diag-lookup. Accept dense
+      // or sparse-COO formats (same shape as `solve`).
+      const diag: number[] = new Array(n).fill(0);
+      const offSum: number[] = new Array(n).fill(0);
+
+      if (matrix.format === 'coo' && matrix.data && matrix.data.rowIndices && matrix.data.colIndices && matrix.data.values) {
+        const ri = matrix.data.rowIndices;
+        const ci = matrix.data.colIndices;
+        const vs = matrix.data.values;
+        for (let k = 0; k < ri.length; k++) {
+          const r = ri[k];
+          const c = ci[k];
+          const v = vs[k];
+          if (r < 0 || r >= n) continue;
+          if (r === c) {
+            diag[r] = v;
+          } else {
+            offSum[r] += Math.abs(v);
+          }
+        }
+      } else if (matrix.data && Array.isArray(matrix.data[0])) {
+        // Dense row-major.
+        for (let i = 0; i < n; i++) {
+          const row = matrix.data[i];
+          if (!Array.isArray(row)) continue;
+          for (let j = 0; j < cols; j++) {
+            const v = row[j] ?? 0;
+            if (v === 0) continue;
+            if (j === i) {
+              diag[i] = v;
+            } else {
+              offSum[i] += Math.abs(v);
+            }
+          }
+        }
+      } else {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          'matrix must be in dense (data: number[][]) or sparse-COO (format: "coo", data.rowIndices/colIndices/values) format',
+        );
+      }
+
+      // Compute per-row margins and the global minimum.
+      let worstMargin = Number.POSITIVE_INFINITY;
+      let worstRow: number | null = null;
+      for (let i = 0; i < n; i++) {
+        const d = Math.abs(diag[i]);
+        if (d <= 1e-300) {
+          // Zero diagonal → score -Infinity. Match Rust semantics.
+          worstMargin = Number.NEGATIVE_INFINITY;
+          worstRow = i;
+          break;
+        }
+        const margin = (d - offSum[i]) / d;
+        if (margin < worstMargin) {
+          worstMargin = margin;
+          worstRow = i;
+        }
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                coherence: worstMargin,
+                worst_row: worstRow,
+                is_strict_dd: Number.isFinite(worstMargin) && worstMargin > 0,
+                note: 'Diagonal-dominance margin per ADR-001 item #3. Positive ⇒ Neumann convergence guaranteed; negative ⇒ iterative solvers may diverge.',
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      };
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `coherenceScore error: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
