@@ -17,6 +17,7 @@ use sublinear_solver::{
     Matrix, SparseMatrix, NeumannSolver, SolverAlgorithm, SolverOptions,
     OptimizedConjugateGradientSolver, OptimizedSparseMatrix,
     IncrementalSolver, SparseDelta, solve_on_change_sublinear,
+    verify_sparse_solution,
 };
 use sublinear_solver::optimized_solver::OptimizedSolverConfig;
 
@@ -204,5 +205,100 @@ fn alloc_vec_val(v: f64) -> Vec<f64> {
     vec![v]
 }
 
-criterion_group!(benches, bench_neumann_series, bench_optimized_cg, bench_delta_solve);
+/// ADR-001 PR #41 — witness audit bench.
+///
+/// Compares two ways to verify a SubLinear delta-solve's output:
+///
+///   - `full_residual`: compute `‖b - A·x_new‖_∞` over the *whole*
+///     n-vector. Linear in n.
+///   - `closure_audit`: verify_sparse_solution restricted to the
+///     orchestrator's closure entries. SubLinear in n.
+///
+/// Both reject the same class of solver bugs (residual exceeding
+/// tolerance). The closure-restricted audit is the architectural
+/// match for the SubLinear orchestrator — same complexity class as
+/// the solve it audits.
+fn bench_witness_audit(c: &mut Criterion) {
+    let mut group = c.benchmark_group("witness_audit");
+
+    for &n in &[64usize, 256, 1024] {
+        let triplets = build_test_triplets(n);
+        let matrix = SparseMatrix::from_triplets(triplets, n, n).unwrap();
+        let b_prev: Vec<f64> = (0..n).map(|i| i as f64 + 1.0).collect();
+
+        let warmup = NeumannSolver::new(128, 1e-12);
+        let opts = SolverOptions {
+            max_iterations: 500,
+            tolerance: 1e-10,
+            ..SolverOptions::default()
+        };
+        let prev_solution = warmup.solve(&matrix, &b_prev, &opts).unwrap().solution;
+
+        let delta = SparseDelta::new(vec![n / 3], vec![0.25]).unwrap();
+        let mut b_new = b_prev.clone();
+        delta.apply_to(&mut b_new).unwrap();
+
+        // Compute the closure entries once; both benches audit the same
+        // output. The cost of the orchestrator itself is in bench_delta_solve.
+        let entries = solve_on_change_sublinear(
+            &matrix,
+            &prev_solution,
+            &b_new,
+            &delta,
+            /*closure_depth=*/ 4,
+            /*max_terms=*/ 32,
+            1e-8,
+        )
+        .unwrap();
+
+        // Scatter the closure entries into a dense x_new for the
+        // full-residual baseline. (This scatter is itself O(|closure|),
+        // which is < O(n), so we keep it inside the per-iter loop to
+        // be honest about full_residual's true cost.)
+        group.throughput(Throughput::Elements(n as u64));
+
+        group.bench_with_input(BenchmarkId::new("full_residual", n), &n, |bh, _| {
+            bh.iter(|| {
+                let mut x_new = prev_solution.clone();
+                for &(i, v) in &entries {
+                    x_new[i] = v;
+                }
+                // Compute b - A·x_new over the whole vector.
+                let mut ax = vec![0.0f64; n];
+                let _ = matrix.multiply_vector(&x_new, &mut ax);
+                let mut max_r = 0.0_f64;
+                for i in 0..n {
+                    let r = (b_new[i] - ax[i]).abs();
+                    if r > max_r {
+                        max_r = r;
+                    }
+                }
+                black_box(max_r);
+            });
+        });
+
+        group.bench_with_input(BenchmarkId::new("closure_audit", n), &n, |bh, _| {
+            bh.iter(|| {
+                let report = verify_sparse_solution(
+                    black_box(&matrix),
+                    black_box(&prev_solution),
+                    black_box(&b_new),
+                    black_box(&entries),
+                    1e-4,
+                )
+                .unwrap();
+                black_box(report.ok);
+            });
+        });
+    }
+    group.finish();
+}
+
+criterion_group!(
+    benches,
+    bench_neumann_series,
+    bench_optimized_cg,
+    bench_delta_solve,
+    bench_witness_audit
+);
 criterion_main!(benches);
