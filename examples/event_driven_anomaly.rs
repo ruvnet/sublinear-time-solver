@@ -42,8 +42,9 @@
 
 use std::time::Instant;
 use sublinear_solver::{
-    contrastive_solve_on_change_sublinear, delta_below_solve_threshold, solve_on_change_sublinear,
-    AnomalyRow, Matrix, NeumannSolver, SolverAlgorithm, SolverOptions, SparseDelta, SparseMatrix,
+    contrastive_solve_on_change_sublinear, delta_below_solve_threshold, optimal_neumann_terms,
+    solve_on_change_sublinear, AnomalyRow, Matrix, NeumannSolver, SolverAlgorithm, SolverOptions,
+    SparseDelta, SparseMatrix,
 };
 use sublinear_solver::coherence::coherence_score;
 
@@ -99,8 +100,14 @@ fn main() {
         .map(|i| matrix.get(i, i).unwrap_or(0.0).abs())
         .filter(|x| *x > 0.0)
         .fold(f64::INFINITY, |a, b| if a < b { a } else { b });
+    // ── Adaptive Neumann-term selection (PR #37): pick max_terms from
+    //    the coherence + tolerance bound instead of guessing. ──
+    let b_inf = b_prev.iter().map(|x| x.abs()).fold(0.0_f64, f64::max);
+    let auto_terms =
+        optimal_neumann_terms(coherence, b_inf, min_diag, 1e-8).unwrap_or(32);
     println!(
-        "gate cache:   coherence={coherence:.3}, min_diag={min_diag:.3} (skip-threshold = 1e-6)\n"
+        "gate cache:   coherence={coherence:.3}, min_diag={min_diag:.3}, \
+         auto_terms={auto_terms} (skip=1e-6, tol=1e-8)\n"
     );
 
     // ── Event stream. Each entry is (event_label, sensor_index, delta_value).
@@ -123,7 +130,8 @@ fn main() {
     println!("{}", "─".repeat(74));
 
     let closure_depth = 4usize;
-    let max_terms = 24usize;
+    // `max_terms` is now auto-tuned per matrix via the adaptive helper.
+    let max_terms = auto_terms;
     let tolerance = 1e-8_f64;
     let skip_threshold = 1.0e-6_f64;
     let top_k = 3usize;

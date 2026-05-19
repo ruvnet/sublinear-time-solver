@@ -131,7 +131,7 @@ pub use incremental::{
     solve_on_change_sublinear, IncrementalConfig, IncrementalSolver, SolveOnChangeSublinearOp,
     SparseDelta,
 };
-pub use coherence::{delta_below_solve_threshold, delta_inf_bound};
+pub use coherence::{delta_below_solve_threshold, delta_inf_bound, optimal_neumann_terms};
 
 // Contrastive search (ADR-001 roadmap item #6). Boundary-crossing primitive
 // for change-driven activation: which rows of the current solution diverged
