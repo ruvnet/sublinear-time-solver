@@ -135,6 +135,12 @@ pub use coherence::{
     delta_below_solve_threshold, delta_inf_bound, optimal_neumann_terms, CoherenceCache,
 };
 
+// Bounding planning across chains of solves (ADR-001 #4 phase-3).
+// MCP's enforceComplexityBudget gates one solve at a time; PlanBudget
+// gates the *plan* — the chain of solves an agent intends to run.
+pub mod budget;
+pub use budget::{BudgetExhausted, PlanBudget};
+
 // Contrastive search (ADR-001 roadmap item #6). Boundary-crossing primitive
 // for change-driven activation: which rows of the current solution diverged
 // most from baseline? Backbone of RuView / Cognitum wake-on-event.
