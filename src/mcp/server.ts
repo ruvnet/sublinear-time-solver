@@ -1413,6 +1413,46 @@ export class SublinearSolverMCPServer {
         detail: 'Closure (SubLinear) + per-entry sublinear-Neumann at each closure index (SubLinear). Returns Vec<(idx, val)> over the closure only — never materialises the full n-vector. End-to-end SubLinear in n.',
         edgeSafe: true,
       },
+      // ── Auto-tuned siblings (PR #38) ──────────────────────────────
+      'solve-on-change-sublinear-auto': {
+        class: 'SubLinear',
+        detail: 'Magic-number-free orchestrator: auto-tunes closure_depth + max_terms from coherence_score + optimal_neumann_terms. Caller supplies only tolerance. Non-strict-DD input returns Incoherent.',
+        edgeSafe: true,
+      },
+      'contrastive-solve-on-change-sublinear-auto': {
+        class: 'SubLinear',
+        detail: 'Auto-tuned contrastive top-k sibling. Caller supplies only (tolerance, k); the orchestrator picks closure_depth + max_terms from the matrix coherence.',
+        edgeSafe: true,
+      },
+      // ── ADR-001 open Q#3 — solve witness (PR #41) ─────────────────
+      'verify-sparse-solution': {
+        class: 'SubLinear',
+        detail: 'Per-entry residual audit restricted to closure rows. O(|entries| · avg_row_nnz) — same class as the orchestrator whose output it verifies. Returns max_residual + ok flag for trust-but-verify gating.',
+        edgeSafe: true,
+      },
+      // ── Bounding planning (PR #40) ────────────────────────────────
+      'plan-budget-try-consume': {
+        class: 'Logarithmic',
+        detail: 'Cumulative budget accumulator across a chain of solves. try_consume(class) is O(1) — class-rank comparison + counter decrement. Refuses if class exceeds max_class or remaining_ops hits zero.',
+        edgeSafe: true,
+      },
+      // ── Streaming coherence cache (PR #39) ────────────────────────
+      'coherence-cache-build': {
+        class: 'Linear',
+        detail: 'One-shot O(nnz(A)) build of the per-row diagonal-dominance margin table. Pair with `coherence-cache-update` to amortise the cost across many streaming events.',
+        edgeSafe: false,
+      },
+      'coherence-cache-update': {
+        class: 'SubLinear',
+        detail: 'Incremental per-row margin update. O(|dirty| · row_nnz) typical case; up to O(n) cached-vec rescan (no matrix touches) on the rare unavoidable global-min-row recompute.',
+        edgeSafe: true,
+      },
+      // ── Coherence-gated event filter (PR #34) ─────────────────────
+      'delta-below-solve-threshold': {
+        class: 'Logarithmic',
+        detail: 'O(|δ|) cached-input fast-path skip gate. Returns true iff the supplied delta is small enough that ‖A⁻¹ δ‖_∞ ≤ tolerance by the Neumann-envelope bound. Independent of n + nnz once (coherence, min_diag) are cached.',
+        edgeSafe: true,
+      },
     };
 
     const entry = table[method];
