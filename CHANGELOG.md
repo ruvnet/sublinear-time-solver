@@ -4,6 +4,83 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] / Rust crate 0.3.0 — 2026-05-18
+
+ADR-001 release. The first architectural ADR (*Complexity as
+Architecture*) lands as code: every public solver now declares its
+worst-case complexity class at the type level, a coherence gate
+refuses polynomial-time work on near-singular systems, and an
+event-gated entry point lets streaming systems pay sub-linear cost
+per call instead of cold-starting on every tick.
+
+### Added
+
+- **`ComplexityClass` enum + `Complexity` trait** (`src/complexity.rs`).
+  Twelve-tier taxonomy (`Logarithmic` → `DoubleExponential` +
+  `Adaptive { default, worst }`) with `PartialOrd`/`Ord` for budget
+  comparison, an object-safe `ComplexityIntrospect` trait blanket-
+  impl'd for any `T: Complexity`, and `is_edge_safe()` /
+  `short_label()` helpers. Lifts the "is this algorithm acceptable
+  on a Pi Zero?" question from runtime-discovery to compile-time-
+  check. Re-exported at the crate root as `Complexity`,
+  `ComplexityClass`, `ComplexityIntrospect`.
+
+- **Complexity impls for the headline solvers**:
+  `NeumannSolver` → `Linear`,
+  `OptimizedConjugateGradientSolver` → `Linear`,
+  `SublinearNeumannSolver` → `Adaptive { default: Logarithmic, worst: Linear }`,
+  `JLEmbedding` → `Linear`. Adaptive solvers carry both bounds so
+  callers budget against the safe worst case.
+
+- **Coherence gate** (`src/coherence.rs`).
+  `coherence_score(&dyn Matrix) -> f64` returns the per-row diagonal-
+  dominance margin (`min_i (|diag_i| − Σ|off_i|) / |diag_i|`) in
+  `[-∞, 1]`. `check_coherence_or_reject(matrix, threshold)` returns
+  `Err(SolverError::Incoherent { coherence, threshold })` when the
+  matrix's coherence falls below the configured budget.
+  `SolverOptions::coherence_threshold` defaults to `0.0` (gate
+  disabled) so every existing caller stays wire-compatible.
+
+- **`SolverError::Incoherent { coherence, threshold }`** new variant.
+  `is_recoverable() = true`, `severity = Low` (budget refusal, not
+  data corruption). Error message points the caller at ADR-001 and
+  the opt-out.
+
+- **`solve_on_change(matrix, prev_solution, delta)` event-gated entry**
+  (`src/incremental.rs`). Extension trait `IncrementalSolver` blanket-
+  impl'd for every `SolverAlgorithm`, so the entry point is available
+  on every solver in the crate. Uses the residual-correction pattern
+  (`A·dx = delta`, then `x_new = prev + dx`) which sidesteps the
+  initial-guess-not-honoured-correctly trap in Neumann and is
+  asymptotically faster on small deltas because the inner RHS is
+  sparse. `SparseDelta { indices, values }` type with `apply_to`,
+  `as_pairs`, length validation, out-of-bounds rejection.
+
+- **23 new unit tests** across the three new modules (5 complexity,
+  8 coherence, 6 incremental — plus 4 sanity tests). Lib test count
+  148 → 151 (with the green base from v1.6.0 = 137 → 151 net).
+
+- **ADR document**: `docs/adr/ADR-001-complexity-as-architecture.md`.
+  196 lines. Twelve-class taxonomy mapped onto current code paths,
+  six-item roadmap, "definition of SOTA" criterion. Driven by the
+  `/loop 5m` cron `a3644c7d`.
+
+### What's left for the next minor
+
+Roadmap items #4 (MCP `x-complexity` schema + `max_complexity_class`
+budget arg), #5 (joules-per-decision benchmark), #6 (contrastive
+`find_anomalous_rows` adapter). All three are scoped in
+ADR-001 §Roadmap.
+
+### Acknowledgements
+
+The "complexity classes are architecture, not academia" framing
+came from @ruvnet's directive on the ruv.io stack (RuVector / RuView /
+Cognitum / Ruflo). This release is the first half of that thesis
+made executable in `sublinear-time-solver`.
+
+[1.7.0]: https://github.com/ruvnet/sublinear-time-solver/releases/tag/v1.7.0
+
 ## [1.6.0] / Rust crate 0.2.0 — 2026-05-18
 
 This is a security + correctness + verification release. After this
