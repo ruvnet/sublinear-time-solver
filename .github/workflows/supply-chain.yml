@@ -1,0 +1,153 @@
+name: supply-chain
+
+# Defence-in-depth against supply-chain attacks on this crate's
+# dependency tree. Five layers, in roughly increasing cost order:
+#
+#  1. `dependency-review`  — PRs introducing known-vulnerable deps fail
+#  2. `cargo-audit`        — RustSec advisory DB scan of Cargo.lock
+#  3. `cargo-deny`         — license / ban / source policy on the crate graph
+#  4. `npm-audit`          — npm registry advisory scan of the npm side
+#  5. `lockfile-integrity` — `npm ci` (no install) + Cargo.lock hash check
+#
+# Why each one matters:
+#  - dependency-review catches the "PR adds left-pad-2 by typo" pattern
+#    *before* anyone runs `cargo build` / `npm install` and an
+#    auto-execute postinstall script lands on a maintainer's laptop.
+#  - cargo-audit + cargo-deny cover the Rust supply chain proper.
+#    cargo-deny additionally enforces *who* can be in the tree
+#    (license + source registry whitelist) so a malicious mirror or
+#    typosquatted crate name shows up loud.
+#  - npm-audit covers the JS/TS side independently — distinct CVE
+#    feed, distinct trust root.
+#  - lockfile-integrity asserts that the committed lockfiles are
+#    canonical (no rogue floating-point versions, no hand-edited
+#    integrity hashes). Without it, an attacker who phishes a
+#    maintainer can ship a "lockfile only" PR that pulls a malicious
+#    version of a transitive dep.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly Tuesday 09:17 UTC — catches CVEs disclosed against deps
+    # we shipped weeks ago. Off-hour minute to dodge the on-the-hour
+    # thundering herd against the GH Actions scheduler.
+    - cron: '17 9 * * 2'
+
+permissions:
+  contents: read
+  # Required by dependency-review-action to read the PR's dep delta.
+  pull-requests: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────
+  # Layer 1: PR-time dependency review (GitHub native)
+  # ─────────────────────────────────────────────────────────────────
+  dependency-review:
+    name: dependency-review (PRs only)
+    runs-on: ubuntu-latest
+    # Schedule + push runs have no PR diff to review; skip cleanly.
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: dependency-review-action
+        uses: actions/dependency-review-action@v4
+        with:
+          # Fail PR when a new dep has a vuln at "moderate" or worse.
+          fail-on-severity: moderate
+          # Forbid changes to copyleft licenses unless explicitly
+          # allowed. Permissive set matches what the crate already
+          # ships under (MIT OR Apache-2.0).
+          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Unicode-DFS-2016, MPL-2.0, Zlib, CC0-1.0
+          comment-summary-in-pr: on-failure
+
+  # ─────────────────────────────────────────────────────────────────
+  # Layer 2: cargo-audit against the RustSec advisory DB
+  # ─────────────────────────────────────────────────────────────────
+  cargo-audit:
+    name: cargo audit (RustSec advisories)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: install cargo-audit
+        run: cargo install --locked cargo-audit
+      - name: cargo audit
+        # `--deny warnings` so any RUSTSEC advisory (including "unmaintained"
+        # which is informational by default) fails the build. If a
+        # legitimate `unmaintained` shows up that we can't replace yet,
+        # add an `[advisories.ignore]` to `deny.toml` with a justification
+        # and an expiry — don't suppress globally.
+        run: cargo audit --deny warnings
+
+  # ─────────────────────────────────────────────────────────────────
+  # Layer 3: cargo-deny — license / source / ban policy
+  # ─────────────────────────────────────────────────────────────────
+  cargo-deny:
+    name: cargo deny (license + source + ban policy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: install cargo-deny
+        run: cargo install --locked cargo-deny
+      - name: cargo deny check
+        # Runs all four checks: advisories, bans, licenses, sources.
+        # Policy is in `deny.toml`.
+        run: cargo deny check
+
+  # ─────────────────────────────────────────────────────────────────
+  # Layer 4: npm audit
+  # ─────────────────────────────────────────────────────────────────
+  npm-audit:
+    name: npm audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: npm ci (no scripts)
+        # `--ignore-scripts` is the single highest-leverage anti-supply-
+        # chain mitigation on the npm side: it disables `preinstall`,
+        # `install`, and `postinstall` lifecycle hooks. A compromised
+        # transitive dep typically delivers its payload via one of these.
+        # Tests / publish still need scripts; CI doesn't.
+        run: npm ci --ignore-scripts
+      - name: npm audit (production deps, high+ severity)
+        # `--omit=dev` skips dev-only deps (criterion, proptest, etc.) so
+        # the audit reflects what ACTUALLY ships in the published tarball.
+        # `--audit-level=high` is the right cutover: low/moderate are
+        # mostly noise on a workspace this size and would constantly
+        # disrupt CI without security value.
+        run: npm audit --omit=dev --audit-level=high
+
+  # ─────────────────────────────────────────────────────────────────
+  # Layer 5: lockfile integrity
+  # ─────────────────────────────────────────────────────────────────
+  lockfile-integrity:
+    name: lockfile integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Cargo.lock is up to date
+        # `cargo update --locked` exits non-zero if Cargo.lock would
+        # change. The check catches the case where a PR bumps a
+        # version in Cargo.toml but forgets to refresh the lock —
+        # the next CI run would silently float to a different version.
+        run: cargo update --locked --dry-run
+      - name: package-lock.json is up to date
+        # `npm ci` verifies the lock against package.json and refuses
+        # to drift. `--ignore-scripts` keeps it side-effect free.
+        run: npm ci --ignore-scripts
