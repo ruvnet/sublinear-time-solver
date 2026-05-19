@@ -1,3 +1,5 @@
+ClosureIndicesOp                                                                           ComplexityClass::SubLinear
+ContrastiveSolveOnChangeOp                                                                 ComplexityClass::Adaptive
 FindAnomalousRowsOp                                                                        ComplexityClass::Adaptive
 IncrementalSolveOp                                                                         ComplexityClass::Adaptive
 crate::optimized_solver::OptimizedConjugateGradientSolver                                  ComplexityClass::Linear

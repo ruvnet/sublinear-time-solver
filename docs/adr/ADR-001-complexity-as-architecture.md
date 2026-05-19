@@ -168,13 +168,13 @@ Six concrete items, ordered by impact-per-effort. The `/loop 5m` cron (`a3644c7d
 | 3 | Coherence gate | 1 iter | ✅ **Shipped in v1.7.0** (`src/coherence.rs` + `SolverOptions::coherence_threshold`) |
 | 4 | MCP `x-complexity` + `max_complexity_class` arg + `estimate_complexity_class` tool | 2 iter | ✅ **Shipped in v1.7.x** — `solve` and `solveTrueSublinear` schemas carry `x-complexity`; new `estimateComplexityClass` tool returns per-method classes. Phase-2: enforce `max_complexity_class` on solve handlers. |
 | 5 | `joules_per_decision` bench (Linux RAPL + hwmon abstraction) | 2-3 iter | ✅ **Shipped in v1.7.0** (`examples/joules_per_decision.rs`) — RAPL backend works on Intel + AMD Zen 2+; time-only fallback for sandboxed hosts. Phase-2: Pi hwmon backend + CI integration. |
-| 6 | `find_anomalous_rows(matrix, baseline_solution, k)` contrastive adapter | 2-3 iter | ✅ **Shipped in v1.7.0** (`src/contrastive.rs`) — O(n log k) baseline; phase-2 drops to O(k · log n) via sublinear-Neumann single-entry. |
+| 6 | `find_anomalous_rows(matrix, baseline_solution, k)` contrastive adapter | 2-3 iter | ✅ **Shipped in v1.7.0** (`src/contrastive.rs`) — O(n log k) baseline. Phase-2A landed `src/closure.rs` + `contrastive_solve_on_change` orchestrator (closure → solve_on_change → top-k-in-subset), staged at `Adaptive { Linear, Linear }` today. Phase-2B drops the inner solve to per-entry sublinear-Neumann → end-to-end SubLinear. |
 
 ### Definition of "SOTA"
 
 This ADR is "implemented and SOTA" when **all six items above ship**, the README explicitly cites complexity classes as a first-class API surface, and the CI `bench-smoke` job exercises both `time-per-solve` *and* `joules-per-solve`.
 
-**Status as of v1.7.x (2026-05-18)**: 6 of 6 roadmap items shipped. The README + BENCHMARK still need explicit complexity-class language (phase 2 — small docs PR), and the CI bench-smoke job runs `cargo bench --quick` for ns/solve; integrating J/solve waits on either GH Actions exposing a per-job power counter, or a self-hosted runner on a Pi Zero 2W. **Functionally complete; "fully SOTA" needs the two docs/CI polish items.**
+**Status as of v1.7.x (2026-05-19)**: 6 of 6 roadmap items shipped, phase-2A of item #6 landed (`closure_indices` + `contrastive_solve_on_change`). The closure primitive is the load-bearing piece of the change-driven activation thesis — RuView and Cognitum can now wake on a sparse RHS delta + bounded-depth row-graph closure without scanning the full solution. Phase-2B (per-entry sublinear-Neumann inner) is the last remaining lift to declare the orchestrator end-to-end SubLinear in n. **Functionally complete + change-driven primitive in place; "fully SOTA" needs phase-2B + docs/CI polish items.**
 
 ---
 
