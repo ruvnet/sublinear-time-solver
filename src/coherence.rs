@@ -189,6 +189,98 @@ pub fn delta_below_solve_threshold(
     bound < tolerance
 }
 
+/// Minimum number of Neumann terms required to hit `tolerance` on a
+/// single-entry solve, given the matrix's `coherence` margin and the
+/// magnitudes of the RHS and any perturbation.
+///
+/// ## Math
+///
+/// For strictly DD `A = D - O` with coherence `c`, the Neumann series
+/// `A⁻¹ b = Σ_k y_k` satisfies `‖y_k‖_∞ ≤ ρ^k · ‖y_0‖_∞` where the
+/// spectral radius of `D⁻¹O` is bounded by `ρ ≤ 1 - c`. To get
+/// per-entry error below `tolerance` we need
+///
+/// ```text
+///   k ≥ log(‖y_0‖_∞ / tolerance) / log(1 / ρ)
+///       = log(‖b‖_∞ / (min_diag · tolerance)) / log(1 / (1 - c))
+/// ```
+///
+/// This function picks the smallest such `k` (rounded up). Saturates at
+/// `64` so a callers-provided pathological pair can't blow up the
+/// iteration count.
+///
+/// ## Returns
+///
+/// - `Some(k)` — recommended Neumann term count, clamped to `[1, 64]`.
+/// - `None` — non-strict-DD input (`coherence <= 0`), or non-positive
+///   `tolerance`, or non-positive `min_diag`. Caller should fall back
+///   to a hand-picked `max_terms` or to a full solve.
+///
+/// ## Edge cases
+///
+/// - `b_inf_norm == 0` → returns `Some(1)` (we still want at least one
+///   term to confirm the zero answer).
+/// - Inputs that produce `k > 64` are clamped (the bound is conservative;
+///   real matrices rarely need that many).
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// # use sublinear_solver::coherence::optimal_neumann_terms;
+/// // For coherence 0.5, ‖b‖ = 10, min_diag = 5, tolerance = 1e-8:
+/// //   k ≥ log(10 / (5 · 1e-8)) / log(2) = log2(2e8) ≈ 27.6 → k = 28
+/// let k = optimal_neumann_terms(
+///     /*coherence=*/ 0.5,
+///     /*b_inf_norm=*/ 10.0,
+///     /*min_diag=*/   5.0,
+///     /*tolerance=*/  1e-8,
+/// ).unwrap();
+/// assert!(k >= 28 && k <= 30);
+/// ```
+pub fn optimal_neumann_terms(
+    coherence: Precision,
+    b_inf_norm: Precision,
+    min_diag: Precision,
+    tolerance: Precision,
+) -> Option<usize> {
+    if !coherence.is_finite() || coherence <= 0.0 || coherence >= 1.0 {
+        return None;
+    }
+    if !min_diag.is_finite() || min_diag <= 0.0 {
+        return None;
+    }
+    if !tolerance.is_finite() || tolerance <= 0.0 {
+        return None;
+    }
+    if b_inf_norm < 0.0 || !b_inf_norm.is_finite() {
+        return None;
+    }
+    // Zero RHS → one term is enough (it's the zero answer).
+    if b_inf_norm == 0.0 {
+        return Some(1);
+    }
+    // ρ ≤ 1 - coherence is the conservative spectral-radius bound.
+    let rho = 1.0 - coherence;
+    // 1/ρ > 1 because coherence > 0 ⇒ rho < 1.
+    let one_over_rho_log = (1.0 / rho).ln();
+    if !one_over_rho_log.is_finite() || one_over_rho_log <= 0.0 {
+        // Numerical floor — extreme coherence near 1.0 collapses the log.
+        return Some(1);
+    }
+    let y0 = b_inf_norm / min_diag; // ‖D⁻¹ b‖_∞ upper bound
+    let ratio = y0 / tolerance;
+    if ratio <= 1.0 {
+        // Already at tolerance from term 0 alone.
+        return Some(1);
+    }
+    let k_float = ratio.ln() / one_over_rho_log;
+    if !k_float.is_finite() || k_float <= 0.0 {
+        return Some(1);
+    }
+    let k = k_float.ceil() as usize;
+    Some(k.clamp(1, 64))
+}
+
 /// Verify that a matrix's coherence meets or exceeds the configured
 /// threshold; otherwise return `SolverError::Incoherent`.
 ///
@@ -384,5 +476,63 @@ mod tests {
     fn delta_below_threshold_on_empty_delta_skips() {
         // Empty delta has inf-norm 0, which is below any positive tolerance.
         assert!(delta_below_solve_threshold(0.8, 5.0, &[], 1e-8));
+    }
+
+    // ── optimal_neumann_terms tests ────────────────────────────────────
+
+    #[test]
+    fn optimal_terms_basic_case() {
+        // coherence=0.5, ‖b‖=10, min_diag=5, tol=1e-8.
+        // y0 = 2, ratio = 2 / 1e-8 = 2e8, log2(2e8) ≈ 27.6 → 28
+        // rho = 0.5, log(2) ≈ 0.693, log(2e8) ≈ 19.11
+        // k ≥ 19.11 / 0.693 ≈ 27.6 → 28
+        let k = optimal_neumann_terms(0.5, 10.0, 5.0, 1e-8).unwrap();
+        assert!(k >= 27 && k <= 29, "expected ~28, got {k}");
+    }
+
+    #[test]
+    fn optimal_terms_high_coherence_needs_few_terms() {
+        // coherence near 1: 1/rho is huge, log is huge, so k is tiny.
+        let k = optimal_neumann_terms(0.95, 10.0, 5.0, 1e-6).unwrap();
+        assert!(k <= 10, "high coherence should converge fast; got {k}");
+    }
+
+    #[test]
+    fn optimal_terms_low_coherence_needs_many_terms() {
+        // coherence near 0: 1/rho ≈ 1, log near 0, so k saturates.
+        let k = optimal_neumann_terms(0.01, 10.0, 5.0, 1e-6).unwrap();
+        assert_eq!(k, 64, "tiny coherence should saturate at the cap; got {k}");
+    }
+
+    #[test]
+    fn optimal_terms_rejects_non_dd() {
+        assert!(optimal_neumann_terms(0.0, 1.0, 1.0, 1e-6).is_none());
+        assert!(optimal_neumann_terms(-0.1, 1.0, 1.0, 1e-6).is_none());
+        assert!(optimal_neumann_terms(1.0, 1.0, 1.0, 1e-6).is_none());
+        assert!(optimal_neumann_terms(1.5, 1.0, 1.0, 1e-6).is_none());
+    }
+
+    #[test]
+    fn optimal_terms_rejects_bad_min_diag() {
+        assert!(optimal_neumann_terms(0.5, 1.0, 0.0, 1e-6).is_none());
+        assert!(optimal_neumann_terms(0.5, 1.0, -1.0, 1e-6).is_none());
+    }
+
+    #[test]
+    fn optimal_terms_rejects_bad_tolerance() {
+        assert!(optimal_neumann_terms(0.5, 1.0, 1.0, 0.0).is_none());
+        assert!(optimal_neumann_terms(0.5, 1.0, 1.0, -1e-6).is_none());
+    }
+
+    #[test]
+    fn optimal_terms_zero_b_returns_one() {
+        // Zero RHS — one term confirms the zero answer.
+        assert_eq!(optimal_neumann_terms(0.5, 0.0, 1.0, 1e-8).unwrap(), 1);
+    }
+
+    #[test]
+    fn optimal_terms_loose_tolerance_returns_one() {
+        // y0 = 2, tolerance = 10 → ratio < 1, no iteration needed beyond term 0.
+        assert_eq!(optimal_neumann_terms(0.5, 10.0, 5.0, 10.0).unwrap(), 1);
     }
 }
