@@ -134,8 +134,16 @@ pub use incremental::{IncrementalSolver, SparseDelta, IncrementalConfig};
 // most from baseline? Backbone of RuView / Cognitum wake-on-event.
 pub mod contrastive;
 pub use contrastive::{
-    find_anomalous_rows, find_anomalous_rows_in_subset, find_rows_above_threshold, AnomalyRow,
+    contrastive_solve_on_change, find_anomalous_rows, find_anomalous_rows_in_subset,
+    find_rows_above_threshold, AnomalyRow, ContrastiveSolveOnChangeOp,
 };
+
+// Bounded-depth row-graph closure (ADR-001 #6 phase-2A). Turns a sparse
+// RHS delta into the candidate set of rows whose solution might have
+// changed — the input to a true sub-linear contrastive solve. Composes
+// with `incremental::SparseDelta` and `contrastive::find_anomalous_rows_in_subset`.
+pub mod closure;
+pub use closure::{closure_indices, ClosureIndicesOp};
 
 // Sublinear algorithms with mathematically rigorous O(log n) complexity
 pub mod sublinear;

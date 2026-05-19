@@ -290,6 +290,128 @@ impl Complexity for FindAnomalousRowsOp {
          sublinear-Neumann single-entry primitive.";
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Phase-2A orchestrator: closure → solve_on_change → top-k-in-subset.
+// ─────────────────────────────────────────────────────────────────────────
+
+/// One-shot contrastive solve: given a previous solution + a sparse RHS
+/// delta, return the top-`k` rows whose value diverged most under the
+/// new RHS, **without scanning the full solution vector**.
+///
+/// This is the composition the ADR-001 thesis turns on: the inner-loop
+/// version of "solve under change", restricted to the rows that *could*
+/// have changed.
+///
+/// ## Wiring
+///
+/// 1. `candidates = closure::closure_indices(matrix, &delta.indices, depth)`
+///    — bounded-depth row-graph closure of the delta's support. For DD
+///    matrices with spectral radius ρ, choose `depth ≈ log_{1/ρ}(1/ε)`
+///    so the closure covers every row whose true change exceeds ε.
+/// 2. `current = solver.solve_on_change(matrix, prev, delta, opts)?`
+///    — warm-started solve produces the new solution (today: the full
+///    vector). Phase-2B will replace this with per-entry sublinear-
+///    Neumann calls scoped to `candidates`, dropping the inner cost
+///    from `O(n · κ-iters)` to `O(|candidates| · log(1/ε))`.
+/// 3. `top_k = find_anomalous_rows_in_subset(prev, current, candidates, k)`
+///    — top-k restricted to the candidate set.
+///
+/// ## Complexity
+///
+/// Today (phase-2A):
+///   * closure:      O(depth · branch · |closure|)         SubLinear in n
+///   * inner solve:  O(n · κ-iters · ‖delta‖_residual)      Linear in n
+///   * top-k:        O(|candidates| · log k)               SubLinear in n
+///
+/// Net: bounded by the inner solve at Linear. The closure already pays
+/// off when *callers reuse it across multiple deltas of the same shape*
+/// (RuView pipelines do exactly this), and is the API contract that
+/// phase-2B then drops to the SubLinear target.
+///
+/// Phase-2B (planned):
+///   * closure:      unchanged
+///   * inner solve:  O(|candidates| · log(1/ε))           SubLinear in n
+///   * top-k:        unchanged
+///   * Net:          SubLinear in n end-to-end.
+///
+/// ## Errors
+///
+/// Returns `SolverError` from the inner `solve_on_change` call (e.g.
+/// `Incoherent`, `Convergence`, `DimensionMismatch`). Panics only on
+/// caller bug — `prev_solution.len() != matrix.rows()`.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// # use sublinear_solver::{Matrix, SparseDelta, SolverOptions, AnomalyRow};
+/// # use sublinear_solver::contrastive::contrastive_solve_on_change;
+/// # use sublinear_solver::ConjugateGradientSolver;
+/// # fn demo(a: &dyn Matrix, prev: &[f64], delta: &SparseDelta) {
+/// let solver = ConjugateGradientSolver::default();
+/// let opts = SolverOptions::default();
+/// let top = contrastive_solve_on_change(
+///     &solver, a, prev, delta,
+///     /* depth = */ 4,
+///     /* k     = */ 8,
+///     &opts,
+/// ).unwrap();
+/// for AnomalyRow { row, baseline, current, anomaly } in top {
+///     // wake an agent for `row`
+/// }
+/// # }
+/// ```
+pub fn contrastive_solve_on_change<S>(
+    solver: &S,
+    matrix: &dyn crate::matrix::Matrix,
+    prev_solution: &[Precision],
+    delta: &crate::incremental::SparseDelta,
+    depth: usize,
+    k: usize,
+    options: &crate::solver::SolverOptions,
+) -> crate::error::Result<Vec<AnomalyRow>>
+where
+    S: crate::incremental::IncrementalSolver + ?Sized,
+{
+    // (1) Closure: which rows might have changed?
+    let candidates = crate::closure::closure_indices(matrix, &delta.indices, depth);
+    if candidates.is_empty() || k == 0 {
+        return Ok(Vec::new());
+    }
+
+    // (2) Inner solve. Today the warm-started incremental path; phase-2B
+    //     will swap this for per-entry sublinear-Neumann scoped to
+    //     `candidates`.
+    let result = solver.solve_on_change(matrix, prev_solution, delta, options)?;
+
+    // (3) Top-k restricted to the candidate set. Skip the rest of the
+    //     vector entirely.
+    Ok(find_anomalous_rows_in_subset(
+        prev_solution,
+        &result.solution,
+        &candidates,
+        k,
+    ))
+}
+
+/// Marker type with a `Complexity` impl for `contrastive_solve_on_change`.
+///
+/// The orchestrator's worst-case bound is dominated by the inner
+/// `solve_on_change` call (phase-2A: Linear). Phase-2B drops this to
+/// SubLinear by replacing the inner solve with per-entry queries
+/// scoped to the closure.
+pub struct ContrastiveSolveOnChangeOp;
+
+impl Complexity for ContrastiveSolveOnChangeOp {
+    const CLASS: ComplexityClass = ComplexityClass::Adaptive {
+        default: &ComplexityClass::Linear,
+        worst: &ComplexityClass::Linear,
+    };
+    const DETAIL: &'static str =
+        "Phase-2A: closure (SubLinear) + warm-start solve (Linear) + top-k-in-subset \
+         (SubLinear). Phase-2B replaces the inner solve with per-entry sublinear-Neumann \
+         queries scoped to the closure, dropping the orchestrator end-to-end to SubLinear.";
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -455,5 +577,76 @@ mod tests {
         let candidates: Vec<usize> = (0..8).collect();
         let subset = find_anomalous_rows_in_subset(&baseline, &current, &candidates, 4);
         assert_eq!(full, subset);
+    }
+
+    // ── Phase-2A orchestrator tests ──────────────────────────────────
+
+    #[test]
+    fn orchestrator_op_complexity_class_compile_time() {
+        // The op marker must declare the staged Adaptive { Linear, Linear }
+        // class so callers can budget against the worst case.
+        const _: () = assert!(matches!(
+            <ContrastiveSolveOnChangeOp as Complexity>::CLASS,
+            ComplexityClass::Adaptive { .. }
+        ));
+    }
+
+    #[test]
+    fn orchestrator_op_detail_mentions_phase_2b() {
+        // Docs contract: the DETAIL string must call out the phase-2B
+        // SubLinear target so future readers know this is staged work,
+        // not the terminal bound.
+        let detail = <ContrastiveSolveOnChangeOp as Complexity>::DETAIL;
+        assert!(detail.contains("Phase-2A"));
+        assert!(detail.contains("Phase-2B"));
+        assert!(detail.contains("SubLinear"));
+    }
+
+    #[test]
+    fn orchestrator_with_empty_delta_returns_empty_top_k() {
+        // Empty delta → closure is empty → top-k is empty without ever
+        // touching the solver. This is the "no event, no work" path —
+        // the core gating discipline of the ADR.
+        use crate::incremental::SparseDelta;
+        use crate::matrix::SparseMatrix;
+        use crate::solver::neumann::NeumannSolver;
+        use crate::solver::SolverOptions;
+
+        let n = 4;
+        let triplets: Vec<(usize, usize, Precision)> =
+            (0..n).map(|i| (i, i, 2.0)).collect();
+        let a = SparseMatrix::from_triplets(triplets, n, n).unwrap();
+        let prev = alloc::vec![0.0; n];
+        let delta = SparseDelta::empty();
+
+        let solver = NeumannSolver::new(64, 1e-10);
+        let opts = SolverOptions::default();
+
+        let top = contrastive_solve_on_change(&solver, &a, &prev, &delta, 3, 5, &opts)
+            .expect("empty-delta path must succeed without invoking the inner solver");
+        assert!(top.is_empty(), "empty delta should yield empty top-k");
+    }
+
+    #[test]
+    fn orchestrator_zero_k_returns_empty_without_solving() {
+        // k = 0 is the "tell me nothing" path; must be a fast no-op
+        // before the inner solve.
+        use crate::incremental::SparseDelta;
+        use crate::matrix::SparseMatrix;
+        use crate::solver::neumann::NeumannSolver;
+        use crate::solver::SolverOptions;
+
+        let n = 4;
+        let triplets: Vec<(usize, usize, Precision)> =
+            (0..n).map(|i| (i, i, 2.0)).collect();
+        let a = SparseMatrix::from_triplets(triplets, n, n).unwrap();
+        let prev = alloc::vec![0.0; n];
+        let delta = SparseDelta::new(alloc::vec![1], alloc::vec![1.0]).unwrap();
+
+        let solver = NeumannSolver::new(64, 1e-10);
+        let opts = SolverOptions::default();
+
+        let top = contrastive_solve_on_change(&solver, &a, &prev, &delta, 3, 0, &opts).unwrap();
+        assert!(top.is_empty());
     }
 }
