@@ -55,18 +55,32 @@ Every public solver, sampler, and analyser in this crate declares its **worst-ca
 
 The 12-tier taxonomy (`Logarithmic` → `DoubleExponential`, plus `Adaptive { default, worst }` for solvers that degrade on hard inputs) lives in `src/complexity.rs`. The decision rationale and full 6-item roadmap is in [`docs/adr/ADR-001-complexity-as-architecture.md`](docs/adr/ADR-001-complexity-as-architecture.md).
 
-Headline classes in v1.7+:
+Headline classes in v1.7+ (phase-2 primitives shipped):
 
-| Solver | Class | Per-call cost |
+| Solver / primitive | Class | Per-call cost |
 |---|---|---|
 | `SublinearNeumannSolver` (single entry) | `Adaptive { Logarithmic, Linear }` | `O(log n)` on DD systems; `O(n)` base case |
+| `solve_single_entry_neumann(A, b, i)` | **`SubLinear`** | `O(max_terms · \|closure\| · branch)`, independent of `n` for sparse DD |
+| `closure_indices(A, seeds, depth)` | **`SubLinear`** | `O(depth · branch · \|closure\|)` — input to every change-driven path |
+| `solve_on_change_sublinear(A, prev, b_new, delta, …)` | **`SubLinear`** | Closure + per-entry Neumann; returns `Vec<(idx, val)>` over the closure only — never materialises the full `n`-vector |
+| `contrastive_solve_on_change_sublinear(…)` | **`SubLinear`** | End-to-end change-driven top-k anomaly detection, no `n`-scan |
+| `solve_on_change(prev, sparse_delta)` | `Linear` (warm-start, `k_warm ≪ k_cold`) | Returns full `n`-vector solution — use the `_sublinear` sibling when you only need the changed entries |
 | `OptimizedConjugateGradientSolver` | `Linear` | `O(k · nnz(A))`, k ≈ √κ(A) |
 | `NeumannSolver` | `Linear` | `O(k · nnz(A))` per iter |
-| `solve_on_change(prev, sparse_delta)` | `Linear` (in `nnz(A)`, with `k_warm ≪ k_cold`) | Steady-state cost for streaming workloads |
-| `find_anomalous_rows(baseline, current, k)` | `Linear` today, → `SubLinear` phase 2 | `O(n log k)` baseline; `O(k log n)` planned |
+| `find_anomalous_rows(baseline, current, k)` | `Linear` baseline | `O(n log k)`; use `find_anomalous_rows_in_subset` or `contrastive_solve_on_change_sublinear` for the SubLinear path |
 | `coherence_score(matrix)` | `Linear` | `O(nnz(A))` — refuses near-singular solves before they run |
 
-Runtime introspection via `dyn ComplexityIntrospect`, or `mcp__sublinear__estimateComplexityClass` over the wire. Energy numbers (`J/solve`) — the metric that actually matters on a Pi Zero — captured via `examples/joules_per_decision.rs` (Linux RAPL / hwmon / time-only fallback).
+**Empirical receipt** (`benches/solver_benchmarks.rs::delta_solve`, `cargo bench -- --quick delta_solve`):
+
+| n | `cold_full` (Linear) | `warm_full` (Linear) | `sparse_closure` (SubLinear) |
+|---:|---:|---:|---:|
+| 64 | — | 11.9 µs | 906 µs |
+| 256 | 66.7 µs | 45.5 µs | 2.28 ms |
+| 1024 | 258 µs | 179 µs | 2.32 ms |
+
+`cold_full` / `warm_full` grow linearly with `n`; `sparse_closure` stays roughly constant (256→1024 is essentially no change in cost). The curves diverge with `n` — the architectural payoff at scale.
+
+Runtime introspection via `dyn ComplexityIntrospect`, or `mcp__sublinear__estimateComplexityClass` over the wire (now covers every phase-2 method name: `closure-indices`, `solve-single-entry-neumann`, `solve-on-change-sublinear`, `contrastive-solve-on-change-sublinear`, `contrastive-solve-on-change`). MCP `solve`, `estimateEntry`, and `solveTrueSublinear` all enforce the caller's `max_complexity_class` budget before any solver work runs — the *bounded-planning kernel* of ADR-001. Energy numbers (`J/solve`) — the metric that actually matters on a Pi Zero — captured via `examples/joules_per_decision.rs` (Linux RAPL / hwmon / time-only fallback).
 
 ## 🎯 What Can This Do?
 
