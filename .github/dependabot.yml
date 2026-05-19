@@ -1,0 +1,72 @@
+version: 2
+
+# Dependabot delivers dep updates as PRs that the supply-chain
+# workflow (`.github/workflows/supply-chain.yml`) gates. Without
+# this, security advisories disclosed against a transitive dep don't
+# reach us until a human notices — Dependabot turns them into
+# auditable PRs within hours.
+#
+# Each ecosystem gets its own schedule so the noise stays bounded.
+
+updates:
+  # ────────────────────────────────────────────────────────
+  # Rust — crates.io via Cargo.toml + Cargo.lock
+  # ────────────────────────────────────────────────────────
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"      # matches the supply-chain.yml scheduled scan
+      time: "09:30"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    # Group patch + minor bumps so we don't drown in single-dep PRs;
+    # majors stay separate because they may carry breaking changes.
+    groups:
+      cargo-minor-patch:
+        update-types: ["minor", "patch"]
+    labels: ["dependencies", "rust"]
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # ────────────────────────────────────────────────────────
+  # npm — package.json + package-lock.json
+  # ────────────────────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:30"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-patch:
+        update-types: ["minor", "patch"]
+    labels: ["dependencies", "npm"]
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    # Production deps only — devDeps drift is much less interesting
+    # from a supply-chain standpoint (criterion bumps don't ship to
+    # users).
+    versioning-strategy: "increase-if-necessary"
+    ignore:
+      - dependency-name: "*"
+        dependency-type: "development"
+
+  # ────────────────────────────────────────────────────────
+  # GitHub Actions — uses statements in .github/workflows/
+  # ────────────────────────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:30"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 3
+    labels: ["dependencies", "github-actions"]
+    commit-message:
+      prefix: "chore(ci)"

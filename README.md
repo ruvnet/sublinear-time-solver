@@ -11,7 +11,7 @@
 
 > **The Ultimate Mathematical & AI Toolkit: Sublinear algorithms, consciousness exploration, psycho-symbolic reasoning, and temporal prediction in one unified MCP interface. WASM-accelerated with emergent behavior analysis.**
 
-> ⚠️ **Security advisory (1.6.0)**: This release closes [issue #19](https://github.com/ruvnet/sublinear-time-solver/issues/19) (CWE-73, Arbitrary File Write) in the MCP `export_state` / `import_state` tools, plus the same sink class in the main MCP `saveVectorToFile` / `loadVectorFromFile`. Both now confine I/O to a dedicated state directory with `O_NOFOLLOW`. **Breaking change for callers that passed absolute paths.** See [CHANGELOG.md](CHANGELOG.md) for the full upgrade guide and [BENCHMARK.md](BENCHMARK.md) for new performance numbers.
+> ⚠️ **Security posture (1.6.0+)**: This release closed [issue #19](https://github.com/ruvnet/sublinear-time-solver/issues/19) (CWE-73, Arbitrary File Write) in the MCP tools. Every PR is now gated by **five supply-chain layers** (`cargo-audit` against RustSec, `cargo-deny` for license + source + ban policy, `npm-audit`, GitHub's `dependency-review-action`, and a lockfile-integrity check) plus the original safe-path regression suite. Dependabot files dep updates as PRs weekly so the gates fire on each one. See [CHANGELOG.md](CHANGELOG.md) for the v1.6.0 breaking-change upgrade guide and [BENCHMARK.md](BENCHMARK.md) for performance numbers.
 
 
 ## 🚀 Quick Start

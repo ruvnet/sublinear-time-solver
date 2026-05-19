@@ -1,0 +1,134 @@
+# cargo-deny configuration — supply-chain policy for the `sublinear`
+# crate. See the supply-chain CI workflow (`.github/workflows/supply-
+# chain.yml`) for how this gets enforced on every PR + on a weekly
+# scheduled scan.
+#
+# Run locally:
+#     cargo install --locked cargo-deny
+#     cargo deny check
+#
+# Four sub-checks run:  advisories, bans, licenses, sources.
+# Each one fails the run independently; together they form the
+# crate-graph half of our supply-chain defence (the npm side is in
+# `npm audit`).
+
+[graph]
+# Target a sensible set so we don't pull in checks for triples we
+# never build (e.g. wasm32-unknown-unknown only matters for the
+# `wasm` feature, which is gated separately).
+targets = [
+    { triple = "x86_64-unknown-linux-gnu" },
+    { triple = "aarch64-unknown-linux-gnu" },
+    { triple = "x86_64-apple-darwin" },
+    { triple = "aarch64-apple-darwin" },
+]
+
+# ─────────────────────────────────────────────────────────────────────
+# 1) advisories — RustSec DB scan
+# ─────────────────────────────────────────────────────────────────────
+[advisories]
+# DB is fetched from https://github.com/RustSec/advisory-db at the
+# default ref.
+db-urls = ["https://github.com/RustSec/advisory-db"]
+
+# `version = 2` enables the modern severity-based handling.
+version = 2
+
+# Yanked crates in our resolved graph are a smell — someone may have
+# yanked because of a vuln. Surface them as warnings; promote to
+# `deny` once we have time to migrate off whichever transitive holds
+# the yanked version.
+yanked = "warn"
+
+# `ignore = [...]` is where we whitelist specific RUSTSEC IDs with a
+# justification + expiry comment when a transitive is flagged but
+# un-fixable that day. Every entry MUST carry a justification and an
+# explicit re-review date (we revisit on each minor release at minimum).
+ignore = [
+    # paste 1.0.15 — unmaintained (archived upstream 2024-10).
+    # Pulled transitively via `nalgebra 0.32 → simba → paste`.
+    # No actual vulnerability, just informational. Bumping nalgebra
+    # to 0.33 / 0.34 doesn't drop paste — it's entrenched in the
+    # simba dep tree until simba migrates to `pastey`. Re-review on
+    # 2026-08-01 or when nalgebra/simba publishes a paste-free release.
+    "RUSTSEC-2024-0436",
+
+    # bincode 1.x — unmaintained, 2.x is API-incompatible. Only used
+    # by `src/temporal_nexus/dashboard/exporter.rs:374` (one call site).
+    # Migration to bincode 2.x is queued for the next minor (will land
+    # before re-review). Informational only — no CVE.
+    # Re-review on 2026-07-01.
+    "RUSTSEC-2025-0141",
+]
+
+# ─────────────────────────────────────────────────────────────────────
+# 2) bans — explicit crate-name allow/block list
+# ─────────────────────────────────────────────────────────────────────
+[bans]
+# Multiple versions of the same crate in the graph signals dep drift
+# (e.g. half the graph on `rand 0.7`, the other half on `0.8`). Allow
+# for now (warn) but track for cleanup; promote to `deny` once we've
+# unified.
+multiple-versions = "warn"
+
+# Refuse any wildcard version (`= "*"`) in OUR Cargo.toml — that's how
+# typosquatting + accidental float-to-malicious-version happens.
+# `deny` here means the cargo-deny run fails, not the underlying build.
+wildcards = "deny"
+
+# Highlight transitively-pulled-in deep deps so we can audit chunks of
+# the graph that grew without explicit blessing.
+highlight = "all"
+
+# Concretely forbidden crates — empty for now, but the slot exists so
+# we can quickly block a compromised package mid-flight without
+# editing the workflow. Example: `crate-with-malware = "*"`.
+deny = []
+
+# Skip the OpenSSL family check (we don't link OpenSSL).
+# skip = []
+
+# ─────────────────────────────────────────────────────────────────────
+# 3) licenses — what we'll allow in the graph
+# ─────────────────────────────────────────────────────────────────────
+[licenses]
+version = 2
+
+# Matches `actions/dependency-review-action`'s allow-list in the
+# supply-chain workflow so the two checks agree.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+    "MPL-2.0",
+    "Zlib",
+    "CC0-1.0",
+]
+
+# Confidence threshold for the license-detection heuristic. 0.8 is
+# the cargo-deny default; lower numbers risk false positives.
+confidence-threshold = 0.8
+
+# Per-crate license exceptions go here if we ever need them.
+exceptions = []
+
+# ─────────────────────────────────────────────────────────────────────
+# 4) sources — which registries / git remotes the graph can pull from
+# ─────────────────────────────────────────────────────────────────────
+[sources]
+# Default: only the official crates.io registry. Anything else
+# (private mirror, git dep) must be explicitly allowed below.
+unknown-registry = "deny"
+unknown-git      = "deny"
+
+# Allow-list: empty. If a future PR needs a git dep, the cargo-deny
+# CI will fail loud and the reviewer has to choose: either add the
+# remote here (with a justification) or rewrite to a crates.io
+# version.
+allow-git = []
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
