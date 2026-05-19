@@ -4,6 +4,79 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased] — targeting v1.8.0 / Rust crate 0.4.0
+
+ADR-001 phase-2/3 release. Closes every open question in the ADR
+(except the hardware-dependent Pi hwmon J/solve), shipping a full
+self-tuning SubLinear pipeline with empirical receipts, two runnable
+examples, and a streaming iterator surface for Rust callers.
+
+### Added — Change-driven SubLinear primitives
+
+- **`closure_indices(matrix, seeds, depth)`** (`src/closure.rs`, PR #26).
+  Bounded-depth row-graph BFS — input to every change-driven path. SubLinear in `n` for sparse DD with bounded depth.
+
+- **`solve_single_entry_neumann(matrix, b, target, max_terms, tolerance)`** (`src/entry.rs`, PR #27). Computes `x[i] = e_iᵀ A⁻¹ b` via truncated Neumann restricted to `closure(target, max_terms)`. Never materialises the full `x`. Critical correctness test: agrees with full `NeumannSolver::solve` at every row of an 8×8 DD chain within `1e-6`.
+
+- **`solve_on_change_sublinear(...)`** (`src/incremental.rs`, PR #29). Sparse delta-solve returning `Vec<(idx, val)>` over closure entries only — never materialises the full `n`-vector.
+
+- **`contrastive_solve_on_change_sublinear(...)`** (`src/contrastive.rs`, PR #27). End-to-end SubLinear orchestrator: closure → per-entry Neumann → top-k-in-subset.
+
+- **Auto-tuned siblings `*_sublinear_auto(...)`** (PR #38). Caller passes only `tolerance`/`k`; orchestrator picks `closure_depth + max_terms` internally from `coherence_score` + `optimal_neumann_terms`. Eliminates the last hand-tuned magic numbers from the change-driven inner loop.
+
+### Added — Coherence + gating primitives
+
+- **`delta_below_solve_threshold(coherence, min_diag, delta, tolerance)`** (`src/coherence.rs`, PR #34). `O(|δ|)` cached-input fast-path skip gate — the "no event, no work" discipline of ADR-001. Independent of `n` + `nnz` once `(coherence, min_diag)` are cached.
+
+- **`optimal_neumann_terms(coherence, b_inf, min_diag, tolerance)`** (PR #37). Math-driven adaptive Neumann depth. Replaces caller-blind guesses with the Neumann-envelope bound `k ≥ log(‖b‖∞ / (min_diag · tolerance)) / log(1 / (1 − coherence))`.
+
+- **`CoherenceCache::{build, update, score}`** (PR #39). Streaming per-row diagonal-dominance margin cache. `O(nnz)` build, `O(|dirty| · row_nnz)` update — amortised SubLinear when only a few rows mutate per event.
+
+- **`approximate_spectral_radius(matrix, num_iters)` + `optimal_neumann_terms_with_rho(rho, ...)`** (PR #46). Power-iteration tight `ρ` estimate, used to pick smaller `max_terms` on matrices where `(1 - coherence)` is loose.
+
+### Added — Verification + bounded planning
+
+- **`verify_sparse_solution(matrix, prev, b, entries, tolerance)`** (`src/witness.rs`, PR #41). Per-entry residual audit restricted to the closure. SubLinear in `n` — same class as the orchestrator whose output it verifies. Closes ADR-001 open question #3.
+
+- **`PlanBudget::{new, try_consume, has_capacity, worst_seen}`** (`src/budget.rs`, PR #40). Cumulative budget accumulator across chained solves. Per-call MCP gate (PR #28) + per-plan accumulator together bound the planning kernel from both directions.
+
+### Added — Streaming surface
+
+- **`event_stream_iter(matrix, prev, events, config, budget)` → `Iterator<Item = ProcessedEvent>`** (`src/stream.rs`, PR #45). The native Rust surface for processing event streams. Composes with stdlib `.filter()` / `.take()` / `.collect()`. Each event: optional skip-gate → optional budget consume → SubLinear orchestrator. Iterator ends gracefully on budget refusal.
+
+### Added — MCP wire surface
+
+- **`handleEstimateEntry` enforces `max_complexity_class` budget** (PR #28). The third solve handler joins `handleSolve` + `handleSolveTrueSublinear`.
+- **`METHOD_WORST_CASE` + `estimateComplexityClass` table extended** (PRs #28, #30, #42) to cover every phase-2/3 primitive: closure-indices, solve-single-entry-neumann, contrastive-solve-on-change(-sublinear)(-auto), solve-on-change(-sublinear), verify-sparse-solution, plan-budget-try-consume, coherence-cache-{build,update}, delta-below-solve-threshold. Wire-callable agents can query any primitive's class before invoking it.
+
+### Added — Empirical receipts
+
+- **`benches/solver_benchmarks.rs::delta_solve`** (PR #31). Compares `cold_full` / `warm_full` (Linear) vs `sparse_closure` (SubLinear) across `n = 64, 256, 1024`. Linear paths grow 4× per 4× size; SubLinear path stays roughly constant.
+- **`benches/solver_benchmarks.rs::witness_audit`** (PR #43). Compares `full_residual` (Linear) vs `closure_audit` (SubLinear). Crossover at `n ≈ 200`; by `n = 1024` the closure-restricted audit is ~4× faster.
+
+### Added — Runnable demos
+
+- **`examples/event_driven_anomaly.rs`** (PRs #33, #35, #38). Canonical inner-loop demo: baseline solve → coherence-gated event filter → SubLinear orchestrator → top-k anomaly extraction. End-to-end on 5 sensor events + 1 noise event.
+- **`examples/event_stream_processing.rs`** (PR #48). Streaming surface demo using `event_stream_iter` + `PlanBudget` over a 10-event stream. Shows the iterator composition pattern.
+
+### Documentation
+
+- **README.md** (PR #32): "Complexity as a First-Class API Surface" section now reflects every shipped primitive with class + per-call cost. Bench numbers from `delta_solve` quoted inline.
+- **BENCHMARK.md** (PR #36): Adds "Change-driven solve paths — Linear vs SubLinear" + "Event-driven anomaly example" sections, plus a complexity-class catalog.
+- **`docs/adr/ADR-001-complexity-as-architecture.md`** (PR #44): Added "Shipped primitive catalogue" section enumerating every primitive shipped this cycle with class, file, and role. 3 of 5 open questions resolved inline.
+
+### Tooling
+
+- **`.github/complexity-baseline.txt`** updated to include every new `Op` marker (ClosureIndicesOp, ContrastiveSolveOnChangeOp, ContrastiveSolveOnChangeSublinearOp, EventStreamOp, SolveOnChangeSublinearOp, SolveSingleEntryNeumannOp, VerifySparseSolutionOp).
+- **`temporal_nexus::integration_tests::test_demonstration`** quarantined on macOS (PR #47) — wall-clock-flaky on shared-tenant M1 runners.
+
+### Tests
+
+- **+80 new tests** across `src/closure.rs` (7), `src/entry.rs` (9), `src/contrastive.rs` (additions), `src/incremental.rs` (additions), `src/coherence.rs` (+27 across PRs #34, #37, #39, #46), `src/budget.rs` (8), `src/witness.rs` (7), `src/stream.rs` (5).
+- 245+ lib tests pass on Linux + macOS (modulo the quarantined timing test on macOS).
+
+[Unreleased]: https://github.com/ruvnet/sublinear-time-solver/compare/v1.7.2...HEAD
+
 ## [1.7.2] / Rust crate 0.3.2 — 2026-05-18
 
 ADR-001 phase-2 release. Three enforcement mechanisms now live, plus the sub-linear contrastive primitive that completes roadmap item #6's phase-2 plan.
