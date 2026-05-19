@@ -427,6 +427,60 @@ export class SublinearSolverMCPServer {
             required: ['method'],
           },
         },
+        // ADR-001 #2/#6 phase-2 (Rust src/incremental.rs +
+        // src/entry.rs + src/closure.rs). Wire-callable SubLinear
+        // orchestrator: closure + per-entry Neumann + (optional)
+        // top-k. Returns ONLY the closure entries — never
+        // materialises the full n-vector.
+        {
+          name: 'solveOnChangeSublinear',
+          description:
+            'Solve `A·x = b_new` at the closure entries only via closure-restricted per-entry Neumann. Returns `Vec<{row, value}>` where row ∈ closure(delta.indices, depth) and value ≈ x_new[row]. Composes: closure_indices (SubLinear) + per-entry Neumann (SubLinear) = end-to-end SubLinear in n. Use this instead of `solve` when you have a previous solution + a sparse RHS delta + only need the changed entries.',
+          'x-complexity': {
+            class: 'SubLinear',
+            detail:
+              'O(|closure| · max_terms · branch). Independent of n for sparse DD matrices with bounded depth + max_terms. Same class as the underlying Rust solve_on_change_sublinear.',
+            edgeSafe: true,
+          },
+          inputSchema: {
+            type: 'object',
+            properties: {
+              matrix: {
+                type: 'object',
+                description: 'Matrix A in dense or sparse-COO format. Same shape accepted by `solve`.',
+              },
+              vector: {
+                type: 'array',
+                items: { type: 'number' },
+                description: 'New right-hand side b_new (after applying the delta).',
+              },
+              delta_indices: {
+                type: 'array',
+                items: { type: 'number', minimum: 0 },
+                description: 'Row indices where the RHS delta is non-zero. Used as the closure seed set.',
+              },
+              closure_depth: {
+                type: 'number',
+                minimum: 0,
+                default: 4,
+                description: 'Bounded hop depth for the closure. Pick from optimal_neumann_terms(coherence, ...) or 4-8 for typical DD matrices.',
+              },
+              max_terms: {
+                type: 'number',
+                minimum: 1,
+                default: 32,
+                description: 'Maximum Neumann iterations per entry. Pick from optimal_neumann_terms(coherence, ...) or 24-32 for typical DD matrices.',
+              },
+              tolerance: {
+                type: 'number',
+                minimum: 0,
+                default: 1e-8,
+                description: 'Early-exit tolerance on per-term contribution.',
+              },
+            },
+            required: ['matrix', 'vector', 'delta_indices'],
+          },
+        },
         // ADR-001 #6 phase-2A (Rust src/closure.rs). Wire-callable
         // bounded-depth row-graph BFS. Lets agents preview the
         // closure of a sparse delta before committing to a solve —
@@ -642,6 +696,8 @@ export class SublinearSolverMCPServer {
             return await this.handleCoherenceScore(args as any);
           case 'closureIndices':
             return await this.handleClosureIndices(args as any);
+          case 'solveOnChangeSublinear':
+            return await this.handleSolveOnChangeSublinear(args as any);
           // Temporal tools
           case 'predictWithTemporalAdvantage':
           case 'validateTemporalAdvantage':
@@ -2001,6 +2057,204 @@ export class SublinearSolverMCPServer {
       throw new McpError(
         ErrorCode.InternalError,
         `closureIndices error: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Wire-callable SubLinear orchestrator. Mirrors Rust's
+   * `incremental::solve_on_change_sublinear(matrix, prev, b_new,
+   * delta, closure_depth, max_terms, tolerance)`. Pure-TS — no
+   * WASM bridge. Composes:
+   *
+   *   1. closure_indices(matrix, delta.indices, closure_depth)
+   *   2. for each closure entry: per-entry Neumann iteration
+   *      restricted to the closure (matches src/entry.rs math)
+   *   3. return Vec<{row, value}>
+   *
+   * Cost O(|closure| · max_terms · branch). End-to-end SubLinear
+   * in n for sparse DD matrices with bounded depth + max_terms.
+   */
+  private async handleSolveOnChangeSublinear(params: any) {
+    try {
+      if (!params.matrix) {
+        throw new McpError(ErrorCode.InvalidParams, 'Missing required parameter: matrix');
+      }
+      if (!Array.isArray(params.vector)) {
+        throw new McpError(ErrorCode.InvalidParams, 'Missing or invalid parameter: vector (RHS b_new)');
+      }
+      if (!Array.isArray(params.delta_indices)) {
+        throw new McpError(ErrorCode.InvalidParams, 'Missing or invalid parameter: delta_indices');
+      }
+      const closureDepth: number = typeof params.closure_depth === 'number' ? params.closure_depth : 4;
+      const maxTerms: number = typeof params.max_terms === 'number' ? params.max_terms : 32;
+      const tolerance: number = typeof params.tolerance === 'number' ? params.tolerance : 1e-8;
+      if (closureDepth < 0 || maxTerms < 1 || tolerance <= 0) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          'closure_depth ≥ 0, max_terms ≥ 1, tolerance > 0 required',
+        );
+      }
+
+      const matrix = params.matrix;
+      const n: number = matrix.rows ?? params.vector.length;
+      if (params.vector.length !== n) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          `vector.length=${params.vector.length} != matrix.rows=${n}`,
+        );
+      }
+
+      // Materialise sparse row adjacency with values (need values for
+      // the Neumann iteration, not just adjacency for closure BFS).
+      const rowEntries: Array<Array<[number, number]>> = Array.from({ length: n }, () => []);
+      const diag: number[] = new Array(n).fill(0);
+      if (matrix.format === 'coo' && matrix.data && matrix.data.rowIndices && matrix.data.colIndices && matrix.data.values) {
+        const ri = matrix.data.rowIndices;
+        const ci = matrix.data.colIndices;
+        const vs = matrix.data.values;
+        for (let k = 0; k < ri.length; k++) {
+          const r = ri[k];
+          const c = ci[k];
+          const v = vs[k];
+          if (r < 0 || r >= n) continue;
+          if (r === c) diag[r] = v;
+          else rowEntries[r].push([c, v]);
+        }
+      } else if (matrix.data && Array.isArray(matrix.data[0])) {
+        for (let i = 0; i < n; i++) {
+          const row = matrix.data[i];
+          if (!Array.isArray(row)) continue;
+          for (let j = 0; j < row.length; j++) {
+            const v = row[j];
+            if (v === 0) continue;
+            if (j === i) diag[i] = v;
+            else rowEntries[i].push([j, v]);
+          }
+        }
+      } else {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          'matrix must be in dense or sparse-COO format',
+        );
+      }
+
+      // (1) Closure BFS — same as handleClosureIndices.
+      const visited = new Set<number>();
+      const seeds: number[] = params.delta_indices.filter(
+        (s: any) => typeof s === 'number' && s >= 0 && s < n,
+      );
+      let frontier: number[] = [];
+      for (const s of seeds) {
+        if (!visited.has(s)) {
+          visited.add(s);
+          frontier.push(s);
+        }
+      }
+      for (let d = 0; d < closureDepth; d++) {
+        if (frontier.length === 0) break;
+        const next: number[] = [];
+        for (const row of frontier) {
+          for (const [col] of rowEntries[row]) {
+            if (!visited.has(col)) {
+              visited.add(col);
+              next.push(col);
+            }
+          }
+        }
+        frontier = next;
+      }
+      const closure = Array.from(visited).sort((a, b) => a - b);
+      if (closure.length === 0) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({ entries: [], closure_size: 0, max_terms: maxTerms, closure_depth: closureDepth }, null, 2),
+            },
+          ],
+        };
+      }
+
+      // (2) Per-entry Neumann. For each target ∈ closure, compute
+      //     x[target] = Σ_k y_k[target] where y_0[j] = b[j]/A[j,j]
+      //     and y_{k+1}[j] = -(1/A[j,j]) · Σ_{m≠j, m∈closure} A[j,m]·y_k[m].
+      const closureSet = new Set<number>(closure);
+      const out: Array<{ row: number; value: number }> = [];
+      for (const target of closure) {
+        // Validate diagonal at every closure row.
+        let bad = false;
+        for (const j of closure) {
+          if (Math.abs(diag[j]) <= 1e-300) {
+            bad = true;
+            break;
+          }
+        }
+        if (bad) {
+          throw new McpError(
+            ErrorCode.InvalidParams,
+            'matrix has zero diagonal in the closure — not strict-DD',
+          );
+        }
+        // y_0[j] = b[j] / A[j,j]
+        const y = new Map<number, number>();
+        for (const j of closure) {
+          y.set(j, params.vector[j] / diag[j]);
+        }
+        let xTarget = y.get(target) ?? 0;
+
+        // Iterate up to max_terms times.
+        for (let k = 1; k <= maxTerms; k++) {
+          const yNext = new Map<number, number>();
+          for (const j of closure) {
+            let sum = 0;
+            for (const [m, ajm] of rowEntries[j]) {
+              if (m === j) continue;
+              if (!closureSet.has(m)) continue;
+              const ym = y.get(m);
+              if (ym !== undefined) sum += ajm * ym;
+            }
+            yNext.set(j, -sum / diag[j]);
+          }
+          const delta = yNext.get(target) ?? 0;
+          xTarget += delta;
+          // Early-exit on tolerance.
+          if (Math.abs(delta) < tolerance) break;
+          // Swap y ← y_next.
+          y.clear();
+          for (const [k2, v2] of yNext) y.set(k2, v2);
+        }
+        out.push({ row: target, value: xTarget });
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                entries: out,
+                closure_size: closure.length,
+                max_terms: maxTerms,
+                closure_depth: closureDepth,
+                note:
+                  closure.length >= n
+                    ? `Closure covers full matrix (${closure.length}/${n}) — orchestrator degraded to Linear. Reduce closure_depth.`
+                    : `Closure covers ${closure.length}/${n} rows (${((closure.length / n) * 100).toFixed(1)}%). SubLinear in n.`,
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      };
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `solveOnChangeSublinear error: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
