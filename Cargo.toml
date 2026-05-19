@@ -1,6 +1,6 @@
 [package]
 name = "sublinear"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 authors = ["rUv <github.com/ruvnet>"]
 license = "MIT OR Apache-2.0"
@@ -116,3 +116,10 @@ lto = "fat"
 [profile.bench]
 inherits = "release"
 debug = true
+# Override release's `panic = "abort"` for benches — criterion's
+# transitive deps (regex_syntax, aho_corasick, memchr, log, humantime,
+# is_terminal, termcolor) require unwind for `catch_unwind` in their
+# measurement loops. Without this override the bench-smoke CI job
+# fails to link with "requires panic strategy `abort` which is
+# incompatible with this crate's strategy of `unwind`".
+panic = "unwind"

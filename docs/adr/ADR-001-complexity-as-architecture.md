@@ -163,16 +163,18 @@ Six concrete items, ordered by impact-per-effort. The `/loop 5m` cron (`a3644c7d
 
 | # | Item | Effort | Lands when |
 |---|---|---|---|
-| 1 | `Complexity` trait + `ComplexityClass` enum + attribute macro | 1-2 iter | every public solver carries `#[complexity(...)]` |
-| 2 | `solve_on_change(prev, delta)` on `Solver` trait | 2-3 iter | benchmark shows steady-state cost `≈ O(nnz(delta) · log n)` not `O(nnz(A))` |
-| 3 | Coherence gate | 1 iter | `SolverError::Incoherent` returned on a near-singular regression matrix |
-| 4 | MCP `x-complexity` + `max_complexity_class` arg + `estimate_complexity_class` tool | 2 iter | `tools/list` advertises the class; agent can refuse a budget-bust call |
-| 5 | `joules_per_decision` bench (Linux RAPL + hwmon abstraction) | 2-3 iter | CHANGELOG carries `J/solve` numbers next to `ns/solve` |
-| 6 | `find_anomalous_rows(matrix, baseline_solution, k)` contrastive adapter | 2-3 iter | RuView / Cognitum can adopt for change-driven activation |
+| 1 | `Complexity` trait + `ComplexityClass` enum + attribute macro | 1-2 iter | ✅ **Shipped in v1.7.0** (`src/complexity.rs`) |
+| 2 | `solve_on_change(prev, delta)` on `Solver` trait | 2-3 iter | ✅ **Shipped in v1.7.0** (`src/incremental.rs`) |
+| 3 | Coherence gate | 1 iter | ✅ **Shipped in v1.7.0** (`src/coherence.rs` + `SolverOptions::coherence_threshold`) |
+| 4 | MCP `x-complexity` + `max_complexity_class` arg + `estimate_complexity_class` tool | 2 iter | ✅ **Shipped in v1.7.x** — `solve` and `solveTrueSublinear` schemas carry `x-complexity`; new `estimateComplexityClass` tool returns per-method classes. Phase-2: enforce `max_complexity_class` on solve handlers. |
+| 5 | `joules_per_decision` bench (Linux RAPL + hwmon abstraction) | 2-3 iter | ✅ **Shipped in v1.7.0** (`examples/joules_per_decision.rs`) — RAPL backend works on Intel + AMD Zen 2+; time-only fallback for sandboxed hosts. Phase-2: Pi hwmon backend + CI integration. |
+| 6 | `find_anomalous_rows(matrix, baseline_solution, k)` contrastive adapter | 2-3 iter | ✅ **Shipped in v1.7.0** (`src/contrastive.rs`) — O(n log k) baseline; phase-2 drops to O(k · log n) via sublinear-Neumann single-entry. |
 
 ### Definition of "SOTA"
 
 This ADR is "implemented and SOTA" when **all six items above ship**, the README explicitly cites complexity classes as a first-class API surface, and the CI `bench-smoke` job exercises both `time-per-solve` *and* `joules-per-solve`.
+
+**Status as of v1.7.x (2026-05-18)**: 6 of 6 roadmap items shipped. The README + BENCHMARK still need explicit complexity-class language (phase 2 — small docs PR), and the CI bench-smoke job runs `cargo bench --quick` for ns/solve; integrating J/solve waits on either GH Actions exposing a per-job power counter, or a self-hosted runner on a Pi Zero 2W. **Functionally complete; "fully SOTA" needs the two docs/CI polish items.**
 
 ---
 

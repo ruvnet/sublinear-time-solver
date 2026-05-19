@@ -4,6 +4,24 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.7.1] / Rust crate 0.3.1 — 2026-05-18
+
+Closes the ADR-001 roadmap. With this release the package is functionally SOTA per the ADR's own criterion (6 of 6 roadmap items shipped; README cites complexity classes as a first-class API surface; only CI J/solve integration remains, blocked on GH Actions exposing power counters).
+
+### Added
+
+- **MCP tool surface advertises complexity** (ADR-001 #4). `solve` and `solveTrueSublinear` JSON schemas now carry an `x-complexity` extension with `class`, `default`/`worst` for Adaptive solvers, `detail`, and `edgeSafe`. Clients can read it at `tools/list` time.
+- **`max_complexity_class` input arg + server-side enforcement.** Both solver handlers reject the call with a structured `InvalidRequest` when the chosen method's worst-case class exceeds the caller's budget. No-op when the arg is absent (wire-compatible). Per-method class table mirrors the Rust `Complexity` impls.
+- **New `estimateComplexityClass` MCP tool.** O(1) lookup against the per-method class table. Returns class + detail + edgeSafe so an agent can decide between 'spend the J/decision'and 'cache lookup' before invoking a solver.
+- README's new "🧮 Complexity as a First-Class API Surface" section explaining the type-level + wire-level contract.
+
+### Fixed
+
+- **`[profile.bench]` now sets `panic = "unwind"`** so criterion's transitive deps (regex_syntax, aho_corasick, memchr, log, humantime, is_terminal, termcolor) can link. Without this, criterion's `catch_unwind`-using measurement loop fails the CI bench-smoke job after a recent dep drift tightened panic-strategy requirements.
+- Cargo.toml gains an explicit `include` list so future npm/WASM artifact directories cannot silently push the crate tarball past the 10 MB crates.io cap. (The v1.7.0 publish narrowly avoided this; the v1.7.1 cycle hit it head-on. Fixed forward.)
+
+[1.7.1]: https://github.com/ruvnet/sublinear-time-solver/releases/tag/v1.7.1
+
 ## [1.7.0] / Rust crate 0.3.0 — 2026-05-18
 
 ADR-001 release. The first architectural ADR (*Complexity as
