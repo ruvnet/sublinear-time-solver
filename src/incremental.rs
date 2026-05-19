@@ -301,6 +301,103 @@ impl Complexity for IncrementalSolveOp {
          nnz(delta) > full_solve_break_even (default 64).";
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Phase-2 SubLinear delta-solve.
+//
+// solve_on_change above returns a *full* updated solution vector, even
+// when only `|closure| ≪ n` entries changed. For change-driven downstream
+// callers (Kalman updates, sensor-deduplicated controllers, contrastive
+// search) the full vector is waste. This API returns ONLY the closure
+// entries, computed via the per-entry sublinear Neumann primitive — never
+// materialising the full n-vector.
+// ─────────────────────────────────────────────────────────────────────────
+
+/// SubLinear sibling of `IncrementalSolver::solve_on_change`. Returns
+/// `Vec<(usize, Precision)>` of `(row_index, x_new[row])` for every row
+/// in the bounded-depth closure of `delta`'s support, computed without
+/// touching any row outside the closure.
+///
+/// The output is sorted ascending by row index. Callers that need a
+/// dense view can scatter the entries into a vector themselves; callers
+/// chaining onto contrastive search / find_anomalous_rows_in_subset
+/// don't need to.
+///
+/// ## Wiring
+///
+/// ```text
+///   closure   = closure::closure_indices(matrix, &delta.indices, closure_depth)
+///   for i in closure:
+///       x_new[i] = entry::solve_single_entry_neumann(matrix, b_new, i, max_terms, tolerance)
+/// ```
+///
+/// Caller supplies `b_new` (the new RHS) directly rather than reconstructing
+/// it from `b_prev + delta` — this is the "I already know what the world
+/// looks like now" path. `prev_solution` is *not used* by this function:
+/// the per-entry Neumann is cold-start from `D⁻¹b_new`. It's exposed as
+/// a parameter only for API symmetry with `solve_on_change` and so
+/// callers can pre-bind the same shape.
+///
+/// ## Complexity
+///
+/// `O(|closure| · max_terms · branching)` — independent of `n` for sparse
+/// DD matrices with bounded `max_terms`. Pure `SubLinear`.
+///
+/// ## Errors
+///
+/// Returns [`crate::error::SolverError`] from the inner per-entry calls
+/// (`InvalidInput` on a zero diagonal in the closure; `DimensionMismatch`
+/// on a wrong-sized `b_new`).
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// # use sublinear_solver::{Matrix, SparseDelta};
+/// # use sublinear_solver::incremental::solve_on_change_sublinear;
+/// # fn demo(a: &dyn Matrix, prev: &[f64], delta: &SparseDelta, b_new: &[f64]) {
+/// // We perturbed b at a few indices; tell me the NEW solution at the
+/// // rows that could have changed — and nowhere else.
+/// let new_entries = solve_on_change_sublinear(
+///     a, prev, b_new, delta,
+///     /*closure_depth=*/ 4,
+///     /*max_terms=*/    32,
+///     /*tolerance=*/    1e-10,
+/// ).unwrap();
+/// for (row, val) in new_entries {
+///     // wake a downstream observer for `row`
+/// }
+/// # }
+/// ```
+pub fn solve_on_change_sublinear(
+    matrix: &dyn crate::matrix::Matrix,
+    _prev_solution: &[Precision],
+    b_new: &[Precision],
+    delta: &SparseDelta,
+    closure_depth: usize,
+    max_terms: usize,
+    tolerance: Precision,
+) -> Result<Vec<(usize, Precision)>> {
+    if delta.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let closure_set = crate::closure::closure_indices(matrix, &delta.indices, closure_depth);
+    if closure_set.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    crate::entry::solve_single_entries_neumann(matrix, b_new, &closure_set, max_terms, tolerance)
+}
+
+/// Op marker for [`solve_on_change_sublinear`]. SubLinear in `n` end-to-end.
+pub struct SolveOnChangeSublinearOp;
+
+impl Complexity for SolveOnChangeSublinearOp {
+    const CLASS: ComplexityClass = ComplexityClass::SubLinear;
+    const DETAIL: &'static str =
+        "Closure (SubLinear) + per-entry sublinear-Neumann at each closure index (SubLinear). \
+         Independent of n for sparse DD matrices with bounded closure_depth + max_terms.";
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -430,5 +527,87 @@ mod tests {
             "warm-start iterations ({}) should be <= cold-start ({}) on a small delta",
             warm.iterations, cold.iterations,
         );
+    }
+
+    // ── Phase-2 SubLinear delta-solve tests ──────────────────────────
+
+    #[test]
+    fn sublinear_delta_solve_op_is_sublinear_compile_time() {
+        const _: () = assert!(matches!(
+            <SolveOnChangeSublinearOp as Complexity>::CLASS,
+            ComplexityClass::SubLinear
+        ));
+    }
+
+    #[test]
+    fn sublinear_delta_solve_empty_delta_returns_empty() {
+        let (m, b) = build_test_system();
+        let prev = alloc::vec![0.0; m.rows()];
+        let delta = SparseDelta::empty();
+        let entries =
+            solve_on_change_sublinear(&m, &prev, &b, &delta, 3, 32, 1e-10).unwrap();
+        assert!(entries.is_empty());
+    }
+
+    #[test]
+    fn sublinear_delta_solve_matches_full_solve_at_closure_entries() {
+        // Build a strict-DD chain so the closure shrinks meaningfully.
+        let n = 8;
+        let mut triplets = Vec::new();
+        for i in 0..n {
+            triplets.push((i, i, 4.0 as Precision));
+            if i + 1 < n {
+                triplets.push((i, i + 1, -1.0 as Precision));
+                triplets.push((i + 1, i, -1.0 as Precision));
+            }
+        }
+        let m = SparseMatrix::from_triplets(triplets, n, n).unwrap();
+        let b_prev = alloc::vec![1.0 as Precision; n];
+
+        let solver = NeumannSolver::new(64, 1e-12);
+        let opts = SolverOptions::default();
+        let prev = solver.solve(&m, &b_prev, &opts).unwrap();
+
+        let delta =
+            SparseDelta::new(alloc::vec![3usize], alloc::vec![0.5 as Precision]).unwrap();
+        let mut b_new = b_prev.clone();
+        delta.apply_to(&mut b_new).unwrap();
+
+        // Full new solution as ground truth.
+        let full_new = solver.solve(&m, &b_new, &opts).unwrap();
+
+        // SubLinear delta-solve over the closure of {3} at depth 4.
+        let entries = solve_on_change_sublinear(
+            &m,
+            &prev.solution,
+            &b_new,
+            &delta,
+            /*closure_depth=*/ 4,
+            /*max_terms=*/    32,
+            /*tolerance=*/    1e-10,
+        )
+        .unwrap();
+        assert!(
+            !entries.is_empty(),
+            "non-empty delta + non-empty matrix should yield entries"
+        );
+        // Output ordered ascending by row index.
+        for w in entries.windows(2) {
+            assert!(w[0].0 < w[1].0, "entries must be sorted ascending");
+        }
+        // Each entry must match the full-solve value within tolerance.
+        for &(row, val) in &entries {
+            let diff = (val - full_new.solution[row]).abs();
+            assert!(
+                diff < 1e-6,
+                "row {}: sublinear delta-solve {} differs from full {} by {}",
+                row,
+                val,
+                full_new.solution[row],
+                diff
+            );
+        }
+        // Row 3 (the delta site) must be in the entries.
+        assert!(entries.iter().any(|&(r, _)| r == 3));
     }
 }
