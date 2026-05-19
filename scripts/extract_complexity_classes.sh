@@ -18,6 +18,13 @@
 
 set -euo pipefail
 
+# Force C locale so the final `sort -u` produces byte-stable output
+# across hosts (otherwise locale-aware sort orders uppercase before
+# lowercase on Linux CI but the opposite on macOS / glibc-with-UTF-8).
+# Without this, the complexity-baseline-guard CI job fails on PRs
+# generated from a different locale than the baseline.
+export LC_ALL=C
+
 cd "$(git rev-parse --show-toplevel)" 2>/dev/null || cd "$(dirname "$0")/.."
 
 # `awk` walks each .rs file under src/, tracks the most-recent
