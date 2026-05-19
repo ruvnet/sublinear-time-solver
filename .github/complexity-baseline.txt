@@ -5,6 +5,7 @@ FindAnomalousRowsOp                                                             
 IncrementalSolveOp                                                                         ComplexityClass::Adaptive
 SolveOnChangeSublinearOp                                                                   ComplexityClass::SubLinear
 SolveSingleEntryNeumannOp                                                                  ComplexityClass::SubLinear
+VerifySparseSolutionOp                                                                     ComplexityClass::SubLinear
 crate::optimized_solver::OptimizedConjugateGradientSolver                                  ComplexityClass::Linear
 crate::solver::neumann::NeumannSolver                                                      ComplexityClass::Linear
 crate::sublinear::johnson_lindenstrauss::JLEmbedding                                       ComplexityClass::Linear
