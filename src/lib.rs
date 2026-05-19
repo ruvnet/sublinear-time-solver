@@ -117,6 +117,11 @@ pub mod types;
 pub mod complexity;
 pub use complexity::{Complexity, ComplexityClass, ComplexityIntrospect};
 
+// Coherence gate (ADR-001 roadmap item #3). Refuses polynomial-time solves
+// on near-singular systems. Opt-in via `SolverOptions::coherence_threshold`.
+pub mod coherence;
+pub use coherence::{coherence_score, check_coherence_or_reject};
+
 // Sublinear algorithms with mathematically rigorous O(log n) complexity
 pub mod sublinear;
 

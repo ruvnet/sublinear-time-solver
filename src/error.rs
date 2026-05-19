@@ -34,6 +34,21 @@ pub enum SolverError {
         residual_norm: f64,
     },
     
+    /// Coherence gate refused the solve: the matrix's diagonal-dominance
+    /// margin dropped below the configured threshold, so the solver would
+    /// have spent polynomial-time work on a near-singular system to
+    /// produce an ε-quality answer. See ADR-001 (Complexity as Architecture)
+    /// roadmap item #3 and `src/coherence.rs` for the gate implementation.
+    Incoherent {
+        /// Computed coherence score in [-∞, 1]: 1.0 = perfectly diagonal,
+        /// > 0 = strictly diagonally dominant, ≤ 0 = at or past the
+        /// diagonal-dominance boundary.
+        coherence: f64,
+        /// Threshold the caller configured via
+        /// `SolverOptions::coherence_threshold`.
+        threshold: f64,
+    },
+
     /// Algorithm failed to converge within specified iterations.
     ConvergenceFailure {
         /// Number of iterations performed
@@ -148,6 +163,11 @@ impl SolverError {
         match self {
             SolverError::ConvergenceFailure { .. } => true,
             SolverError::NumericalInstability { .. } => true,
+            // Incoherent is recoverable in the same sense ConvergenceFailure
+            // is: the caller can lower the coherence_threshold, fall back to
+            // a cached answer, or refuse the solve. The matrix itself is not
+            // broken — it's just below the budget the caller asked for.
+            SolverError::Incoherent { .. } => true,
             SolverError::MatrixNotDiagonallyDominant { .. } => false, // Fundamental issue
             SolverError::InvalidInput { .. } => false, // User error
             SolverError::DimensionMismatch { .. } => false, // User error
@@ -199,6 +219,9 @@ impl SolverError {
             SolverError::MatrixNotDiagonallyDominant { .. } => ErrorSeverity::High,
             SolverError::ConvergenceFailure { .. } => ErrorSeverity::Medium,
             SolverError::NumericalInstability { .. } => ErrorSeverity::Medium,
+            // Incoherent is a *budget* refusal, not a data corruption — Low.
+            // The caller asked us to refuse, we refused; nothing's broken.
+            SolverError::Incoherent { .. } => ErrorSeverity::Low,
             SolverError::InvalidInput { .. } => ErrorSeverity::Medium,
             SolverError::DimensionMismatch { .. } => ErrorSeverity::Medium,
             SolverError::UnsupportedMatrixFormat { .. } => ErrorSeverity::Low,
@@ -257,8 +280,15 @@ impl fmt::Display for SolverError {
                        iteration, reason, residual_norm)
             },
             SolverError::ConvergenceFailure { iterations, residual_norm, tolerance, algorithm } => {
-                write!(f, "Algorithm '{}' failed to converge after {} iterations: residual = {:.2e} > tolerance = {:.2e}", 
+                write!(f, "Algorithm '{}' failed to converge after {} iterations: residual = {:.2e} > tolerance = {:.2e}",
                        algorithm, iterations, residual_norm, tolerance)
+            },
+            SolverError::Incoherent { coherence, threshold } => {
+                write!(f,
+                    "Coherence gate refused solve: matrix coherence = {:.6} < threshold = {:.6} \
+                     (ADR-001 item #3 — set SolverOptions::coherence_threshold to 0.0 to disable)",
+                    coherence, threshold,
+                )
             },
             SolverError::InvalidInput { message, parameter } => {
                 match parameter {
