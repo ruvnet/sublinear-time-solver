@@ -85,13 +85,18 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: install cargo-audit
         run: cargo install --locked cargo-audit
-      - name: cargo audit
-        # `--deny warnings` so any RUSTSEC advisory (including "unmaintained"
-        # which is informational by default) fails the build. If a
-        # legitimate `unmaintained` shows up that we can't replace yet,
-        # add an `[advisories.ignore]` to `deny.toml` with a justification
-        # and an expiry — don't suppress globally.
-        run: cargo audit --deny warnings
+      - name: cargo audit (vulnerabilities only)
+        # Default behaviour: errors on RUSTSEC `vulnerability` advisories,
+        # warns on `unmaintained` and `notice`. The two complementary
+        # tools split responsibility cleanly:
+        #   * cargo audit = "is there a known CVE in our tree?"
+        #   * cargo deny  = "does our tree match our policy?"
+        #     (including the ignore list for un-fixable unmaintained
+        #     advisories with explicit justifications + re-review dates
+        #     in deny.toml).
+        # Using `--deny warnings` here would double-count the
+        # unmaintained advisories that `deny.toml` already triages.
+        run: cargo audit
 
   # ─────────────────────────────────────────────────────────────────
   # Layer 3: cargo-deny — license / source / ban policy
