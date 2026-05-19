@@ -470,6 +470,66 @@ pub fn contrastive_solve_on_change_sublinear(
     ))
 }
 
+/// Magic-number-free sibling of [`contrastive_solve_on_change_sublinear`].
+/// Takes only `(matrix, prev, b_new, delta, tolerance, k)` and auto-tunes
+/// both `closure_depth` and `max_terms` from the matrix's coherence via
+/// [`crate::coherence::optimal_neumann_terms`].
+///
+/// Mirrors [`crate::incremental::solve_on_change_sublinear_auto`] for the
+/// contrastive top-k path. Caller's contract collapses to: *"here's
+/// tolerance and k, give me back the top-k anomalies."*
+///
+/// ## Errors
+///
+/// - [`crate::error::SolverError::Incoherent`] on non-strict-DD input
+///   (the auto-tune relies on the coherence margin envelope).
+pub fn contrastive_solve_on_change_sublinear_auto(
+    matrix: &dyn crate::matrix::Matrix,
+    prev_solution: &[Precision],
+    b_new: &[Precision],
+    delta: &crate::incremental::SparseDelta,
+    tolerance: Precision,
+    k: usize,
+) -> crate::error::Result<Vec<AnomalyRow>> {
+    if delta.is_empty() || k == 0 {
+        return Ok(Vec::new());
+    }
+
+    let coherence = crate::coherence::coherence_score(matrix);
+    let min_diag = (0..matrix.rows())
+        .map(|i| matrix.get(i, i).unwrap_or(0.0).abs())
+        .filter(|x| *x > 0.0)
+        .fold(Precision::INFINITY, |a, b| if a < b { a } else { b });
+
+    if !coherence.is_finite() || coherence <= 0.0 {
+        return Err(crate::error::SolverError::Incoherent {
+            coherence,
+            threshold: 1e-12,
+        });
+    }
+
+    let b_inf = b_new
+        .iter()
+        .map(|x| x.abs())
+        .fold(0.0_f64, |a, b| if a > b { a } else { b });
+
+    let auto_terms = crate::coherence::optimal_neumann_terms(
+        coherence, b_inf, min_diag, tolerance,
+    )
+    .unwrap_or(32);
+
+    contrastive_solve_on_change_sublinear(
+        matrix,
+        prev_solution,
+        b_new,
+        delta,
+        /*closure_depth=*/ auto_terms,
+        /*max_terms=*/ auto_terms,
+        tolerance,
+        k,
+    )
+}
+
 /// Op marker for the SubLinear orchestrator variant.
 pub struct ContrastiveSolveOnChangeSublinearOp;
 

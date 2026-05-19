@@ -398,6 +398,83 @@ impl Complexity for SolveOnChangeSublinearOp {
          Independent of n for sparse DD matrices with bounded closure_depth + max_terms.";
 }
 
+/// Magic-number-free sibling of [`solve_on_change_sublinear`]. Takes only
+/// `(matrix, prev, b_new, delta, tolerance)` and **auto-tunes** both
+/// `closure_depth` and `max_terms` from the matrix's coherence margin
+/// via [`crate::coherence::optimal_neumann_terms`].
+///
+/// The kth Neumann iterate touches rows up to `k` hops away from the
+/// seeds; the closure must cover at least that radius. So
+/// `closure_depth == max_terms` is the tight choice — wider wastes work,
+/// narrower under-covers the support of the iterate.
+///
+/// Caller's contract collapses to: *"here's tolerance, give me back
+/// what changed"*. Suitable for downstream code that doesn't want to
+/// reason about ρ ≤ 1 - c at every call site.
+///
+/// ## Behaviour
+///
+/// - On a strict-DD matrix: auto-tunes from `coherence_score(matrix)`
+///   and dispatches to [`solve_on_change_sublinear`].
+/// - On a non-strict-DD matrix (coherence ≤ 0): returns
+///   `SolverError::Incoherent`. The Neumann-envelope bound doesn't
+///   hold there, so auto-tuning would silently lie. Caller must fall
+///   back to a full solve or to the hand-tuned API.
+/// - Empty delta short-circuits to an empty result without consuming
+///   coherence — the "no event, no work" path is preserved.
+///
+/// ## Complexity
+///
+/// Same as [`solve_on_change_sublinear`]: SubLinear in `n` for sparse
+/// DD matrices. Adds one `O(nnz(A))` coherence-score pass per call —
+/// callers running many events should compute coherence once and use
+/// the manual API instead.
+pub fn solve_on_change_sublinear_auto(
+    matrix: &dyn crate::matrix::Matrix,
+    prev_solution: &[Precision],
+    b_new: &[Precision],
+    delta: &SparseDelta,
+    tolerance: Precision,
+) -> Result<Vec<(usize, Precision)>> {
+    if delta.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let coherence = crate::coherence::coherence_score(matrix);
+    let min_diag = (0..matrix.rows())
+        .map(|i| matrix.get(i, i).unwrap_or(0.0).abs())
+        .filter(|x| *x > 0.0)
+        .fold(Precision::INFINITY, |a, b| if a < b { a } else { b });
+
+    if !coherence.is_finite() || coherence <= 0.0 {
+        return Err(SolverError::Incoherent {
+            coherence,
+            threshold: 1e-12,
+        });
+    }
+
+    let b_inf = b_new
+        .iter()
+        .map(|x| x.abs())
+        .fold(0.0_f64, |a, b| if a > b { a } else { b });
+
+    // optimal_neumann_terms guarantees ≥1 result on strict-DD input.
+    let auto_terms = crate::coherence::optimal_neumann_terms(
+        coherence, b_inf, min_diag, tolerance,
+    )
+    .unwrap_or(32);
+
+    solve_on_change_sublinear(
+        matrix,
+        prev_solution,
+        b_new,
+        delta,
+        /*closure_depth=*/ auto_terms,
+        /*max_terms=*/ auto_terms,
+        tolerance,
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -609,5 +686,68 @@ mod tests {
         }
         // Row 3 (the delta site) must be in the entries.
         assert!(entries.iter().any(|&(r, _)| r == 3));
+    }
+
+    // ── Auto-tuned orchestrator tests ────────────────────────────────
+
+    #[test]
+    fn auto_empty_delta_returns_empty() {
+        let (m, b) = build_test_system();
+        let prev = alloc::vec![0.0; m.rows()];
+        let delta = SparseDelta::empty();
+        let entries = solve_on_change_sublinear_auto(&m, &prev, &b, &delta, 1e-8).unwrap();
+        assert!(entries.is_empty());
+    }
+
+    #[test]
+    fn auto_matches_manual_on_strict_dd() {
+        // On a strict-DD matrix the auto orchestrator must produce the
+        // same entries (within tolerance) as a hand-tuned solve.
+        let n = 8;
+        let mut triplets = Vec::new();
+        for i in 0..n {
+            triplets.push((i, i, 4.0 as Precision));
+            if i + 1 < n {
+                triplets.push((i, i + 1, -1.0 as Precision));
+                triplets.push((i + 1, i, -1.0 as Precision));
+            }
+        }
+        let m = SparseMatrix::from_triplets(triplets, n, n).unwrap();
+        let b_prev = alloc::vec![1.0 as Precision; n];
+
+        let solver = NeumannSolver::new(64, 1e-12);
+        let opts = SolverOptions::default();
+        let prev = solver.solve(&m, &b_prev, &opts).unwrap();
+
+        let delta =
+            SparseDelta::new(alloc::vec![3usize], alloc::vec![0.5 as Precision]).unwrap();
+        let mut b_new = b_prev.clone();
+        delta.apply_to(&mut b_new).unwrap();
+
+        let auto =
+            solve_on_change_sublinear_auto(&m, &prev.solution, &b_new, &delta, 1e-8).unwrap();
+        assert!(!auto.is_empty());
+        // Auto path agrees with the full solve at every closure row.
+        let full = solver.solve(&m, &b_new, &opts).unwrap();
+        for &(row, val) in &auto {
+            assert!((val - full.solution[row]).abs() < 1e-6);
+        }
+    }
+
+    #[test]
+    fn auto_rejects_non_dd_matrix_with_incoherent() {
+        // Off-diagonals dominate the diagonal → coherence ≤ 0.
+        let triplets = alloc::vec![
+            (0usize, 0, 1.0),
+            (0, 1, 2.0),
+            (1, 0, 2.0),
+            (1, 1, 1.0),
+        ];
+        let m = SparseMatrix::from_triplets(triplets, 2, 2).unwrap();
+        let prev = alloc::vec![0.0; 2];
+        let b = alloc::vec![1.0; 2];
+        let delta = SparseDelta::new(alloc::vec![0], alloc::vec![0.5]).unwrap();
+        let err = solve_on_change_sublinear_auto(&m, &prev, &b, &delta, 1e-8).unwrap_err();
+        assert!(matches!(err, SolverError::Incoherent { .. }));
     }
 }
