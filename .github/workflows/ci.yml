@@ -70,6 +70,31 @@ jobs:
       - name: cargo bench --bench solver_benchmarks (smoke)
         run: cargo bench --bench solver_benchmarks -- --quick
 
+  # ADR-001 item #1 + phase-2: regression-guard against silent
+  # complexity-class downgrades. A PR that changes a public solver
+  # from SubLinear → Linear (or any worse direction) fails CI unless
+  # the author updates `.github/complexity-baseline.txt` deliberately.
+  # That makes the type-level Complexity contract enforceable across
+  # PRs the same way the safe-path security tests are.
+  complexity-baseline-guard:
+    name: complexity baseline (no silent downgrades)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: regenerate baseline + diff against checked-in
+        run: |
+          scripts/extract_complexity_classes.sh > /tmp/current-baseline.txt
+          if ! diff -u .github/complexity-baseline.txt /tmp/current-baseline.txt; then
+            echo "::error::Complexity-class baseline drifted. \
+            A solver's CLASS changed without an accompanying update to \
+            .github/complexity-baseline.txt. If this is intentional, \
+            regenerate the baseline:"
+            echo "   scripts/extract_complexity_classes.sh > .github/complexity-baseline.txt"
+            echo "and include the diff in your PR. See ADR-001 for context."
+            exit 1
+          fi
+          echo "Complexity baseline matches checked-in snapshot."
+
   # ADR-001 §SOTA: closes the last gap by exercising the
   # joules_per_decision example on every PR. GH Actions doesn't expose
   # per-job power counters (no RAPL access), so the run uses the
