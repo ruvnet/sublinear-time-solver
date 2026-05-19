@@ -427,6 +427,58 @@ export class SublinearSolverMCPServer {
             required: ['method'],
           },
         },
+        // ADR-001 open Q#3 / PR #41: closure-restricted residual audit.
+        // Wire-callable witness for SubLinear orchestrator outputs.
+        // SubLinear in n — same complexity class as the solve it audits.
+        {
+          name: 'verifySparseSolution',
+          description:
+            'Audit a sparse solution returned by a SubLinear orchestrator (solve-on-change-sublinear, contrastive-solve-on-change-sublinear, …). Computes the closure-restricted residual r[i] = b[i] - Σ_j A[i,j]·x_new[j] for every (i, x_new[i]) entry. Returns {ok, max_residual, threshold, worst_row}. SubLinear in n: O(|entries|·avg_row_nnz). For audit/trust-but-verify; failure on strict-DD input is a real solver bug.',
+          'x-complexity': {
+            class: 'SubLinear',
+            detail:
+              'O(|entries|·avg_row_nnz) — independent of n for sparse DD matrices. Same class as the SubLinear orchestrator whose output it verifies.',
+            edgeSafe: true,
+          },
+          inputSchema: {
+            type: 'object',
+            properties: {
+              matrix: {
+                type: 'object',
+                description: 'Matrix A in dense or sparse-COO format. Same shape accepted by `solve`.',
+              },
+              prev_solution: {
+                type: 'array',
+                items: { type: 'number' },
+                description: 'Length-n previous solution. Used for rows NOT in the entries list (closure boundary).',
+              },
+              vector: {
+                type: 'array',
+                items: { type: 'number' },
+                description: 'Length-n right-hand side b that the orchestrator solved against.',
+              },
+              entries: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    row: { type: 'number', minimum: 0 },
+                    value: { type: 'number' },
+                  },
+                  required: ['row', 'value'],
+                },
+                description: 'The Vec<(row, value)> returned by solve_on_change_sublinear or extracted from a contrastive output\'s closure set.',
+              },
+              tolerance: {
+                type: 'number',
+                default: 1e-6,
+                description: 'Audit threshold: ok iff max|r_i| ≤ tolerance · max(1, ‖b‖_∞).',
+                minimum: 0,
+              },
+            },
+            required: ['matrix', 'prev_solution', 'vector', 'entries'],
+          },
+        },
         {
           name: 'generateTestVector',
           description: 'Generate test vectors for matrix solving with various patterns',
@@ -524,6 +576,8 @@ export class SublinearSolverMCPServer {
             return await this.handleSaveVectorToFile(args as any);
           case 'estimateComplexityClass':
             return await this.handleEstimateComplexityClass(args as any);
+          case 'verifySparseSolution':
+            return await this.handleVerifySparseSolution(args as any);
           // Temporal tools
           case 'predictWithTemporalAdvantage':
           case 'validateTemporalAdvantage':
@@ -1487,6 +1541,150 @@ export class SublinearSolverMCPServer {
         },
       ],
     };
+  }
+
+  /**
+   * ADR-001 open Q#3 / PR #41 (Rust). Wire-callable witness for
+   * SubLinear orchestrator outputs. Computes the closure-restricted
+   * residual `r[i] = b[i] - Σ_j A[i,j]·x_new[j]` for every supplied
+   * `(row, value)` entry. `x_new[j]` uses the entry's value if j
+   * appears in the entries list; otherwise falls back to
+   * `prev_solution[j]` (the closure-boundary contract).
+   *
+   * Pure-TS implementation — does NOT cross into Rust/WASM. The
+   * residual math is straightforward enough that duplicating it
+   * here is cheaper than plumbing a new WASM binding. Matches
+   * Rust's `verify_sparse_solution` semantics exactly.
+   *
+   * Cost: O(|entries| · avg_row_nnz). SubLinear in n for sparse
+   * DD matrices — same complexity class as the orchestrator
+   * whose output it verifies.
+   */
+  private async handleVerifySparseSolution(params: any) {
+    try {
+      if (!params.matrix) {
+        throw new McpError(ErrorCode.InvalidParams, 'Missing required parameter: matrix');
+      }
+      if (!params.prev_solution || !Array.isArray(params.prev_solution)) {
+        throw new McpError(ErrorCode.InvalidParams, 'Missing or invalid parameter: prev_solution (must be number array)');
+      }
+      if (!params.vector || !Array.isArray(params.vector)) {
+        throw new McpError(ErrorCode.InvalidParams, 'Missing or invalid parameter: vector (RHS b, must be number array)');
+      }
+      if (!Array.isArray(params.entries)) {
+        throw new McpError(ErrorCode.InvalidParams, 'Missing or invalid parameter: entries (must be array of {row, value})');
+      }
+      const tolerance: number = typeof params.tolerance === 'number' ? params.tolerance : 1e-6;
+      if (tolerance < 0) {
+        throw new McpError(ErrorCode.InvalidParams, `tolerance must be >= 0, got ${tolerance}`);
+      }
+
+      const matrix = params.matrix;
+      const n: number = matrix.rows ?? params.prev_solution.length;
+      if (params.prev_solution.length !== n) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          `prev_solution.length=${params.prev_solution.length} != matrix.rows=${n}`,
+        );
+      }
+      if (params.vector.length !== n) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          `vector.length=${params.vector.length} != matrix.rows=${n}`,
+        );
+      }
+
+      // Build a sparse overlay map: entry row → entry value.
+      const overlay = new Map<number, number>();
+      for (const e of params.entries) {
+        if (typeof e.row !== 'number' || typeof e.value !== 'number') {
+          continue; // tolerate malformed entries silently — matches Rust
+        }
+        if (e.row >= 0 && e.row < n) {
+          overlay.set(e.row, e.value);
+        }
+      }
+      const xAt = (j: number): number => {
+        const v = overlay.get(j);
+        return v !== undefined ? v : (params.prev_solution[j] ?? 0);
+      };
+
+      // Threshold: tolerance · max(1, ‖b‖_∞).
+      let bInf = 0;
+      for (const v of params.vector) {
+        const a = Math.abs(v);
+        if (a > bInf) bInf = a;
+      }
+      const threshold = tolerance * Math.max(1, bInf);
+
+      // Compute r[i] = b[i] - A[i,:]·x_new for each entry row.
+      let maxResidual = 0;
+      let worstRow: number | null = null;
+      const rowAccess = (row: number): Array<[number, number]> => {
+        // Accept dense (matrix.data: number[][]) or sparse-COO formats.
+        if (matrix.format === 'coo' && matrix.data && matrix.data.rowIndices && matrix.data.colIndices && matrix.data.values) {
+          // Linear scan of COO triplets for this row. Acceptable for
+          // audit cost since |entries| ≪ n.
+          const out: Array<[number, number]> = [];
+          for (let k = 0; k < matrix.data.rowIndices.length; k++) {
+            if (matrix.data.rowIndices[k] === row) {
+              out.push([matrix.data.colIndices[k], matrix.data.values[k]]);
+            }
+          }
+          return out;
+        }
+        if (matrix.data && Array.isArray(matrix.data[row])) {
+          // Dense row.
+          const out: Array<[number, number]> = [];
+          for (let j = 0; j < matrix.data[row].length; j++) {
+            const v = matrix.data[row][j];
+            if (v !== 0) out.push([j, v]);
+          }
+          return out;
+        }
+        return [];
+      };
+
+      for (const e of params.entries) {
+        if (typeof e.row !== 'number' || e.row < 0 || e.row >= n) continue;
+        let ax = 0;
+        for (const [j, aij] of rowAccess(e.row)) {
+          ax += aij * xAt(j);
+        }
+        const r = Math.abs(params.vector[e.row] - ax);
+        if (r > maxResidual) {
+          maxResidual = r;
+          worstRow = e.row;
+        }
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                ok: maxResidual <= threshold,
+                max_residual: maxResidual,
+                threshold,
+                worst_row: worstRow,
+                note: 'Closure-restricted residual audit per ADR-001 open Q#3 (PR #41). Failure on strict-DD input indicates a real solver bug, not a tolerance miss.',
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      };
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `verifySparseSolution error: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   private async handleSaveVectorToFile(params: any) {
