@@ -8,18 +8,18 @@ repository = "https://github.com/ruvnet/sublinear-time-solver"
 description = "High-performance sublinear-time solver for asymmetric diagonally dominant systems"
 keywords = ["linear-algebra", "sparse-matrix", "solver", "sublinear", "wasm"]
 categories = ["mathematics", "science", "wasm"]
-exclude = [
-    "scripts/linear_systems/test_matrices/",
-    "target/",
-    "temporal-lead-solver/",
-    "tests/",
-    "docs/",
-    "*.json",
-    "demo.js",
-    "prove_temporal_lead.py",
-    "test_temporal_lead_mcp.js",
-    "benchmarks/",
-    "examples/large_files/",
+# crates.io publish surface. Use `include` (not just `exclude`) so npm/
+# WASM artifacts can never silently push the tarball past the 10 MB cap
+# again. Anything we want on docs.rs / crates.io must appear in this list.
+include = [
+    "src/**/*.rs",
+    "benches/*.rs",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "BENCHMARK.md",
+    "docs/adr/*.md",
 ]
 
 [lib]
