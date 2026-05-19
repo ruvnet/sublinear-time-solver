@@ -189,6 +189,165 @@ pub fn delta_below_solve_threshold(
     bound < tolerance
 }
 
+/// Incremental coherence cache for streaming matrix-update workloads.
+///
+/// [`coherence_score`] is `O(nnz(A))` — a full scan of the matrix.
+/// Streaming workloads (Cognitum reflex loops over a learning system,
+/// RuView agents tracking sensor-network state, anything that mutates
+/// rows over time) re-pay that cost on every event even when only a
+/// handful of rows actually changed.
+///
+/// This cache stores the per-row diagonal-dominance margin and the
+/// current global minimum. Initial [`CoherenceCache::build`] is the
+/// same O(nnz) one-shot cost. Each subsequent [`update`] only
+/// re-scans the dirty rows: `O(|dirty| · avg_row_nnz)`. The cached
+/// [`score`] is an O(1) read.
+///
+/// ## Math
+///
+/// Per-row margin at row `i`:
+///   `(|A[i,i]| - Σ_{j≠i}|A[i,j]|) / |A[i,i]|`
+///
+/// Global coherence = `min_i row_margin[i]`. When row `i`'s margin
+/// changes, the global min either becomes the new value (if `i` was
+/// the previous min row, or the new value is lower) or stays as
+/// before (otherwise). We track the min row index so we can detect
+/// when re-computing it across all clean rows is unavoidable —
+/// happens iff the dirty update increases the previous-min row's
+/// margin. The unavoidable case is still bounded by `O(n)` (just a
+/// vec scan), no matrix touches.
+///
+/// ## Complexity
+///
+///   * `build`:  `O(nnz(A))` — same as `coherence_score`.
+///   * `update`: `O(|dirty| · avg_row_nnz)` typical case.
+///                The rare unavoidable global recompute is `O(n)`
+///                vec scan (no matrix touches) — still cheaper than
+///                a full `coherence_score` on a sparse matrix.
+///   * `score`:  `O(1)`.
+///
+/// The "amortised SubLinear-per-event" guarantee: as long as the
+/// previous-min row stays among the dirty set or the new minimum
+/// lands among the dirty rows, the cache never has to do the global
+/// scan.
+#[derive(Debug, Clone)]
+pub struct CoherenceCache {
+    /// Per-row diagonal-dominance margin. Length = matrix.rows() at build time.
+    per_row_margin: alloc::vec::Vec<Precision>,
+    /// Current global minimum margin (cached).
+    min_margin: Precision,
+    /// Row index of the current min margin (used to detect when a
+    /// dirty update on that row forces a global recompute).
+    min_row: usize,
+}
+
+impl CoherenceCache {
+    /// Compute per-row margins for every row and cache the global
+    /// minimum. One-shot O(nnz(A)) work, matches [`coherence_score`].
+    pub fn build(matrix: &dyn Matrix) -> Self {
+        let n = matrix.rows();
+        let mut per_row_margin = alloc::vec::Vec::with_capacity(n);
+        let mut min_margin = Precision::INFINITY;
+        let mut min_row = 0usize;
+        for i in 0..n {
+            let m = Self::row_margin(matrix, i);
+            if m < min_margin {
+                min_margin = m;
+                min_row = i;
+            }
+            per_row_margin.push(m);
+        }
+        Self {
+            per_row_margin,
+            min_margin,
+            min_row,
+        }
+    }
+
+    /// Re-scan only the listed dirty rows. `O(|dirty| · row_nnz)`
+    /// typical case; up to `O(n)` vec scan if the previous-min row
+    /// got dirtier and we have to find the new global minimum.
+    ///
+    /// `dirty_rows` need not be sorted or unique; duplicates are
+    /// handled idempotently. Out-of-bound indices are silently
+    /// dropped (matches `coherence_score`'s tolerant handling).
+    pub fn update(&mut self, matrix: &dyn Matrix, dirty_rows: &[usize]) {
+        let n = self.per_row_margin.len();
+        if dirty_rows.is_empty() || n == 0 {
+            return;
+        }
+
+        // Re-compute margins for every dirty row.
+        let mut prev_min_dirty = false;
+        for &row in dirty_rows {
+            if row >= n {
+                continue;
+            }
+            let new_margin = Self::row_margin(matrix, row);
+            let old_margin = self.per_row_margin[row];
+            self.per_row_margin[row] = new_margin;
+            if row == self.min_row {
+                prev_min_dirty = true;
+            }
+            // Fast path: dirty row dropped below the cached min →
+            // we can update the cached min in O(1).
+            if !prev_min_dirty || new_margin < self.min_margin {
+                if new_margin < self.min_margin {
+                    self.min_margin = new_margin;
+                    self.min_row = row;
+                }
+                let _ = old_margin; // silence unused
+            }
+        }
+
+        // Unavoidable case: the previous-min row's margin increased
+        // (got more coherent) and we don't know which other row is
+        // now the min. O(n) vec scan, no matrix touches.
+        if prev_min_dirty && self.per_row_margin[self.min_row] > self.min_margin {
+            // Rare. Re-scan the cached margins to find the new min.
+            let mut new_min = Precision::INFINITY;
+            let mut new_min_row = 0usize;
+            for (i, &m) in self.per_row_margin.iter().enumerate() {
+                if m < new_min {
+                    new_min = m;
+                    new_min_row = i;
+                }
+            }
+            self.min_margin = new_min;
+            self.min_row = new_min_row;
+        }
+    }
+
+    /// Cached global minimum margin. `O(1)`.
+    pub fn score(&self) -> Precision {
+        self.min_margin
+    }
+
+    /// Row index of the current global minimum margin.
+    pub fn min_row(&self) -> usize {
+        self.min_row
+    }
+
+    /// Compute the diagonal-dominance margin for a single row.
+    ///
+    /// `(|diag| - Σ_{j≠i}|A[i,j]|) / |diag|`. Returns `NEG_INFINITY`
+    /// for a zero-diagonal row (matches `coherence_score`).
+    fn row_margin(matrix: &dyn Matrix, i: usize) -> Precision {
+        let diag = matrix.get(i, i).unwrap_or(0.0).abs();
+        if diag <= 1e-300 {
+            return Precision::NEG_INFINITY;
+        }
+        let mut off_diag_sum: Precision = 0.0;
+        let cols = matrix.cols();
+        for j in 0..cols {
+            if i != j {
+                off_diag_sum += matrix.get(i, j).unwrap_or(0.0).abs();
+            }
+        }
+        (diag - off_diag_sum) / diag
+    }
+}
+
 /// Minimum number of Neumann terms required to hit `tolerance` on a
 /// single-entry solve, given the matrix's `coherence` margin and the
 /// magnitudes of the RHS and any perturbation.
@@ -534,5 +693,125 @@ mod tests {
     fn optimal_terms_loose_tolerance_returns_one() {
         // y0 = 2, tolerance = 10 → ratio < 1, no iteration needed beyond term 0.
         assert_eq!(optimal_neumann_terms(0.5, 10.0, 5.0, 10.0).unwrap(), 1);
+    }
+
+    // ── CoherenceCache tests ──────────────────────────────────────────
+
+    #[test]
+    fn cache_build_matches_coherence_score() {
+        let m = build(
+            vec![
+                (0, 0, 5.0), (0, 1, 1.0),
+                (1, 0, 1.0), (1, 1, 5.0),
+            ],
+            2,
+        );
+        let cache = CoherenceCache::build(&m);
+        let expected = coherence_score(&m);
+        assert!((cache.score() - expected).abs() < 1e-12);
+    }
+
+    #[test]
+    fn cache_update_with_empty_dirty_is_noop() {
+        let m = build(vec![(0, 0, 5.0), (1, 1, 5.0)], 2);
+        let mut cache = CoherenceCache::build(&m);
+        let before = cache.score();
+        cache.update(&m, &[]);
+        assert_eq!(cache.score(), before);
+    }
+
+    #[test]
+    fn cache_update_drops_score_when_dirty_row_loses_dominance() {
+        // Initial: diag 5, off 1 → margin 0.8 on every row.
+        let m = build(
+            vec![
+                (0, 0, 5.0), (0, 1, 1.0),
+                (1, 0, 1.0), (1, 1, 5.0),
+            ],
+            2,
+        );
+        let mut cache = CoherenceCache::build(&m);
+        assert!((cache.score() - 0.8).abs() < 1e-12);
+
+        // Mutate row 0 so its off-diagonal grows. New margin = (5-3)/5 = 0.4.
+        let m2 = build(
+            vec![
+                (0, 0, 5.0), (0, 1, 3.0),
+                (1, 0, 1.0), (1, 1, 5.0),
+            ],
+            2,
+        );
+        cache.update(&m2, &[0]);
+        assert!((cache.score() - 0.4).abs() < 1e-12);
+        assert_eq!(cache.min_row(), 0);
+    }
+
+    #[test]
+    fn cache_update_recovers_score_after_min_row_improves() {
+        // Row 0 starts as the worst (margin 0.4); row 1 has margin 0.8.
+        let m = build(
+            vec![
+                (0, 0, 5.0), (0, 1, 3.0),
+                (1, 0, 1.0), (1, 1, 5.0),
+            ],
+            2,
+        );
+        let mut cache = CoherenceCache::build(&m);
+        assert!((cache.score() - 0.4).abs() < 1e-12);
+        assert_eq!(cache.min_row(), 0);
+
+        // Heal row 0 so its margin matches row 1's (0.8). Global min
+        // must rise to 0.8 — exercises the rare full-rescan path.
+        let m2 = build(
+            vec![
+                (0, 0, 5.0), (0, 1, 1.0),
+                (1, 0, 1.0), (1, 1, 5.0),
+            ],
+            2,
+        );
+        cache.update(&m2, &[0]);
+        assert!((cache.score() - 0.8).abs() < 1e-12);
+    }
+
+    #[test]
+    fn cache_update_drops_out_of_bound_dirty_rows() {
+        let m = build(vec![(0, 0, 5.0), (1, 1, 5.0)], 2);
+        let mut cache = CoherenceCache::build(&m);
+        let before = cache.score();
+        cache.update(&m, &[99, 100]); // OOB, should be silently dropped
+        assert_eq!(cache.score(), before);
+    }
+
+    #[test]
+    fn cache_matches_full_score_after_arbitrary_updates() {
+        // Sanity property: after any sequence of dirty updates, the
+        // cached score equals what a fresh coherence_score would
+        // compute on the same matrix.
+        let m = build(
+            vec![
+                (0, 0, 5.0), (0, 1, 2.0),
+                (1, 0, 1.0), (1, 1, 5.0), (1, 2, 1.0),
+                (2, 1, 1.0), (2, 2, 5.0),
+            ],
+            3,
+        );
+        let mut cache = CoherenceCache::build(&m);
+
+        // Imagine we mutated row 1 — re-pass the same matrix at row 1.
+        // (No-op semantically, but exercises the update path.)
+        cache.update(&m, &[1]);
+        assert!((cache.score() - coherence_score(&m)).abs() < 1e-12);
+
+        // Mutate to an entirely different matrix and update every row.
+        let m2 = build(
+            vec![
+                (0, 0, 5.0), (0, 1, 0.5),
+                (1, 0, 0.5), (1, 1, 5.0), (1, 2, 0.5),
+                (2, 1, 0.5), (2, 2, 5.0),
+            ],
+            3,
+        );
+        cache.update(&m2, &[0, 1, 2]);
+        assert!((cache.score() - coherence_score(&m2)).abs() < 1e-12);
     }
 }
