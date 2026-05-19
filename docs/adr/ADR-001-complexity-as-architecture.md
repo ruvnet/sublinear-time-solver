@@ -178,13 +178,65 @@ This ADR is "implemented and SOTA" when **all six items above ship**, the README
 
 ---
 
+## Shipped primitive catalogue (as of 2026-05-19)
+
+Beyond the six-item roadmap, this ADR drove a substantial extension surface across PRs #26–#43. Every primitive below is wire-queryable via `mcp__sublinear__estimateComplexityClass` and carries a `Complexity` impl whose `CLASS` constant matches the table.
+
+### Change-driven solve primitives
+
+| Primitive | Class | File | Role |
+|---|---|---|---|
+| `closure_indices(matrix, seeds, depth)` | SubLinear | `src/closure.rs` | bounded-depth row-graph BFS — input to every change-driven path |
+| `solve_single_entry_neumann(matrix, b, i, max_terms, tol)` | SubLinear | `src/entry.rs` | compute `x[i]` without materialising `x` |
+| `solve_on_change_sublinear(…)` | SubLinear | `src/incremental.rs` | sparse delta-solve over closure entries |
+| `contrastive_solve_on_change_sublinear(…)` | SubLinear | `src/contrastive.rs` | end-to-end change-driven top-k anomaly detection |
+| `solve_on_change_sublinear_auto(…)` | SubLinear | `src/incremental.rs` | auto-tuned `closure_depth + max_terms` from coherence |
+| `contrastive_solve_on_change_sublinear_auto(…)` | SubLinear | `src/contrastive.rs` | auto-tuned contrastive sibling |
+
+### Coherence + gating primitives
+
+| Primitive | Class | File | Role |
+|---|---|---|---|
+| `coherence_score(matrix)` | Linear | `src/coherence.rs` | one-shot diagonal-dominance margin |
+| `CoherenceCache::build / update / score` | SubLinear (update) | `src/coherence.rs` | streaming per-row margin cache for mutable matrices |
+| `delta_below_solve_threshold(…)` | O(\|δ\|) | `src/coherence.rs` | "no event, no work" skip-on-tiny-delta gate |
+| `optimal_neumann_terms(…)` | O(1) | `src/coherence.rs` | adaptive Neumann-depth from coherence + tolerance |
+| `check_coherence_or_reject(matrix, threshold)` | Linear | `src/coherence.rs` | refuse near-singular solves before they run |
+
+### Verification + bounded planning
+
+| Primitive | Class | File | Role |
+|---|---|---|---|
+| `verify_sparse_solution(…)` | SubLinear | `src/witness.rs` | per-entry residual audit restricted to closure |
+| `PlanBudget::try_consume(class)` | O(1) | `src/budget.rs` | cumulative budget across chained solves |
+
+### MCP enforcement surface (per ADR-001 item #4 phase-2)
+
+`solve`, `estimateEntry`, `solveTrueSublinear` all gate on the caller's
+`max_complexity_class` arg before any solver work runs. `estimateComplexityClass`
+exposes the full table above so budget-aware clients can refuse a call at
+tool-list time.
+
+### Empirical receipts
+
+- `benches/solver_benchmarks.rs::delta_solve` (PR #31) — `cold_full` /
+  `warm_full` (Linear) vs `sparse_closure` (SubLinear) across n=64,256,1024.
+  Linear paths grow ~4× per 4× size; SubLinear path stays nearly constant.
+- `benches/solver_benchmarks.rs::witness_audit` (PR #43) — `full_residual`
+  (Linear) vs `closure_audit` (SubLinear) across n=64,256,1024. Crossover
+  at n≈200; by n=1024 closure_audit is ~4× faster.
+- `examples/event_driven_anomaly.rs` (PRs #33, #35) — runnable demo of the
+  full pipeline (baseline → coherence gate → SubLinear orchestrator).
+
+---
+
 ## Open Questions
 
-1. **Should `Complexity` be a trait or a const associated value?** Trait gives runtime introspection (an agent can `dyn Solver` and query the class); const is zero-cost. Likely both — runtime trait `ComplexityIntrospect` for `dyn`, compile-time `const COMPLEXITY: ComplexityClass` for monomorphic call sites.
-2. **How does an `Adaptive` solver (one that drops down to a worse class on hard inputs) declare itself?** Probably `ComplexityClass::Adaptive { default, worst }`.
-3. **Does `solve_on_change` need a witness?** Probably yes — a caller wants to verify the delta-solve's output equals the full-solve's output up to ε. Cheap to compute; one extra A·x.
-4. **What's the right coherence threshold default?** 0.05 is a guess. The bench corpus has matrices with coherences between 0.5 and 0.001; need to run a sweep and pick the value where false-positives ≈ false-negatives on realistic workloads.
-5. **Power-bench on macOS?** The IOKit power assertion interface is closer to per-process accounting than RAPL; might need a separate impl. Or fall back to `time` and note "not measured" for the energy column on darwin.
+1. **Should `Complexity` be a trait or a const associated value?** ✅ Resolved by shipping both: `ComplexityIntrospect` for `dyn`, `const CLASS: ComplexityClass` on the `Complexity` trait for monomorphic call sites.
+2. **How does an `Adaptive` solver declare itself?** ✅ Resolved by `ComplexityClass::Adaptive { default, worst }` — shipped in v1.7.0.
+3. **Does `solve_on_change` need a witness?** ✅ Resolved by `verify_sparse_solution` (PR #41). Closure-restricted residual audit at the same SubLinear complexity class as the orchestrator whose output it verifies.
+4. **What's the right coherence threshold default?** 0.05 is still a guess. The bench corpus has matrices with coherences between 0.5 and 0.001; needs a sweep + false-positives ≈ false-negatives tuning on realistic workloads. *Tracked as remaining tuning work.*
+5. **Power-bench on macOS?** The IOKit power assertion interface is closer to per-process accounting than RAPL; might need a separate impl. Or fall back to `time` and note "not measured" for the energy column on darwin. *Hardware-dependent; tracked as Pi hwmon J/solve backend in roadmap item #5.*
 
 ---
 
