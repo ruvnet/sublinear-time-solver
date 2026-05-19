@@ -97,9 +97,28 @@ export class SublinearSolverMCPServer {
         {
           name: 'solve',
           description: 'Solve a diagonally dominant linear system Mx = b',
+          // ADR-001 item #4: advertise the worst-case complexity class at
+          // tool-list time so clients can refuse a budget-bust call without
+          // first making it. `x-complexity` is a non-standard JSON Schema
+          // extension; clients that don't understand it ignore it.
+          'x-complexity': {
+            class: 'Linear',
+            detail: 'O(k · nnz(M)) per iter; k bounded by maxIterations + epsilon.',
+            edgeSafe: false,
+          },
           inputSchema: {
             type: 'object',
             properties: {
+              max_complexity_class: {
+                type: 'string',
+                enum: [
+                  'Logarithmic', 'PolyLogarithmic', 'SubLinear', 'Linear',
+                  'QuasiLinear', 'SubQuadratic', 'Polynomial',
+                  'SuperPolynomial', 'SubExponential', 'Exponential',
+                  'Factorial', 'DoubleExponential',
+                ],
+                description: 'ADR-001 item #4 — caller-supplied budget cap. If the chosen method\'s complexity class exceeds this, the response includes a warning. Phase-2 will harden to an error.',
+              },
               matrix: {
                 type: 'object',
                 description: 'Matrix M in dense or sparse format',
@@ -272,9 +291,29 @@ export class SublinearSolverMCPServer {
         {
           name: 'solveTrueSublinear',
           description: 'Solve with TRUE O(log n) algorithms using Johnson-Lindenstrauss dimension reduction and adaptive Neumann series. For vectors >500 elements, use vector_file parameter with JSON/CSV/TXT files to avoid MCP truncation. Use generateTestVector + saveVectorToFile for large test vectors.',
+          // ADR-001 item #4: this tool's *default* path is Logarithmic per
+          // entry; the base case fallback is Linear. Declared as Adaptive
+          // so callers see both bounds.
+          'x-complexity': {
+            class: 'Adaptive',
+            default: 'Logarithmic',
+            worst: 'Linear',
+            detail: 'O(log n) per single-entry query on DD systems via JL + recursive Neumann; O(n) base case at n ≤ base_case_threshold.',
+            edgeSafe: true,
+          },
           inputSchema: {
             type: 'object',
             properties: {
+              max_complexity_class: {
+                type: 'string',
+                enum: [
+                  'Logarithmic', 'PolyLogarithmic', 'SubLinear', 'Linear',
+                  'QuasiLinear', 'SubQuadratic', 'Polynomial',
+                  'SuperPolynomial', 'SubExponential', 'Exponential',
+                  'Factorial', 'DoubleExponential',
+                ],
+                description: 'ADR-001 item #4 — caller-supplied budget cap. Compared against the *worst-case* bound (Linear here) so callers always see safe behaviour.',
+              },
               matrix: {
                 type: 'object',
                 description: 'Matrix M in sparse format with values, rowIndices, colIndices arrays',
@@ -335,6 +374,40 @@ export class SublinearSolverMCPServer {
             },
             required: ['matrix']
           }
+        },
+        // ADR-001 item #4: estimate the complexity class of a candidate
+        // solve BEFORE running it. Agents with a budget can decide between
+        // "spend the J/decision" and "fall back to a cached answer" at
+        // tool-list / dispatch time.
+        {
+          name: 'estimateComplexityClass',
+          description: 'Estimate the worst-case complexity class for a given solver method on a matrix descriptor (no actual solve runs). Returns the class label, a short detail string, and an edgeSafe flag — the basis for an agent\'s budget decision per ADR-001 (Complexity as Architecture).',
+          'x-complexity': {
+            class: 'Logarithmic',
+            detail: 'O(1) lookup against the per-method class table.',
+            edgeSafe: true,
+          },
+          inputSchema: {
+            type: 'object',
+            properties: {
+              method: {
+                type: 'string',
+                enum: ['neumann', 'random-walk', 'forward-push', 'backward-push', 'bidirectional', 'optimized-cg', 'sublinear-neumann'],
+                description: 'Solver method to estimate. Use the exact method name from the `solve` tool.',
+              },
+              matrix_rows: {
+                type: 'number',
+                description: 'Dimension of the system (rows = cols). Used only for the human-readable detail string; does not affect the class.',
+                minimum: 1,
+              },
+              matrix_nnz: {
+                type: 'number',
+                description: 'Optional: number of nonzeros. Used only for the human-readable detail string.',
+                minimum: 0,
+              },
+            },
+            required: ['method'],
+          },
         },
         {
           name: 'generateTestVector',
@@ -431,6 +504,8 @@ export class SublinearSolverMCPServer {
             return await this.handleGenerateTestVector(args as any);
           case 'saveVectorToFile':
             return await this.handleSaveVectorToFile(args as any);
+          case 'estimateComplexityClass':
+            return await this.handleEstimateComplexityClass(args as any);
           // Temporal tools
           case 'predictWithTemporalAdvantage':
           case 'validateTemporalAdvantage':
@@ -1128,6 +1203,97 @@ export class SublinearSolverMCPServer {
         `Vector generation error: ${error instanceof Error ? error.message : String(error)}`
       );
     }
+  }
+
+  /**
+   * ADR-001 item #4 — estimate the worst-case complexity class for a
+   * candidate solve without running it. Used by agents to decide whether
+   * to spend the J/decision budget on a given method, or fall back to a
+   * cached / cheaper answer.
+   *
+   * The class table mirrors the `Complexity` impls in `src/complexity.rs`
+   * so the wire contract matches the Rust contract. Keep them in sync —
+   * a CI guard for this is on the ADR roadmap (phase 2).
+   */
+  private async handleEstimateComplexityClass(params: any) {
+    const method = params?.method;
+    if (typeof method !== 'string') {
+      throw new McpError(ErrorCode.InvalidParams, 'Missing required parameter: method (string)');
+    }
+    // Per-method class table. Sourced from the Rust `Complexity` impls
+    // landed in v1.7.0 / 0.3.0.
+    const table: Record<string, { class: string; default?: string; worst?: string; detail: string; edgeSafe: boolean }> = {
+      'neumann': {
+        class: 'Linear',
+        detail: 'O(k · nnz(A)) per iter; k bounded by max_iterations + tolerance.',
+        edgeSafe: false,
+      },
+      'random-walk': {
+        class: 'Linear',
+        detail: 'O(walks · expected_length); per-walk cost is sublinear but the ensemble is linear in the budget.',
+        edgeSafe: false,
+      },
+      'forward-push': {
+        class: 'SubLinear',
+        detail: 'O(1/ε) per query on DD systems with bounded degree.',
+        edgeSafe: true,
+      },
+      'backward-push': {
+        class: 'SubLinear',
+        detail: 'O(1/ε) per query, symmetric to forward-push.',
+        edgeSafe: true,
+      },
+      'bidirectional': {
+        class: 'SubLinear',
+        detail: 'Combines forward + backward push; constants smaller than either alone.',
+        edgeSafe: true,
+      },
+      'optimized-cg': {
+        class: 'Linear',
+        detail: 'O(k · nnz(A)) per iter; k ≈ √κ(A) on SPD inputs.',
+        edgeSafe: false,
+      },
+      'sublinear-neumann': {
+        class: 'Adaptive',
+        default: 'Logarithmic',
+        worst: 'Linear',
+        detail: 'O(log n) per single-entry query on DD systems via JL + recursive Neumann; O(n) base case at n ≤ base_case_threshold.',
+        edgeSafe: true,
+      },
+    };
+
+    const entry = table[method];
+    if (!entry) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        `Unknown method '${method}'. Known: ${Object.keys(table).join(', ')}.`,
+      );
+    }
+
+    const n = typeof params.matrix_rows === 'number' ? params.matrix_rows : null;
+    const nnz = typeof params.matrix_nnz === 'number' ? params.matrix_nnz : null;
+    const scaleHint = n
+      ? ` (estimated for n=${n}${nnz ? `, nnz=${nnz}` : ''})`
+      : '';
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(
+            {
+              success: true,
+              method,
+              complexity: entry,
+              scale_hint: scaleHint.trim() || null,
+              note: 'Class table sourced from the Rust Complexity impls in v1.7.0 / 0.3.0. See ADR-001 (Complexity as Architecture) for the strategic context.',
+            },
+            null,
+            2,
+          ),
+        },
+      ],
+    };
   }
 
   private async handleSaveVectorToFile(params: any) {
