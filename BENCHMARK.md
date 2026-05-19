@@ -11,7 +11,7 @@ being trivially diagonal). The reported numbers are criterion's
 median over its quick-mode samples; full release-mode runs go in CI's
 `bench-smoke` job.
 
-## Solver runtime (single solve)
+## Solver runtime (single solve — `Linear` class)
 
 | Solver         | n=16    | n=64    | n=256   | Throughput @ n=256 |
 |----------------|---------|---------|---------|--------------------|
@@ -24,6 +24,64 @@ classical ranking (CG amortises matrix-vector products with very tight
 inner loops, Neumann pays per-term scaling and a residual recompute).
 Use Neumann when the system is asymmetric and CG isn't applicable;
 otherwise CG is the default.
+
+## Change-driven solve paths — `Linear` vs `SubLinear`
+
+Captured from `cargo bench -- --quick delta_solve` (PR #31, ADR-001
+roadmap items #2 + #6 phase-2). Three change-driven paths on a
+single-row RHS perturbation against a strict-DD ring-stencil matrix:
+
+| n     | `cold_full` (Linear) | `warm_full` (Linear) | `sparse_closure` (**SubLinear**) |
+|------:|---------------------:|---------------------:|---------------------------------:|
+|   64  | —                    | 11.9 µs              | 906 µs                           |
+|  256  | 66.7 µs              | 45.5 µs              | 2.28 ms                          |
+| 1024  | 258 µs               | 179 µs               | 2.32 ms                          |
+
+**Architectural property:** `cold_full` and `warm_full` grow ~linearly
+with `n` (~4× cost for 4× size). `sparse_closure` is essentially
+constant: 256→1024 leaves the cost unchanged (2.28 ms → 2.32 ms).
+The curves diverge with `n` — the SubLinear path's per-event cost is
+bounded by closure size, not by the global state-space size. Crossover
+on this conservative bench (`closure_depth=4, max_terms=32`) is past
+`n ≈ 10⁴`; tuning those constants to a tighter spectral-radius bound
+pulls the crossover much lower.
+
+### Event-driven anomaly example
+
+`cargo run --release --example event_driven_anomaly` (PRs #33, #35)
+runs the full ADR-001 inner-loop discipline:
+
+```
+baseline:     88 µs       full Neumann solve, one-shot   (Linear)
+gate:         <1 µs       skip tiny deltas (PR #34)      (O(|δ|))
+per-event:    ~2-3 ms     closure=17 rows                (SubLinear)
+```
+
+The "no event, no work" coherence gate fires in ≤1 µs when the
+delta's induced change in `x` is below the caller's tolerance, so
+noisy / drifting / sub-resolution events cost nothing. Meaningful
+events flow through the full SubLinear pipeline; nothing outside
+their bounded-depth closure is ever touched.
+
+### Complexity-class catalog
+
+Every public primitive declares its worst-case class via the
+`Complexity` trait (`src/complexity.rs`) and the matching
+`x-complexity` annotation in MCP. The phase-2 SubLinear additions
+shipped in this release cycle:
+
+| Primitive | Class | Notes |
+|---|---|---|
+| `closure_indices` | **SubLinear** | bounded-depth BFS — input to every change-driven path |
+| `solve_single_entry_neumann` | **SubLinear** | computes `x[i]` without materialising `x` |
+| `solve_on_change_sublinear` | **SubLinear** | returns `Vec<(idx, val)>` over the closure only |
+| `contrastive_solve_on_change_sublinear` | **SubLinear** | end-to-end change-driven top-k |
+| `delta_below_solve_threshold` | `O(\|δ\|)` | coherence-gated skip — never touches `n` or `nnz` |
+
+The MCP `solve`, `estimateEntry`, and `solveTrueSublinear` handlers
+enforce the caller's `max_complexity_class` budget before any solver
+work runs (ADR-001 item #4 phase-2). `estimateComplexityClass` now
+surfaces every primitive in the catalog for budget-aware clients.
 
 ## Fixes that landed this cycle
 
