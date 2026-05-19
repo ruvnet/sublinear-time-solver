@@ -128,8 +128,9 @@ pub use coherence::{coherence_score, check_coherence_or_reject};
 // is sparse, event-driven activation" thesis.
 pub mod incremental;
 pub use incremental::{
-    solve_on_change_sublinear, solve_on_change_sublinear_auto, IncrementalConfig,
-    IncrementalSolver, SolveOnChangeSublinearOp, SparseDelta,
+    solve_on_change_sublinear, solve_on_change_sublinear_auto,
+    solve_on_change_sublinear_auto_with_rho, IncrementalConfig, IncrementalSolver,
+    SolveOnChangeSublinearOp, SparseDelta,
 };
 pub use coherence::{
     approximate_spectral_radius, delta_below_solve_threshold, delta_inf_bound,
@@ -163,9 +164,9 @@ pub use stream::{
 pub mod contrastive;
 pub use contrastive::{
     contrastive_solve_on_change, contrastive_solve_on_change_sublinear,
-    contrastive_solve_on_change_sublinear_auto, find_anomalous_rows, find_anomalous_rows_in_subset,
-    find_rows_above_threshold, AnomalyRow, ContrastiveSolveOnChangeOp,
-    ContrastiveSolveOnChangeSublinearOp,
+    contrastive_solve_on_change_sublinear_auto, contrastive_solve_on_change_sublinear_auto_with_rho,
+    find_anomalous_rows, find_anomalous_rows_in_subset, find_rows_above_threshold, AnomalyRow,
+    ContrastiveSolveOnChangeOp, ContrastiveSolveOnChangeSublinearOp,
 };
 
 // Bounded-depth row-graph closure (ADR-001 #6 phase-2A). Turns a sparse

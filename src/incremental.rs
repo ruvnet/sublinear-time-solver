@@ -475,6 +475,78 @@ pub fn solve_on_change_sublinear_auto(
     )
 }
 
+/// Tightest-bound variant of [`solve_on_change_sublinear_auto`]: takes
+/// a caller-supplied spectral-radius `rho` (e.g. from
+/// [`crate::coherence::approximate_spectral_radius`]) and uses it to
+/// pick `max_terms` via [`crate::coherence::optimal_neumann_terms_with_rho`]
+/// instead of the loose `(1 - coherence)` bound.
+///
+/// On matrices where `(1 - coherence)` overestimates `ρ` (most matrices
+/// in practice), this produces a smaller `max_terms` → smaller closure
+/// → less per-event work. The cached `(rho, min_diag)` pair is
+/// computed once at matrix-build time and reused across all events.
+///
+/// ## Errors
+///
+/// - [`crate::error::SolverError::InvalidInput`] if `rho` is outside
+///   the valid open interval `(0, 1)` — the Neumann-envelope bound
+///   doesn't hold there.
+/// - All other errors match [`solve_on_change_sublinear`].
+pub fn solve_on_change_sublinear_auto_with_rho(
+    matrix: &dyn crate::matrix::Matrix,
+    prev_solution: &[Precision],
+    b_new: &[Precision],
+    delta: &SparseDelta,
+    tolerance: Precision,
+    rho: Precision,
+) -> Result<Vec<(usize, Precision)>> {
+    if delta.is_empty() {
+        return Ok(Vec::new());
+    }
+    if !rho.is_finite() || rho <= 0.0 || rho >= 1.0 {
+        return Err(SolverError::InvalidInput {
+            message: alloc::format!(
+                "solve_on_change_sublinear_auto_with_rho: rho={} must lie in (0, 1)",
+                rho
+            ),
+            parameter: Some(alloc::string::String::from("rho")),
+        });
+    }
+
+    let min_diag = (0..matrix.rows())
+        .map(|i| matrix.get(i, i).unwrap_or(0.0).abs())
+        .filter(|x| *x > 0.0)
+        .fold(Precision::INFINITY, |a, b| if a < b { a } else { b });
+    if !min_diag.is_finite() || min_diag <= 0.0 {
+        return Err(SolverError::InvalidInput {
+            message: alloc::string::String::from(
+                "solve_on_change_sublinear_auto_with_rho: non-positive min_diag",
+            ),
+            parameter: Some(alloc::string::String::from("matrix")),
+        });
+    }
+
+    let b_inf = b_new
+        .iter()
+        .map(|x| x.abs())
+        .fold(0.0_f64, |a, b| if a > b { a } else { b });
+
+    let auto_terms = crate::coherence::optimal_neumann_terms_with_rho(
+        rho, b_inf, min_diag, tolerance,
+    )
+    .unwrap_or(32);
+
+    solve_on_change_sublinear(
+        matrix,
+        prev_solution,
+        b_new,
+        delta,
+        /*closure_depth=*/ auto_terms,
+        /*max_terms=*/ auto_terms,
+        tolerance,
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -749,5 +821,77 @@ mod tests {
         let delta = SparseDelta::new(alloc::vec![0], alloc::vec![0.5]).unwrap();
         let err = solve_on_change_sublinear_auto(&m, &prev, &b, &delta, 1e-8).unwrap_err();
         assert!(matches!(err, SolverError::Incoherent { .. }));
+    }
+
+    #[test]
+    fn auto_with_rho_rejects_invalid_rho() {
+        let (m, b) = build_test_system();
+        let prev = alloc::vec![0.0; m.rows()];
+        let delta = SparseDelta::new(alloc::vec![1], alloc::vec![0.1]).unwrap();
+        // rho outside (0, 1) is rejected.
+        for bad_rho in &[0.0, 1.0, -0.1, 1.5, f64::NAN, f64::INFINITY] {
+            let err = solve_on_change_sublinear_auto_with_rho(&m, &prev, &b, &delta, 1e-8, *bad_rho)
+                .unwrap_err();
+            assert!(matches!(err, SolverError::InvalidInput { .. }), "bad rho {bad_rho} should be rejected");
+        }
+    }
+
+    #[test]
+    fn auto_with_rho_empty_delta_short_circuits() {
+        let (m, b) = build_test_system();
+        let prev = alloc::vec![0.0; m.rows()];
+        let delta = SparseDelta::empty();
+        let entries = solve_on_change_sublinear_auto_with_rho(&m, &prev, &b, &delta, 1e-8, 0.5)
+            .unwrap();
+        assert!(entries.is_empty());
+    }
+
+    #[test]
+    fn auto_with_rho_agrees_with_full_solve_on_strict_dd() {
+        // Same setup as auto_matches_manual_on_strict_dd but using the
+        // _with_rho variant with the tight ρ from approximate_spectral_radius.
+        let n = 8;
+        let mut triplets = Vec::new();
+        for i in 0..n {
+            triplets.push((i, i, 4.0 as Precision));
+            if i + 1 < n {
+                triplets.push((i, i + 1, -1.0 as Precision));
+                triplets.push((i + 1, i, -1.0 as Precision));
+            }
+        }
+        let m = SparseMatrix::from_triplets(triplets, n, n).unwrap();
+        let b_prev = alloc::vec![1.0 as Precision; n];
+
+        let solver = NeumannSolver::new(64, 1e-12);
+        let opts = SolverOptions::default();
+        let prev = solver.solve(&m, &b_prev, &opts).unwrap();
+
+        // Use a tight ρ from the spectral-radius primitive.
+        let rho = crate::coherence::approximate_spectral_radius(&m, 30)
+            .expect("strict-DD chain should give a valid rho");
+
+        let delta = SparseDelta::new(
+            alloc::vec![3usize],
+            alloc::vec![0.5 as Precision],
+        )
+        .unwrap();
+        let mut b_new = b_prev.clone();
+        delta.apply_to(&mut b_new).unwrap();
+
+        let auto = solve_on_change_sublinear_auto_with_rho(
+            &m,
+            &prev.solution,
+            &b_new,
+            &delta,
+            1e-8,
+            rho,
+        )
+        .unwrap();
+        assert!(!auto.is_empty());
+
+        let full = solver.solve(&m, &b_new, &opts).unwrap();
+        for &(row, val) in &auto {
+            assert!((val - full.solution[row]).abs() < 1e-6);
+        }
     }
 }
