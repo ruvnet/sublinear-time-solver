@@ -14,6 +14,7 @@ use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId, Through
 use std::hint::black_box;
 
 use sublinear_solver::{
+    closure_indices,
     Matrix, SparseMatrix, NeumannSolver, SolverAlgorithm, SolverOptions,
     OptimizedConjugateGradientSolver, OptimizedSparseMatrix,
     IncrementalSolver, SparseDelta, solve_on_change_sublinear,
@@ -294,11 +295,41 @@ fn bench_witness_audit(c: &mut Criterion) {
     group.finish();
 }
 
+/// ADR-001 #6 phase-2A — closure_indices in isolation.
+///
+/// The `delta_solve` bench bundles closure + per-entry Neumann + top-k.
+/// This group isolates the closure alone across n=64, 256, 1024, 4096
+/// with a fixed seed set and depth. On the ring-stencil test matrix
+/// with bounded branching, closure_indices should stay roughly constant
+/// in n — the architectural property the SubLinear orchestrators
+/// inherit from this primitive.
+fn bench_closure_only(c: &mut Criterion) {
+    let mut group = c.benchmark_group("closure_only");
+    let depth = 4usize;
+
+    for &n in &[64usize, 256, 1024, 4096] {
+        let triplets = build_test_triplets(n);
+        let matrix = SparseMatrix::from_triplets(triplets, n, n).unwrap();
+        // Single seed at n/3 — emulates the canonical "one event" use case.
+        let seeds = vec![n / 3];
+
+        group.throughput(Throughput::Elements(n as u64));
+        group.bench_with_input(BenchmarkId::from_parameter(n), &n, |bh, _| {
+            bh.iter(|| {
+                let c = closure_indices(black_box(&matrix), black_box(&seeds), black_box(depth));
+                black_box(c.len());
+            });
+        });
+    }
+    group.finish();
+}
+
 criterion_group!(
     benches,
     bench_neumann_series,
     bench_optimized_cg,
     bench_delta_solve,
-    bench_witness_audit
+    bench_witness_audit,
+    bench_closure_only
 );
 criterion_main!(benches);
