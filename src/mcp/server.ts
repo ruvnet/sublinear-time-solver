@@ -1378,6 +1378,41 @@ export class SublinearSolverMCPServer {
         detail: 'O(log n) per single-entry query on DD systems via JL + recursive Neumann; O(n) base case at n ≤ base_case_threshold.',
         edgeSafe: true,
       },
+      // ── ADR-001 #6 phase-2A primitives ────────────────────────────
+      'closure-indices': {
+        class: 'SubLinear',
+        detail: 'Bounded-depth BFS through A.row_iter starting from a sparse seed set. O(depth · branch · |closure|); SubLinear when depth · branch ≪ n. Widens to Linear at full diameter.',
+        edgeSafe: true,
+      },
+      'contrastive-solve-on-change': {
+        class: 'Adaptive',
+        default: 'Linear',
+        worst: 'Linear',
+        detail: 'Phase-2A orchestrator: closure (SubLinear) + warm-start solve_on_change (Linear) + top-k-in-subset (SubLinear). Bounded by the inner solve. Use `contrastive-solve-on-change-sublinear` for end-to-end SubLinear.',
+        edgeSafe: false,
+      },
+      // ── ADR-001 #6 phase-2B primitives ────────────────────────────
+      'solve-single-entry-neumann': {
+        class: 'SubLinear',
+        detail: 'Truncated Neumann restricted to closure(target, max_terms). Returns x[i] = e_iᵀ A⁻¹ b without materialising x. O(max_terms · |closure| · branch); SubLinear in n for sparse DD + bounded depth.',
+        edgeSafe: true,
+      },
+      'contrastive-solve-on-change-sublinear': {
+        class: 'SubLinear',
+        detail: 'Phase-2B orchestrator: closure (SubLinear) + per-entry sublinear-Neumann at each closure index (SubLinear) + top-k-in-subset (SubLinear). End-to-end SubLinear in n.',
+        edgeSafe: true,
+      },
+      // ── ADR-001 #2 phase-2 ────────────────────────────────────────
+      'solve-on-change': {
+        class: 'Linear',
+        detail: 'Warm-started full solve with prev_solution as initial_guess. O(k_warm · nnz(A)) per call; k_warm ≪ k_cold for small deltas. Returns the full n-vector solution.',
+        edgeSafe: false,
+      },
+      'solve-on-change-sublinear': {
+        class: 'SubLinear',
+        detail: 'Closure (SubLinear) + per-entry sublinear-Neumann at each closure index (SubLinear). Returns Vec<(idx, val)> over the closure only — never materialises the full n-vector. End-to-end SubLinear in n.',
+        edgeSafe: true,
+      },
     };
 
     const entry = table[method];
