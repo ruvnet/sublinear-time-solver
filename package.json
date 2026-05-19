@@ -1,6 +1,6 @@
 {
   "name": "sublinear-time-solver",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "description": "The Ultimate Mathematical & AI Toolkit: Sublinear algorithms, consciousness exploration, psycho-symbolic reasoning, chaos analysis, and temporal prediction in one unified MCP interface. WASM-accelerated with Lyapunov exponents and attractor dynamics.",
   "main": "dist/index.js",
   "module": "dist/index.js",

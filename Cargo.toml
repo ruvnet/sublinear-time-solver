@@ -1,6 +1,6 @@
 [package]
 name = "sublinear"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 authors = ["rUv <github.com/ruvnet>"]
 license = "MIT OR Apache-2.0"

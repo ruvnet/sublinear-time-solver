@@ -146,6 +146,91 @@ pub fn find_anomalous_rows(
     out
 }
 
+/// Top-k variant constrained to a caller-supplied **candidate set**. Skips
+/// the rest of the solution vector entirely.
+///
+/// This is the building block for the genuinely sub-linear contrastive
+/// recipe outlined in [ADR-001 §Roadmap item #6 phase-2]. The caller
+/// computes the candidate set once — typically the rows reachable from
+/// the support of a sparse RHS delta in a few hops of `A` — and passes
+/// it here. Cost is `O(|candidates| log k)` instead of `O(n log k)`,
+/// so when `|candidates| ≪ n` the call drops to true sub-linear in n.
+///
+/// Composes with `incremental::SparseDelta` and a per-entry solver like
+/// `SublinearNeumannSolver`:
+///
+/// ```text
+///   1. candidates = closure(delta.indices, A, depth)
+///   2. current[i] = sublinear_neumann.solve_single_entry(A, b_new, i)
+///                                                 for i in candidates
+///   3. top_k    = find_anomalous_rows_in_subset(baseline, current,
+///                                                candidates, k)
+/// ```
+///
+/// `current` must be a length-`n` vector that has the correct values at
+/// the candidate indices; entries at non-candidate indices are ignored.
+/// (We don't require sparsity — callers can pass a dense vector with
+/// stale values everywhere except the candidates.)
+///
+/// Result is sorted by descending anomaly score; ties broken by row
+/// index ascending. Returns an empty vec if `k == 0` or `candidates` is
+/// empty. Panics on `baseline.len() != current.len()`.
+pub fn find_anomalous_rows_in_subset(
+    baseline: &[Precision],
+    current: &[Precision],
+    candidates: &[usize],
+    k: usize,
+) -> Vec<AnomalyRow> {
+    assert_eq!(
+        baseline.len(),
+        current.len(),
+        "find_anomalous_rows_in_subset: dim mismatch {} vs {}",
+        baseline.len(),
+        current.len(),
+    );
+
+    if k == 0 || candidates.is_empty() || baseline.is_empty() {
+        return Vec::new();
+    }
+
+    let mut heap: BinaryHeap<MinHeapEntry> =
+        BinaryHeap::with_capacity(k.min(candidates.len()) + 1);
+
+    for &row in candidates {
+        // Skip out-of-bounds indices silently — caller may supply a
+        // closure that overshoots the matrix dimension (e.g. via a
+        // wrap-around graph traversal). Treating it as a no-op is more
+        // useful than panicking.
+        if row >= baseline.len() {
+            continue;
+        }
+        let anomaly = (current[row] - baseline[row]).abs();
+        let entry = MinHeapEntry(AnomalyRow {
+            row,
+            baseline: baseline[row],
+            current: current[row],
+            anomaly,
+        });
+        if heap.len() < k {
+            heap.push(entry);
+        } else if let Some(smallest) = heap.peek() {
+            if anomaly > smallest.0.anomaly {
+                heap.pop();
+                heap.push(entry);
+            }
+        }
+    }
+
+    let mut out: Vec<AnomalyRow> = heap.into_iter().map(|e| e.0).collect();
+    out.sort_by(|a, b| {
+        b.anomaly
+            .partial_cmp(&a.anomaly)
+            .unwrap_or(Ordering::Equal)
+            .then_with(|| a.row.cmp(&b.row))
+    });
+    out
+}
+
 /// Return only the rows whose anomaly score exceeds `threshold`. Useful as
 /// the boundary-crossing primitive for change-driven activation: an agent
 /// stays asleep until at least one entry crosses the threshold.
@@ -295,5 +380,80 @@ mod tests {
         let c = alloc::vec![0.01, 0.02, 0.03, 0.04, 0.05];
         let above = find_rows_above_threshold(&b, &c, 1.0);
         assert!(above.is_empty(), "no entry above threshold should return empty");
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // find_anomalous_rows_in_subset (ADR-001 #6 phase-2)
+    // ─────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn subset_returns_only_candidates() {
+        let baseline = alloc::vec![0.0; 10];
+        let mut current = alloc::vec![0.0; 10];
+        // Put a huge anomaly at row 7 that ISN'T in the candidate set —
+        // we expect it to be ignored.
+        current[7] = 999.0;
+        // Real candidates with smaller anomalies.
+        current[2] = 5.0;
+        current[5] = 3.0;
+        let candidates = alloc::vec![2usize, 5];
+        let top = find_anomalous_rows_in_subset(&baseline, &current, &candidates, 5);
+        assert_eq!(top.len(), 2);
+        assert_eq!(top[0].row, 2);
+        assert_eq!(top[0].anomaly, 5.0);
+        assert_eq!(top[1].row, 5);
+        assert_eq!(top[1].anomaly, 3.0);
+        // 999.0 at row 7 is OUTSIDE the candidates — must not appear.
+        assert!(top.iter().all(|r| r.row != 7));
+    }
+
+    #[test]
+    fn subset_k_limit_works() {
+        let baseline = alloc::vec![0.0; 100];
+        let mut current = alloc::vec![0.0; 100];
+        for &i in &[10, 20, 30, 40, 50] {
+            current[i] = i as Precision;
+        }
+        let candidates = alloc::vec![10usize, 20, 30, 40, 50];
+        // Ask for top-3; should get the 3 biggest anomalies (rows 50, 40, 30).
+        let top = find_anomalous_rows_in_subset(&baseline, &current, &candidates, 3);
+        assert_eq!(top.len(), 3);
+        assert_eq!(top[0].row, 50);
+        assert_eq!(top[1].row, 40);
+        assert_eq!(top[2].row, 30);
+    }
+
+    #[test]
+    fn subset_ignores_out_of_bounds_indices() {
+        let baseline = alloc::vec![0.0; 5];
+        let mut current = alloc::vec![0.0; 5];
+        current[2] = 10.0;
+        // Caller's candidate closure overshoots — out-of-bound indices
+        // must be skipped silently, not panic.
+        let candidates = alloc::vec![2usize, 100, 200];
+        let top = find_anomalous_rows_in_subset(&baseline, &current, &candidates, 5);
+        assert_eq!(top.len(), 1);
+        assert_eq!(top[0].row, 2);
+    }
+
+    #[test]
+    fn subset_empty_candidates_returns_empty() {
+        let baseline = alloc::vec![0.0; 5];
+        let current = alloc::vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let candidates: Vec<usize> = alloc::vec![];
+        let top = find_anomalous_rows_in_subset(&baseline, &current, &candidates, 10);
+        assert!(top.is_empty());
+    }
+
+    #[test]
+    fn subset_matches_full_scan_when_candidates_cover_all_rows() {
+        // Sanity check: when the candidate set IS the full row range,
+        // the result should match find_anomalous_rows.
+        let baseline = alloc::vec![0.0; 8];
+        let current = alloc::vec![1.0, 5.0, 1.0, 9.0, 2.0, 7.0, 3.0, 6.0];
+        let full = find_anomalous_rows(&baseline, &current, 4);
+        let candidates: Vec<usize> = (0..8).collect();
+        let subset = find_anomalous_rows_in_subset(&baseline, &current, &candidates, 4);
+        assert_eq!(full, subset);
     }
 }

@@ -133,7 +133,9 @@ pub use incremental::{IncrementalSolver, SparseDelta, IncrementalConfig};
 // for change-driven activation: which rows of the current solution diverged
 // most from baseline? Backbone of RuView / Cognitum wake-on-event.
 pub mod contrastive;
-pub use contrastive::{find_anomalous_rows, find_rows_above_threshold, AnomalyRow};
+pub use contrastive::{
+    find_anomalous_rows, find_anomalous_rows_in_subset, find_rows_above_threshold, AnomalyRow,
+};
 
 // Sublinear algorithms with mathematically rigorous O(log n) complexity
 pub mod sublinear;
