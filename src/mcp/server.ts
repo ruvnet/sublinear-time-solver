@@ -175,6 +175,14 @@ export class SublinearSolverMCPServer {
         {
           name: 'estimateEntry',
           description: 'Estimate a single entry of the solution M^(-1)b',
+          // ADR-001 item #4 phase-2: advertise the worst-case complexity
+          // class at tool-list time. Sibling of `inputSchema` to match the
+          // pattern established by `solve` and `solveTrueSublinear`.
+          'x-complexity': {
+            class: 'Linear',
+            detail: 'Per-entry estimator. `random-walk` and `monte-carlo` both run a bounded number of samples but still touch O(n) state in the worst case (Linear). For genuine SubLinear single-entry queries on DD matrices use `solve` with `method=forward-push` or `method=backward-push`.',
+            edgeSafe: false,
+          },
           inputSchema: {
             type: 'object',
             properties: {
@@ -212,6 +220,16 @@ export class SublinearSolverMCPServer {
                 enum: ['neumann', 'random-walk', 'monte-carlo'],
                 default: 'random-walk',
                 description: 'Estimation method'
+              },
+              max_complexity_class: {
+                type: 'string',
+                enum: [
+                  'Logarithmic', 'PolyLogarithmic', 'SubLinear', 'Linear',
+                  'QuasiLinear', 'SubQuadratic', 'Polynomial',
+                  'SuperPolynomial', 'SubExponential', 'Exponential',
+                  'Factorial', 'DoubleExponential',
+                ],
+                description: 'Optional caller-supplied worst-case complexity budget. If the chosen `method` declares a worst case stronger than this budget, the call is rejected before any solver work runs. ADR-001 item #4 phase-2 — same gate as `solve`.'
               }
             },
             required: ['matrix', 'vector', 'row', 'column']
@@ -705,13 +723,19 @@ export class SublinearSolverMCPServer {
    * degrade to `Linear` on hard inputs.
    */
   private static readonly METHOD_WORST_CASE: Record<string, string> = {
-    'neumann':           'Linear',
-    'random-walk':       'Linear',
-    'forward-push':      'SubLinear',
-    'backward-push':     'SubLinear',
-    'bidirectional':     'SubLinear',
-    'optimized-cg':      'Linear',
-    'sublinear-neumann': 'Linear', // Adaptive { Logarithmic, Linear } → worst case
+    'neumann':                              'Linear',
+    'random-walk':                          'Linear',
+    'forward-push':                         'SubLinear',
+    'backward-push':                        'SubLinear',
+    'bidirectional':                        'SubLinear',
+    'optimized-cg':                         'Linear',
+    'sublinear-neumann':                    'Linear', // Adaptive { Logarithmic, Linear } → worst case
+    // ADR-001 #6 phase-2A primitives.
+    'closure-indices':                      'SubLinear', // bounded-depth row-graph BFS
+    'contrastive-solve-on-change':          'Linear',    // Adaptive { Linear, Linear } orchestrator
+    // ADR-001 #6 phase-2B: per-entry sublinear-Neumann + SubLinear orchestrator.
+    'solve-single-entry-neumann':           'SubLinear',
+    'contrastive-solve-on-change-sublinear':'SubLinear',
   };
 
   /**
@@ -915,6 +939,12 @@ export class SublinearSolverMCPServer {
 
   private async handleEstimateEntry(params: any) {
     try {
+      // ADR-001 item #4 phase-2: enforce caller's complexity budget
+      // before any solver work. estimateEntry uses neumann-method
+      // single-entry queries internally; budget gate matches handleSolve.
+      const method = (params.method ?? 'neumann').toString();
+      this.enforceComplexityBudget(method, params.max_complexity_class);
+
       // Enhanced parameter validation
       if (!params.matrix) {
         throw new McpError(ErrorCode.InvalidParams, 'Missing required parameter: matrix');
