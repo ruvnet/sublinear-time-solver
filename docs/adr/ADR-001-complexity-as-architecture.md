@@ -180,7 +180,7 @@ This ADR is "implemented and SOTA" when **all six items above ship**, the README
 
 ## Shipped primitive catalogue (as of 2026-05-19)
 
-Beyond the six-item roadmap, this ADR drove a substantial extension surface across PRs #26–#43. Every primitive below is wire-queryable via `mcp__sublinear__estimateComplexityClass` and carries a `Complexity` impl whose `CLASS` constant matches the table.
+Beyond the six-item roadmap, this ADR drove a substantial extension surface across PRs #26–#57. Every primitive below is wire-queryable via `mcp__sublinear__estimateComplexityClass` and carries a `Complexity` impl whose `CLASS` constant matches the table.
 
 ### Change-driven solve primitives
 
@@ -192,6 +192,9 @@ Beyond the six-item roadmap, this ADR drove a substantial extension surface acro
 | `contrastive_solve_on_change_sublinear(…)` | SubLinear | `src/contrastive.rs` | end-to-end change-driven top-k anomaly detection |
 | `solve_on_change_sublinear_auto(…)` | SubLinear | `src/incremental.rs` | auto-tuned `closure_depth + max_terms` from coherence |
 | `contrastive_solve_on_change_sublinear_auto(…)` | SubLinear | `src/contrastive.rs` | auto-tuned contrastive sibling |
+| `solve_on_change_sublinear_auto_with_rho(…)` | SubLinear | `src/incremental.rs` | tightest-bound variant taking caller-supplied ρ |
+| `contrastive_solve_on_change_sublinear_auto_with_rho(…)` | SubLinear | `src/contrastive.rs` | tightest-bound contrastive sibling |
+| `event_stream_iter(matrix, prev, events, cfg, budget)` | SubLinear | `src/stream.rs` | stdlib `Iterator` adapter over the orchestrator — native Rust composition |
 
 ### Coherence + gating primitives
 
@@ -200,7 +203,9 @@ Beyond the six-item roadmap, this ADR drove a substantial extension surface acro
 | `coherence_score(matrix)` | Linear | `src/coherence.rs` | one-shot diagonal-dominance margin |
 | `CoherenceCache::build / update / score` | SubLinear (update) | `src/coherence.rs` | streaming per-row margin cache for mutable matrices |
 | `delta_below_solve_threshold(…)` | O(\|δ\|) | `src/coherence.rs` | "no event, no work" skip-on-tiny-delta gate |
-| `optimal_neumann_terms(…)` | O(1) | `src/coherence.rs` | adaptive Neumann-depth from coherence + tolerance |
+| `optimal_neumann_terms(coherence, …)` | O(1) | `src/coherence.rs` | adaptive Neumann-depth from coherence + tolerance |
+| `approximate_spectral_radius(matrix, num_iters)` | Linear | `src/coherence.rs` | power-iteration tight ρ estimate (one-shot, amortised) |
+| `optimal_neumann_terms_with_rho(rho, …)` | O(1) | `src/coherence.rs` | adaptive depth from explicit ρ — tighter than coherence-derived |
 | `check_coherence_or_reject(matrix, threshold)` | Linear | `src/coherence.rs` | refuse near-singular solves before they run |
 
 ### Verification + bounded planning
@@ -210,12 +215,27 @@ Beyond the six-item roadmap, this ADR drove a substantial extension surface acro
 | `verify_sparse_solution(…)` | SubLinear | `src/witness.rs` | per-entry residual audit restricted to closure |
 | `PlanBudget::try_consume(class)` | O(1) | `src/budget.rs` | cumulative budget across chained solves |
 
-### MCP enforcement surface (per ADR-001 item #4 phase-2)
+### MCP wire surface (per ADR-001 item #4 phase-2/3)
 
 `solve`, `estimateEntry`, `solveTrueSublinear` all gate on the caller's
-`max_complexity_class` arg before any solver work runs. `estimateComplexityClass`
-exposes the full table above so budget-aware clients can refuse a call at
-tool-list time.
+`max_complexity_class` arg before any solver work runs.
+`estimateComplexityClass` exposes the full table above so budget-aware
+clients can refuse a call at tool-list time.
+
+Six additional wire-callable tools shipped after PR #44 lift the full
+SubLinear pipeline onto MCP — agents can run *predict → check → preview
+→ solve → audit* without writing Rust:
+
+| MCP tool | Stage | Class | PR |
+|---|---|---|---|
+| `estimateComplexityClass` | predict | Logarithmic | #28, #30, #42 |
+| `coherenceScore` | check feasibility | Linear | #53 |
+| `closureIndices` | preview closure | SubLinear | #54 |
+| `solveOnChangeSublinear` | run orchestrator | SubLinear | #56 |
+| `contrastiveSolveOnChangeSublinear` | top-k anomalies | SubLinear | #57 |
+| `verifySparseSolution` | audit output | SubLinear | #52 |
+
+All five new handlers are pure-TypeScript — no WASM bridge required.
 
 ### Empirical receipts
 
@@ -225,8 +245,16 @@ tool-list time.
 - `benches/solver_benchmarks.rs::witness_audit` (PR #43) — `full_residual`
   (Linear) vs `closure_audit` (SubLinear) across n=64,256,1024. Crossover
   at n≈200; by n=1024 closure_audit is ~4× faster.
-- `examples/event_driven_anomaly.rs` (PRs #33, #35) — runnable demo of the
-  full pipeline (baseline → coherence gate → SubLinear orchestrator).
+- `benches/solver_benchmarks.rs::closure_only` (PR #55) — isolates
+  `closure_indices` across n=64,256,1024,4096. 64× growth in n → 1.4×
+  growth in cost. The cleanest demonstration that closure is constant-in-n.
+- `examples/event_driven_anomaly.rs` (PRs #33, #35, #38) — runnable demo
+  of the full pipeline (baseline → coherence gate → SubLinear orchestrator).
+- `examples/event_stream_processing.rs` (PR #48) — streaming surface
+  demo using `event_stream_iter` + `PlanBudget`.
+- `tests/property_sublinear.rs` (PR #50) — proptest fuzz of the wire
+  contract: closure monotonicity, empty-delta short-circuit, witness-
+  passes-on-output, auto-vs-manual agreement.
 
 ---
 
