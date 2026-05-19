@@ -4,6 +4,30 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.7.2] / Rust crate 0.3.2 — 2026-05-18
+
+ADR-001 phase-2 release. Three enforcement mechanisms now live, plus the sub-linear contrastive primitive that completes roadmap item #6's phase-2 plan.
+
+### Added
+
+- **`find_anomalous_rows_in_subset(baseline, current, candidates, k)`** in `src/contrastive.rs`. Drops the phase-1 `O(n log k)` full scan to `O(|candidates| log k)` by limiting the scan to a caller-supplied candidate set. Combined with the existing `SublinearNeumannSolver`'s single-entry primitive (`O(log n)` per query), the total contrastive top-k cost becomes `O(|candidates| · log n)` — true sub-linear in n when |candidates| ≪ n. RuView / Cognitum / Ruflo callers compute the candidate set from a sparse RHS delta's reachable rows, then invoke this function on the top-k boundary check.
+
+- **CI `complexity-baseline-guard` job** (`.github/workflows/ci.yml`) + `scripts/extract_complexity_classes.sh` + frozen `.github/complexity-baseline.txt`. Diffs the live `Complexity` impls against a checked-in snapshot on every PR; a silent class downgrade fails the build the same way safe-path regressions do. Uses `LC_ALL=C` so the sort is byte-stable across hosts.
+
+### Improved
+
+- **Phase-2 enforcement matrix now complete for ADR-001:**
+  - **Server-side budget rejection** (v1.7.1): MCP refuses over-budget solver invocations at dispatch time.
+  - **Type-level baseline guard** (this release): CI refuses `Complexity` impls that silently degrade.
+  - **Sub-linear contrastive primitive** (this release): `find_anomalous_rows_in_subset` lets callers pay only for the rows they care about.
+
+### Tests
+
+- 5 new unit tests in `src/contrastive.rs` pinning the new function's contract (out-of-set anomalies stay ignored, OOB indices silently skipped, full-set candidates equals phase-1 output, k limit, empty-candidates → empty result).
+- Total: **165 lib pass** (160 → +5), 11 doc pass, **7 CI gates** on every PR (test×2 OS, fmt+clippy, safe-path, bench-smoke, joules smoke, complexity-baseline-guard).
+
+[1.7.2]: https://github.com/ruvnet/sublinear-time-solver/releases/tag/v1.7.2
+
 ## [1.7.1] / Rust crate 0.3.1 — 2026-05-18
 
 Closes the ADR-001 roadmap. With this release the package is functionally SOTA per the ADR's own criterion (6 of 6 roadmap items shipped; README cites complexity classes as a first-class API surface; only CI J/solve integration remains, blocked on GH Actions exposing power counters).
