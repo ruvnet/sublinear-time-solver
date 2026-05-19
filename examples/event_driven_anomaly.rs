@@ -42,9 +42,10 @@
 
 use std::time::Instant;
 use sublinear_solver::{
-    contrastive_solve_on_change_sublinear, solve_on_change_sublinear, AnomalyRow, Matrix,
-    NeumannSolver, SolverAlgorithm, SolverOptions, SparseDelta, SparseMatrix,
+    contrastive_solve_on_change_sublinear, delta_below_solve_threshold, solve_on_change_sublinear,
+    AnomalyRow, Matrix, NeumannSolver, SolverAlgorithm, SolverOptions, SparseDelta, SparseMatrix,
 };
+use sublinear_solver::coherence::coherence_score;
 
 /// Build a strictly diagonally-dominant `n × n` "ring-stencil" matrix:
 /// `a[i,i] = 5`, plus ±1 at four nearest neighbours with wrap. Models a
@@ -87,18 +88,34 @@ fn main() {
         .expect("baseline solve")
         .solution;
     let baseline_us = t_baseline.elapsed().as_micros();
-    println!("baseline:     {baseline_us} µs (full Neumann solve, one-shot)\n");
+    println!("baseline:     {baseline_us} µs (full Neumann solve, one-shot)");
 
-    // ── Event stream. Each entry is (event_label, sensor_index, delta_value). ──
+    // ── Cache (coherence, min_diag) once for the coherence-gated event
+    //    filter (PR #34). Each event probes delta_below_solve_threshold
+    //    in O(|delta|) before paying the closure + per-entry-Neumann cost.
+    //    This is the "no event, no work" gate from ADR-001. ──
+    let coherence = coherence_score(&matrix);
+    let min_diag = (0..matrix.rows())
+        .map(|i| matrix.get(i, i).unwrap_or(0.0).abs())
+        .filter(|x| *x > 0.0)
+        .fold(f64::INFINITY, |a, b| if a < b { a } else { b });
+    println!(
+        "gate cache:   coherence={coherence:.3}, min_diag={min_diag:.3} (skip-threshold = 1e-6)\n"
+    );
+
+    // ── Event stream. Each entry is (event_label, sensor_index, delta_value).
+    //    Includes a "noise" event whose delta is tiny enough that the
+    //    coherence gate skips the solve entirely. ──
     let events: &[(&str, usize, f64)] = &[
         ("sensor #42 spike   ", 42, 1.50),
         ("sensor #117 drift  ", 117, -0.40),
+        ("sensor #88  noise  ", 88, 1.0e-12),  // ← gated-out
         ("sensor #200 spike  ", 200, 2.10),
         ("sensor #7 dropout  ", 7, -1.80),
         ("sensor #155 outlier", 155, 3.25),
     ];
 
-    println!("event stream (closure_depth=4, max_terms=24, tolerance=1e-8):");
+    println!("event stream (closure_depth=4, max_terms=24, tolerance=1e-8, skip=1e-6):");
     println!(
         "{:<22} {:>10} {:>12} {:>14} {:>14}",
         "event", "closure", "latency_us", "top_anomaly", "score"
@@ -108,15 +125,27 @@ fn main() {
     let closure_depth = 4usize;
     let max_terms = 24usize;
     let tolerance = 1e-8_f64;
+    let skip_threshold = 1.0e-6_f64;
     let top_k = 3usize;
 
     for (label, idx, dv) in events {
         let delta = SparseDelta::new(vec![*idx], vec![*dv]).expect("delta");
+
+        // ── Coherence-gated early exit. O(|delta|) — independent of n. ──
+        let t_total = Instant::now();
+        if delta_below_solve_threshold(coherence, min_diag, &delta.values, skip_threshold) {
+            let skip_us = t_total.elapsed().as_micros();
+            println!(
+                "{:<22} {:>10} {:>12} {:>14} {:>14}",
+                label, "—", skip_us, "skipped", "—"
+            );
+            continue;
+        }
+
         let mut b_new = b_prev.clone();
         delta.apply_to(&mut b_new).expect("apply");
 
         // (1) Sparse delta-solve over the closure only.
-        let t = Instant::now();
         let sparse_entries = solve_on_change_sublinear(
             &matrix,
             &prev_solution,
@@ -127,7 +156,6 @@ fn main() {
             tolerance,
         )
         .expect("sublinear delta-solve");
-        let sparse_us = t.elapsed().as_micros();
 
         // (2) Contrastive top-k anomaly detection, same closure scope.
         let top: Vec<AnomalyRow> = contrastive_solve_on_change_sublinear(
@@ -142,30 +170,37 @@ fn main() {
         )
         .expect("sublinear contrastive solve");
 
+        let total_us = t_total.elapsed().as_micros();
         let closure_n = sparse_entries.len();
         let top_row = top.first().map(|r| r.row.to_string()).unwrap_or_default();
         let top_score = top.first().map(|r| r.anomaly).unwrap_or(0.0);
 
         println!(
             "{:<22} {:>10} {:>12} {:>14} {:>14.4}",
-            label, closure_n, sparse_us, top_row, top_score
+            label, closure_n, total_us, top_row, top_score
         );
     }
 
     println!();
     println!("Architecture summary:");
     println!(
-        "  baseline    Linear     {:>5} µs    full n-vector solve, one-shot",
+        "  baseline       Linear      {:>5} µs    full n-vector solve, one-shot",
         baseline_us
     );
     println!(
-        "  per-event   SubLinear  closure=17 rows    independent of n=256"
+        "  coherence gate O(|δ|)        ~0 µs    skip tiny deltas before any solve"
+    );
+    println!(
+        "  per-event      SubLinear   closure=17 rows    independent of n=256"
     );
     println!();
-    println!("Per-event latency is *bounded by closure size*, not n. Doubling n");
-    println!("(or growing the state space to 10⁴+ rows) leaves the per-event");
-    println!("closure size and cost essentially unchanged — the architectural");
-    println!("win that lets RuView / Cognitum sustain change-driven loops over");
-    println!("large state spaces without burning the J/decision budget. See");
+    println!("Per-event latency is *bounded by closure size*, not n. The coherence");
+    println!("gate further short-circuits tiny / noisy events in O(|δ|) before");
+    println!("any closure computation runs — the 'no event, no work' discipline");
+    println!("of ADR-001 in action. Doubling n (or growing the state space to");
+    println!("10⁴+ rows) leaves both the gate latency *and* the per-event closure");
+    println!("cost essentially unchanged — the architectural win that lets RuView /");
+    println!("Cognitum sustain change-driven loops over large state spaces without");
+    println!("burning the J/decision budget. See");
     println!("docs/adr/ADR-001-complexity-as-architecture.md.");
 }
