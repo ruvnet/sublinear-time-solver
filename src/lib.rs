@@ -122,6 +122,13 @@ pub use complexity::{Complexity, ComplexityClass, ComplexityIntrospect};
 pub mod coherence;
 pub use coherence::{coherence_score, check_coherence_or_reject};
 
+// Event-gated incremental solve (ADR-001 roadmap item #2). Warm-starts
+// the underlying iterative solver from the previous solution when only a
+// sparse delta of the RHS changed — central to the ADR's "intelligence
+// is sparse, event-driven activation" thesis.
+pub mod incremental;
+pub use incremental::{IncrementalSolver, SparseDelta, IncrementalConfig};
+
 // Sublinear algorithms with mathematically rigorous O(log n) complexity
 pub mod sublinear;
 
