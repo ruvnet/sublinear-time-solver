@@ -1,6 +1,7 @@
 ClosureIndicesOp                                                                           ComplexityClass::SubLinear
 ContrastiveSolveOnChangeOp                                                                 ComplexityClass::Adaptive
 ContrastiveSolveOnChangeSublinearOp                                                        ComplexityClass::SubLinear
+EventStreamOp                                                                              ComplexityClass::SubLinear
 FindAnomalousRowsOp                                                                        ComplexityClass::Adaptive
 IncrementalSolveOp                                                                         ComplexityClass::Adaptive
 SolveOnChangeSublinearOp                                                                   ComplexityClass::SubLinear

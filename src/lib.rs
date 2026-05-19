@@ -147,6 +147,15 @@ pub use budget::{BudgetExhausted, PlanBudget};
 pub mod witness;
 pub use witness::{verify_sparse_solution, VerifySparseSolutionOp, WitnessReport};
 
+// Streaming event iterator over the SubLinear orchestrator. The native
+// surface RuView/Cognitum agents call to process sensor/log/metric
+// event streams. Composes with stdlib Iterator + the skip gate +
+// PlanBudget for end-to-end bounded processing.
+pub mod stream;
+pub use stream::{
+    event_stream_iter, EventStatus, EventStreamConfig, EventStreamOp, ProcessedEvent,
+};
+
 // Contrastive search (ADR-001 roadmap item #6). Boundary-crossing primitive
 // for change-driven activation: which rows of the current solution diverged
 // most from baseline? Backbone of RuView / Cognitum wake-on-event.
