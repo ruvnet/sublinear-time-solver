@@ -345,9 +345,9 @@ impl Complexity for FindAnomalousRowsOp {
 /// ```rust,no_run
 /// # use sublinear_solver::{Matrix, SparseDelta, SolverOptions, AnomalyRow};
 /// # use sublinear_solver::contrastive::contrastive_solve_on_change;
-/// # use sublinear_solver::ConjugateGradientSolver;
+/// # use sublinear_solver::NeumannSolver;
 /// # fn demo(a: &dyn Matrix, prev: &[f64], delta: &SparseDelta) {
-/// let solver = ConjugateGradientSolver::default();
+/// let solver = NeumannSolver::new(64, 1e-10);
 /// let opts = SolverOptions::default();
 /// let top = contrastive_solve_on_change(
 ///     &solver, a, prev, delta,
