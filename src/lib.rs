@@ -127,7 +127,10 @@ pub use coherence::{coherence_score, check_coherence_or_reject};
 // sparse delta of the RHS changed — central to the ADR's "intelligence
 // is sparse, event-driven activation" thesis.
 pub mod incremental;
-pub use incremental::{IncrementalSolver, SparseDelta, IncrementalConfig};
+pub use incremental::{
+    solve_on_change_sublinear, IncrementalConfig, IncrementalSolver, SolveOnChangeSublinearOp,
+    SparseDelta,
+};
 
 // Contrastive search (ADR-001 roadmap item #6). Boundary-crossing primitive
 // for change-driven activation: which rows of the current solution diverged

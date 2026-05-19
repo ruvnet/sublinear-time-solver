@@ -164,7 +164,7 @@ Six concrete items, ordered by impact-per-effort. The `/loop 5m` cron (`a3644c7d
 | # | Item | Effort | Lands when |
 |---|---|---|---|
 | 1 | `Complexity` trait + `ComplexityClass` enum + attribute macro | 1-2 iter | ✅ **Shipped in v1.7.0** (`src/complexity.rs`) |
-| 2 | `solve_on_change(prev, delta)` on `Solver` trait | 2-3 iter | ✅ **Shipped in v1.7.0** (`src/incremental.rs`) |
+| 2 | `solve_on_change(prev, delta)` on `Solver` trait | 2-3 iter | ✅ **Shipped in v1.7.0** (`src/incremental.rs`) — warm-start path Linear. Phase-2 added `solve_on_change_sublinear` (closure + per-entry Neumann) returning only the changed entries as `Vec<(idx, val)>`, end-to-end SubLinear in `n`. |
 | 3 | Coherence gate | 1 iter | ✅ **Shipped in v1.7.0** (`src/coherence.rs` + `SolverOptions::coherence_threshold`) |
 | 4 | MCP `x-complexity` + `max_complexity_class` arg + `estimate_complexity_class` tool | 2 iter | ✅ **Shipped in v1.7.x** — `solve` and `solveTrueSublinear` schemas carry `x-complexity`; new `estimateComplexityClass` tool returns per-method classes. Phase-2: enforce `max_complexity_class` on solve handlers. |
 | 5 | `joules_per_decision` bench (Linux RAPL + hwmon abstraction) | 2-3 iter | ✅ **Shipped in v1.7.0** (`examples/joules_per_decision.rs`) — RAPL backend works on Intel + AMD Zen 2+; time-only fallback for sandboxed hosts. Phase-2: Pi hwmon backend + CI integration. |
