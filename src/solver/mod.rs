@@ -42,6 +42,17 @@ pub struct SolverOptions {
     pub enable_profiling: bool,
     /// Random seed for stochastic algorithms
     pub random_seed: Option<u64>,
+    /// Coherence gate threshold (ADR-001 roadmap item #3). If the matrix's
+    /// diagonal-dominance margin (`coherence::coherence_score`) falls below
+    /// this value, the solver returns `Err(SolverError::Incoherent { .. })`
+    /// *before* doing any iterative work — refusing to spend polynomial
+    /// cost on a near-singular system that can only produce an ε-quality
+    /// answer.
+    ///
+    /// `0.0` (the default) disables the gate, preserving wire compatibility
+    /// with every existing caller. Recommended starting value when enabling:
+    /// `0.05`.
+    pub coherence_threshold: Precision,
 }
 
 impl Default for SolverOptions {
@@ -58,6 +69,8 @@ impl Default for SolverOptions {
             error_bounds_tolerance: 1e-8,
             enable_profiling: false,
             random_seed: None,
+            // Gate disabled by default. Callers opt in by setting > 0.
+            coherence_threshold: 0.0,
         }
     }
 }
@@ -77,6 +90,7 @@ impl SolverOptions {
             error_bounds_tolerance: 1e-14,
             enable_profiling: false,
             random_seed: None,
+            coherence_threshold: 0.0,
         }
     }
 
@@ -94,6 +108,7 @@ impl SolverOptions {
             error_bounds_tolerance: 1e-4,
             enable_profiling: false,
             random_seed: None,
+            coherence_threshold: 0.0,
         }
     }
 
@@ -111,6 +126,7 @@ impl SolverOptions {
             error_bounds_tolerance: 1e-6,
             enable_profiling: true,
             random_seed: None,
+            coherence_threshold: 0.0,
         }
     }
 }

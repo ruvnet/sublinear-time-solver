@@ -109,6 +109,32 @@ pub mod matrix;
 pub mod solver;
 pub mod types;
 
+// Complexity-class declarations — every public solver / sampler / analyser
+// declares its worst-case class via the `Complexity` trait. See
+// `docs/adr/ADR-001-complexity-as-architecture.md` for the strategic
+// context (complexity classes as architectural primitives in the broader
+// RuVector / RuView / Cognitum / Ruflo stack).
+pub mod complexity;
+pub use complexity::{Complexity, ComplexityClass, ComplexityIntrospect};
+
+// Coherence gate (ADR-001 roadmap item #3). Refuses polynomial-time solves
+// on near-singular systems. Opt-in via `SolverOptions::coherence_threshold`.
+pub mod coherence;
+pub use coherence::{coherence_score, check_coherence_or_reject};
+
+// Event-gated incremental solve (ADR-001 roadmap item #2). Warm-starts
+// the underlying iterative solver from the previous solution when only a
+// sparse delta of the RHS changed — central to the ADR's "intelligence
+// is sparse, event-driven activation" thesis.
+pub mod incremental;
+pub use incremental::{IncrementalSolver, SparseDelta, IncrementalConfig};
+
+// Contrastive search (ADR-001 roadmap item #6). Boundary-crossing primitive
+// for change-driven activation: which rows of the current solution diverged
+// most from baseline? Backbone of RuView / Cognitum wake-on-event.
+pub mod contrastive;
+pub use contrastive::{find_anomalous_rows, find_rows_above_threshold, AnomalyRow};
+
 // Sublinear algorithms with mathematically rigorous O(log n) complexity
 pub mod sublinear;
 
