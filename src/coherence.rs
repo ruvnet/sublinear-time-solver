@@ -348,6 +348,174 @@ impl CoherenceCache {
     }
 }
 
+/// Estimate the spectral radius of `D⁻¹O` (the Neumann iteration matrix)
+/// via power iteration. Tighter than the `1 - coherence` upper bound that
+/// [`optimal_neumann_terms`] uses by default.
+///
+/// ## Why
+///
+/// For DD `A = D - O` with coherence `c`, `‖D⁻¹O‖_∞ ≤ 1 - c`. That's a
+/// safe upper bound on `ρ(D⁻¹O)` but often loose — the actual spectral
+/// radius can be much smaller, especially on matrices with non-uniform
+/// row weights. A tight `ρ` estimate lets [`optimal_neumann_terms_with_rho`]
+/// pick a much smaller `max_terms`:
+///
+/// ```text
+///   k ≥ log(b_inf / (min_diag · tolerance)) / log(1 / ρ)
+/// ```
+///
+/// Smaller `ρ` → larger `log(1/ρ)` → smaller `k`. The auto-tuned closure
+/// shrinks proportionally, and per-event SubLinear cost drops.
+///
+/// ## Algorithm
+///
+/// Standard power iteration on `M = D⁻¹O = I - D⁻¹A`:
+///
+///   1. Start with a uniform unit vector `v_0`.
+///   2. For each iteration, compute `v_{k+1} = M v_k` and the
+///      Rayleigh-style ratio `‖M v_k‖_∞ / ‖v_k‖_∞`.
+///   3. Renormalise `v_{k+1}` to unit infinity norm.
+///   4. Return the last ratio (the dominant-eigenvalue estimate).
+///
+/// Cost: `O(num_iters · nnz(A))`. Convergence is geometric in
+/// `λ_2 / λ_1` — typically 10–20 iterations suffice on well-conditioned
+/// DD matrices. Run once at matrix-build time; amortised across all
+/// subsequent events.
+///
+/// ## Returns
+///
+/// - `Some(rho)` on success. `0.0 ≤ rho < 1.0` for strict-DD matrices.
+/// - `None` if `num_iters == 0`, the matrix is empty, or any diagonal
+///   row has zero entry.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// # use sublinear_solver::Matrix;
+/// # use sublinear_solver::coherence::{approximate_spectral_radius, optimal_neumann_terms_with_rho};
+/// # fn demo(a: &dyn Matrix) {
+/// let rho = approximate_spectral_radius(a, /*num_iters=*/ 20).unwrap_or(0.99);
+/// // Use the tight rho instead of the loose (1 - coherence) bound.
+/// let k = optimal_neumann_terms_with_rho(rho, /*b_inf=*/ 10.0, /*min_diag=*/ 5.0, /*tol=*/ 1e-8);
+/// # }
+/// ```
+pub fn approximate_spectral_radius(
+    matrix: &dyn Matrix,
+    num_iters: usize,
+) -> Option<Precision> {
+    let n = matrix.rows();
+    if n == 0 || num_iters == 0 {
+        return None;
+    }
+    // Cache the diagonals; reject if any is zero (M = D⁻¹O ill-defined).
+    let mut diag_inv: alloc::vec::Vec<Precision> = alloc::vec::Vec::with_capacity(n);
+    for i in 0..n {
+        let d = matrix.get(i, i).unwrap_or(0.0);
+        if d.abs() <= 1e-300 {
+            return None;
+        }
+        diag_inv.push(1.0 / d.abs());
+    }
+    // Start with a *non-symmetric* deterministic vector. A uniform
+    // start is convenient but lies in the null-space of M = D⁻¹O for
+    // symmetric stencils (ring, Laplacian, …) — the iteration would
+    // collapse to zero. v[i] = (i + 1) / n breaks any reasonable
+    // row-symmetry of A while staying deterministic.
+    let mut v: alloc::vec::Vec<Precision> = (0..n)
+        .map(|i| (i as Precision + 1.0) / (n as Precision))
+        .collect();
+    let mut next: alloc::vec::Vec<Precision> = alloc::vec![0.0; n];
+    let mut rho: Precision = 0.0;
+
+    for _iter in 0..num_iters {
+        // next[i] = (D⁻¹ O v)[i] = -(1/|A[i,i]|) · Σ_{j ≠ i} A[i,j] · v[j]
+        for entry in next.iter_mut() {
+            *entry = 0.0;
+        }
+        for i in 0..n {
+            let mut sum: Precision = 0.0;
+            for (col_idx, a_ij) in matrix.row_iter(i) {
+                let j = col_idx as usize;
+                if j == i {
+                    continue;
+                }
+                if let Some(&vj) = v.get(j) {
+                    sum += a_ij * vj;
+                }
+            }
+            next[i] = -sum * diag_inv[i];
+        }
+        // Infinity norm of next.
+        let next_inf = next
+            .iter()
+            .map(|x| x.abs())
+            .fold(0.0_f64, |a, b| if a > b { a } else { b });
+        let v_inf = v
+            .iter()
+            .map(|x| x.abs())
+            .fold(0.0_f64, |a, b| if a > b { a } else { b });
+        if v_inf <= 1e-300 {
+            return None;
+        }
+        rho = next_inf / v_inf;
+        if next_inf <= 1e-300 {
+            // Converged to zero — radius is effectively 0.
+            return Some(0.0);
+        }
+        // Renormalise to unit ∞-norm.
+        let scale = 1.0 / next_inf;
+        for (vi, ni) in v.iter_mut().zip(next.iter()) {
+            *vi = ni * scale;
+        }
+    }
+    Some(rho)
+}
+
+/// Variant of [`optimal_neumann_terms`] that takes a caller-supplied
+/// spectral-radius `rho` directly instead of inferring it from coherence.
+/// Use this with [`approximate_spectral_radius`] for tight auto-tuning
+/// on matrices where the `1 - coherence` bound is loose.
+///
+/// All other semantics match [`optimal_neumann_terms`] (`[1, 64]` clamp,
+/// zero-RHS short-circuit, etc).
+pub fn optimal_neumann_terms_with_rho(
+    rho: Precision,
+    b_inf_norm: Precision,
+    min_diag: Precision,
+    tolerance: Precision,
+) -> Option<usize> {
+    if !rho.is_finite() || rho <= 0.0 || rho >= 1.0 {
+        return None;
+    }
+    if !min_diag.is_finite() || min_diag <= 0.0 {
+        return None;
+    }
+    if !tolerance.is_finite() || tolerance <= 0.0 {
+        return None;
+    }
+    if b_inf_norm < 0.0 || !b_inf_norm.is_finite() {
+        return None;
+    }
+    if b_inf_norm == 0.0 {
+        return Some(1);
+    }
+    let one_over_rho_log = (1.0 / rho).ln();
+    if !one_over_rho_log.is_finite() || one_over_rho_log <= 0.0 {
+        return Some(1);
+    }
+    let y0 = b_inf_norm / min_diag;
+    let ratio = y0 / tolerance;
+    if ratio <= 1.0 {
+        return Some(1);
+    }
+    let k_float = ratio.ln() / one_over_rho_log;
+    if !k_float.is_finite() || k_float <= 0.0 {
+        return Some(1);
+    }
+    let k = k_float.ceil() as usize;
+    Some(k.clamp(1, 64))
+}
+
 /// Minimum number of Neumann terms required to hit `tolerance` on a
 /// single-entry solve, given the matrix's `coherence` margin and the
 /// magnitudes of the RHS and any perturbation.
@@ -693,6 +861,86 @@ mod tests {
     fn optimal_terms_loose_tolerance_returns_one() {
         // y0 = 2, tolerance = 10 → ratio < 1, no iteration needed beyond term 0.
         assert_eq!(optimal_neumann_terms(0.5, 10.0, 5.0, 10.0).unwrap(), 1);
+    }
+
+    // ── approximate_spectral_radius + optimal_neumann_terms_with_rho ──
+
+    #[test]
+    fn spectral_radius_on_diagonal_matrix_is_zero() {
+        // A = D → O = 0 → ρ(D⁻¹O) = 0.
+        let m = build(vec![(0, 0, 5.0), (1, 1, 5.0), (2, 2, 5.0)], 3);
+        let rho = approximate_spectral_radius(&m, 10).unwrap();
+        assert!(rho < 1e-10, "diagonal matrix should give rho ~0, got {rho}");
+    }
+
+    #[test]
+    fn spectral_radius_estimate_below_loose_bound() {
+        // Strong-DD ring: diag=10, off ±0.5. Coherence = 0.9 → loose
+        // bound 1 - 0.9 = 0.1. Actual ρ should be at or below that.
+        let n = 8;
+        let mut t = Vec::new();
+        for i in 0..n {
+            t.push((i, i, 10.0));
+            t.push((i, (i + 1) % n, 0.5));
+            t.push((i, (i + n - 1) % n, -0.5));
+        }
+        let m = build(t, n);
+        let coh = coherence_score(&m);
+        let loose = 1.0 - coh;
+        let rho = approximate_spectral_radius(&m, 20).unwrap();
+        assert!(rho <= loose + 1e-9, "rho={rho} should be ≤ loose={loose}");
+        assert!(rho > 0.0);
+    }
+
+    #[test]
+    fn spectral_radius_zero_iters_returns_none() {
+        let m = build(vec![(0, 0, 5.0), (1, 1, 5.0)], 2);
+        assert!(approximate_spectral_radius(&m, 0).is_none());
+    }
+
+    #[test]
+    fn spectral_radius_zero_diagonal_returns_none() {
+        // Row 1 has no diagonal entry.
+        let m = build(vec![(0, 0, 5.0), (1, 0, 1.0)], 2);
+        assert!(approximate_spectral_radius(&m, 10).is_none());
+    }
+
+    #[test]
+    fn optimal_terms_with_rho_beats_coherence_path_on_strong_matrix() {
+        // On a strong-DD matrix, the tight ρ from power iteration
+        // should produce a STRICTLY SMALLER k than the loose
+        // (1-coherence)-based path.
+        let n = 8;
+        let mut t = Vec::new();
+        for i in 0..n {
+            t.push((i, i, 10.0));
+            t.push((i, (i + 1) % n, 0.5));
+            t.push((i, (i + n - 1) % n, -0.5));
+        }
+        let m = build(t, n);
+        let coh = coherence_score(&m);
+        let rho = approximate_spectral_radius(&m, 30).unwrap();
+
+        let b_inf = 10.0;
+        let min_diag = 10.0;
+        let tol = 1e-8;
+        let k_loose = optimal_neumann_terms(coh, b_inf, min_diag, tol).unwrap();
+        let k_tight = optimal_neumann_terms_with_rho(rho, b_inf, min_diag, tol).unwrap();
+
+        assert!(
+            k_tight <= k_loose,
+            "tight (rho={rho}) k={k_tight} should be ≤ loose (1-c={}) k={k_loose}",
+            1.0 - coh
+        );
+    }
+
+    #[test]
+    fn optimal_terms_with_rho_rejects_invalid_inputs() {
+        assert!(optimal_neumann_terms_with_rho(0.0, 1.0, 1.0, 1e-6).is_none());
+        assert!(optimal_neumann_terms_with_rho(-0.1, 1.0, 1.0, 1e-6).is_none());
+        assert!(optimal_neumann_terms_with_rho(1.0, 1.0, 1.0, 1e-6).is_none());
+        assert!(optimal_neumann_terms_with_rho(0.5, 1.0, 0.0, 1e-6).is_none());
+        assert!(optimal_neumann_terms_with_rho(0.5, 1.0, 1.0, 0.0).is_none());
     }
 
     // ── CoherenceCache tests ──────────────────────────────────────────

@@ -132,7 +132,8 @@ pub use incremental::{
     IncrementalSolver, SolveOnChangeSublinearOp, SparseDelta,
 };
 pub use coherence::{
-    delta_below_solve_threshold, delta_inf_bound, optimal_neumann_terms, CoherenceCache,
+    approximate_spectral_radius, delta_below_solve_threshold, delta_inf_bound,
+    optimal_neumann_terms, optimal_neumann_terms_with_rho, CoherenceCache,
 };
 
 // Bounding planning across chains of solves (ADR-001 #4 phase-3).
