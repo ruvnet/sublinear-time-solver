@@ -530,6 +530,68 @@ pub fn contrastive_solve_on_change_sublinear_auto(
     )
 }
 
+/// Tightest-bound contrastive sibling: takes a caller-supplied
+/// spectral-radius `rho` (e.g. from
+/// [`crate::coherence::approximate_spectral_radius`]) and uses it
+/// for tighter Neumann-depth tuning than the loose `(1 - coherence)`
+/// bound. See [`crate::incremental::solve_on_change_sublinear_auto_with_rho`]
+/// for the non-contrastive sibling.
+pub fn contrastive_solve_on_change_sublinear_auto_with_rho(
+    matrix: &dyn crate::matrix::Matrix,
+    prev_solution: &[Precision],
+    b_new: &[Precision],
+    delta: &crate::incremental::SparseDelta,
+    tolerance: Precision,
+    k: usize,
+    rho: Precision,
+) -> crate::error::Result<Vec<AnomalyRow>> {
+    if delta.is_empty() || k == 0 {
+        return Ok(Vec::new());
+    }
+    if !rho.is_finite() || rho <= 0.0 || rho >= 1.0 {
+        return Err(crate::error::SolverError::InvalidInput {
+            message: alloc::format!(
+                "contrastive_solve_on_change_sublinear_auto_with_rho: rho={} must lie in (0, 1)",
+                rho
+            ),
+            parameter: Some(alloc::string::String::from("rho")),
+        });
+    }
+
+    let min_diag = (0..matrix.rows())
+        .map(|i| matrix.get(i, i).unwrap_or(0.0).abs())
+        .filter(|x| *x > 0.0)
+        .fold(Precision::INFINITY, |a, b| if a < b { a } else { b });
+    if !min_diag.is_finite() || min_diag <= 0.0 {
+        return Err(crate::error::SolverError::InvalidInput {
+            message: alloc::string::String::from(
+                "contrastive_solve_on_change_sublinear_auto_with_rho: non-positive min_diag",
+            ),
+            parameter: Some(alloc::string::String::from("matrix")),
+        });
+    }
+
+    let b_inf = b_new
+        .iter()
+        .map(|x| x.abs())
+        .fold(0.0_f64, |a, b| if a > b { a } else { b });
+
+    let auto_terms =
+        crate::coherence::optimal_neumann_terms_with_rho(rho, b_inf, min_diag, tolerance)
+            .unwrap_or(32);
+
+    contrastive_solve_on_change_sublinear(
+        matrix,
+        prev_solution,
+        b_new,
+        delta,
+        /*closure_depth=*/ auto_terms,
+        /*max_terms=*/ auto_terms,
+        tolerance,
+        k,
+    )
+}
+
 /// Op marker for the SubLinear orchestrator variant.
 pub struct ContrastiveSolveOnChangeSublinearOp;
 
