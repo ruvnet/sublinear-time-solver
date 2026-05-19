@@ -620,8 +620,80 @@ export class SublinearSolverMCPServer {
             process.exit(0);
         });
     }
+    /**
+     * Twelve-tier complexity-class ranking, matched to the Rust
+     * `ComplexityClass::rank()` in `src/complexity.rs`. Lower = cheaper.
+     * Used by `enforceComplexityBudget` to compare a solver's worst-case
+     * class against a caller-supplied `max_complexity_class` budget.
+     */
+    static COMPLEXITY_RANK = {
+        Logarithmic: 100,
+        PolyLogarithmic: 200,
+        SubLinear: 300,
+        Linear: 400,
+        QuasiLinear: 500,
+        SubQuadratic: 600,
+        Polynomial: 702, // Polynomial(2); higher degrees rank higher in Rust
+        SuperPolynomial: 800,
+        SubExponential: 900,
+        Exponential: 1000,
+        Factorial: 1100,
+        DoubleExponential: 1200,
+    };
+    /**
+     * Per-method worst-case complexity class. Single source of truth for
+     * both `estimateComplexityClass` and the `max_complexity_class` budget
+     * gate. Mirrors the Rust `Complexity` impls in `src/complexity.rs`.
+     *
+     * For `Adaptive` solvers we use the **worst-case** bound so callers
+     * always see safe behaviour — a Cognitum reflex loop with a
+     * `SubLinear` budget won't accidentally invoke a solver that can
+     * degrade to `Linear` on hard inputs.
+     */
+    static METHOD_WORST_CASE = {
+        'neumann': 'Linear',
+        'random-walk': 'Linear',
+        'forward-push': 'SubLinear',
+        'backward-push': 'SubLinear',
+        'bidirectional': 'SubLinear',
+        'optimized-cg': 'Linear',
+        'sublinear-neumann': 'Linear', // Adaptive { Logarithmic, Linear } → worst case
+    };
+    /**
+     * Reject the call with a structured McpError if the chosen `method`'s
+     * worst-case complexity class exceeds the caller's `max_complexity_class`
+     * budget. Returns silently otherwise. No-op when the budget arg is
+     * absent (the default — preserves wire compatibility with pre-1.7.1
+     * clients).
+     *
+     * ADR-001 item #4 phase-2 — the "bounded-planning kernel" promise.
+     */
+    enforceComplexityBudget(method, budget) {
+        if (!budget)
+            return; // gate disabled
+        const budgetRank = SublinearSolverMCPServer.COMPLEXITY_RANK[budget];
+        if (budgetRank === undefined) {
+            throw new McpError(ErrorCode.InvalidParams, `max_complexity_class '${budget}' is not a recognised class. ` +
+                `Known: ${Object.keys(SublinearSolverMCPServer.COMPLEXITY_RANK).join(', ')}.`);
+        }
+        const methodClass = SublinearSolverMCPServer.METHOD_WORST_CASE[method];
+        if (!methodClass)
+            return; // unknown method — let the existing dispatch handle it
+        const methodRank = SublinearSolverMCPServer.COMPLEXITY_RANK[methodClass];
+        if (methodRank > budgetRank) {
+            throw new McpError(ErrorCode.InvalidRequest, `Solver method '${method}' has worst-case class '${methodClass}' ` +
+                `which exceeds the caller's max_complexity_class budget of '${budget}'. ` +
+                `Use estimateComplexityClass to inspect alternatives, or pick a cheaper method.`);
+        }
+    }
     async handleSolve(params) {
         try {
+            // ADR-001 item #4 phase-2: enforce the caller's complexity budget
+            // BEFORE doing any work. Cheap (O(1) rank lookup) and refuses to
+            // burn the J/decision budget on a method the caller already said
+            // is too expensive.
+            const method = (params.method ?? 'neumann').toString();
+            this.enforceComplexityBudget(method, params.max_complexity_class);
             // Priority 0: Try TRUE O(log n) sublinear solver first
             if (params.matrix && params.matrix.values && params.matrix.rowIndices && params.matrix.colIndices) {
                 console.log('🚀 Attempting TRUE O(log n) sublinear solver');
@@ -905,6 +977,13 @@ export class SublinearSolverMCPServer {
     }
     async handleSolveTrueSublinear(params) {
         try {
+            // ADR-001 item #4 phase-2 — enforce the caller's complexity budget.
+            // This solver's worst-case class is Linear (base case fallback); the
+            // budget gate compares against that, so a SubLinear-budget caller
+            // will be rejected. That's intentional: an Adaptive solver can
+            // legitimately degrade on hard inputs and the caller's budget must
+            // hold even in the worst case.
+            this.enforceComplexityBudget('sublinear-neumann', params.max_complexity_class);
             // Validate required parameters
             if (!params.matrix) {
                 throw new McpError(ErrorCode.InvalidParams, 'Missing required parameter: matrix');
