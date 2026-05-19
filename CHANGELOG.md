@@ -23,6 +23,7 @@ examples, and a streaming iterator surface for Rust callers.
 - **`contrastive_solve_on_change_sublinear(...)`** (`src/contrastive.rs`, PR #27). End-to-end SubLinear orchestrator: closure → per-entry Neumann → top-k-in-subset.
 
 - **Auto-tuned siblings `*_sublinear_auto(...)`** (PR #38). Caller passes only `tolerance`/`k`; orchestrator picks `closure_depth + max_terms` internally from `coherence_score` + `optimal_neumann_terms`. Eliminates the last hand-tuned magic numbers from the change-driven inner loop.
+- **`*_sublinear_auto_with_rho(...)` siblings** (PR #51). Tightest-bound variants that take a caller-supplied spectral-radius `ρ` (from `approximate_spectral_radius`) and use `optimal_neumann_terms_with_rho` for tighter tuning than the loose `(1 − coherence)` bound. On matrices where coherence-derived bounds are loose, produces a smaller `max_terms` → smaller closure → less per-event work.
 
 ### Added — Coherence + gating primitives
 
@@ -47,12 +48,20 @@ examples, and a streaming iterator surface for Rust callers.
 ### Added — MCP wire surface
 
 - **`handleEstimateEntry` enforces `max_complexity_class` budget** (PR #28). The third solve handler joins `handleSolve` + `handleSolveTrueSublinear`.
-- **`METHOD_WORST_CASE` + `estimateComplexityClass` table extended** (PRs #28, #30, #42) to cover every phase-2/3 primitive: closure-indices, solve-single-entry-neumann, contrastive-solve-on-change(-sublinear)(-auto), solve-on-change(-sublinear), verify-sparse-solution, plan-budget-try-consume, coherence-cache-{build,update}, delta-below-solve-threshold. Wire-callable agents can query any primitive's class before invoking it.
+- **`METHOD_WORST_CASE` + `estimateComplexityClass` table extended** (PRs #28, #30, #42) to cover every phase-2/3 primitive. Wire-callable agents can query any primitive's class before invoking it.
+- **`verifySparseSolution`** (PR #52). Wire-callable witness — pure-TS handler computing the closure-restricted residual `r[i] = b[i] - Σ_j A[i,j]·x_new[j]` for caller-supplied entries. Returns `{ok, max_residual, threshold, worst_row}`. SubLinear class.
+- **`coherenceScore`** (PR #53). Wire-callable feasibility check returning the matrix's diagonal-dominance margin. Lets agents check *"is this matrix solvable?"* before invoking a solver. Linear cost; positive ⇒ Neumann convergence guaranteed.
+- **`closureIndices`** (PR #54). Wire-callable bounded-depth row-graph BFS. Lets agents preview *"what rows would my SubLinear orchestrator touch?"* before committing. SubLinear class.
+- **`solveOnChangeSublinear`** (PR #56). Wire-callable SubLinear orchestrator. Pure-TS chain of closure + per-entry Neumann + return `Vec<{row, value}>` over closure only. Never materialises the full `n`-vector. SubLinear class.
+- **`contrastiveSolveOnChangeSublinear`** (PR #57). Wire-callable top-k anomaly extraction. Delegates to `solveOnChangeSublinear`, then ranks entries by `|current − prev_solution[row]|` and returns the top-k. The canonical RuView / Cognitum wake-on-event primitive.
+
+The five new MCP tools (`#52, #53, #54, #56, #57`) compose into an end-to-end wire pipeline for the change-driven inner loop — agents can run *predict → check → preview → solve → audit* without writing Rust.
 
 ### Added — Empirical receipts
 
 - **`benches/solver_benchmarks.rs::delta_solve`** (PR #31). Compares `cold_full` / `warm_full` (Linear) vs `sparse_closure` (SubLinear) across `n = 64, 256, 1024`. Linear paths grow 4× per 4× size; SubLinear path stays roughly constant.
 - **`benches/solver_benchmarks.rs::witness_audit`** (PR #43). Compares `full_residual` (Linear) vs `closure_audit` (SubLinear). Crossover at `n ≈ 200`; by `n = 1024` the closure-restricted audit is ~4× faster.
+- **`benches/solver_benchmarks.rs::closure_only`** (PR #55). Isolates `closure_indices` across `n = 64, 256, 1024, 4096`. 64× growth in `n` → 1.4× growth in cost. The cleanest empirical demonstration that `closure_indices` is constant-in-n for sparse DD matrices.
 
 ### Added — Runnable demos
 
