@@ -427,6 +427,67 @@ export class SublinearSolverMCPServer {
             required: ['method'],
           },
         },
+        // ADR-001 #6 phase-2B (Rust src/contrastive.rs). Wire-callable
+        // contrastive top-k orchestrator. Returns the closure rows
+        // whose new solution value diverged most from the baseline,
+        // bounded to top-k. End-to-end SubLinear in n.
+        {
+          name: 'contrastiveSolveOnChangeSublinear',
+          description:
+            'Run the SubLinear orchestrator on a sparse RHS delta, then return the top-k rows whose new solution diverged most from a baseline `prev_solution`. Result is `Array<{row, baseline, current, anomaly}>` sorted by descending `|current - baseline|`. This is the canonical RuView / Cognitum wake-on-event primitive: one event → top-k anomalies → agent attention queue. End-to-end SubLinear in n.',
+          'x-complexity': {
+            class: 'SubLinear',
+            detail:
+              'Closure (SubLinear) + per-entry Neumann (SubLinear) + top-k-in-subset (SubLinear). Independent of n for sparse DD matrices with bounded depth + max_terms.',
+            edgeSafe: true,
+          },
+          inputSchema: {
+            type: 'object',
+            properties: {
+              matrix: {
+                type: 'object',
+                description: 'Matrix A in dense or sparse-COO format.',
+              },
+              prev_solution: {
+                type: 'array',
+                items: { type: 'number' },
+                description: 'Length-n previous solution. Baseline for the contrastive comparison.',
+              },
+              vector: {
+                type: 'array',
+                items: { type: 'number' },
+                description: 'New right-hand side b_new (after applying the delta).',
+              },
+              delta_indices: {
+                type: 'array',
+                items: { type: 'number', minimum: 0 },
+                description: 'Row indices where the RHS delta is non-zero.',
+              },
+              k: {
+                type: 'number',
+                minimum: 1,
+                default: 3,
+                description: 'Number of top anomalies to return.',
+              },
+              closure_depth: {
+                type: 'number',
+                minimum: 0,
+                default: 4,
+              },
+              max_terms: {
+                type: 'number',
+                minimum: 1,
+                default: 32,
+              },
+              tolerance: {
+                type: 'number',
+                minimum: 0,
+                default: 1e-8,
+              },
+            },
+            required: ['matrix', 'prev_solution', 'vector', 'delta_indices'],
+          },
+        },
         // ADR-001 #2/#6 phase-2 (Rust src/incremental.rs +
         // src/entry.rs + src/closure.rs). Wire-callable SubLinear
         // orchestrator: closure + per-entry Neumann + (optional)
@@ -698,6 +759,8 @@ export class SublinearSolverMCPServer {
             return await this.handleClosureIndices(args as any);
           case 'solveOnChangeSublinear':
             return await this.handleSolveOnChangeSublinear(args as any);
+          case 'contrastiveSolveOnChangeSublinear':
+            return await this.handleContrastiveSolveOnChangeSublinear(args as any);
           // Temporal tools
           case 'predictWithTemporalAdvantage':
           case 'validateTemporalAdvantage':
@@ -2255,6 +2318,106 @@ export class SublinearSolverMCPServer {
       throw new McpError(
         ErrorCode.InternalError,
         `solveOnChangeSublinear error: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Wire-callable contrastive top-k orchestrator. Mirrors Rust's
+   * `contrastive::contrastive_solve_on_change_sublinear`. Delegates
+   * the SubLinear solve to handleSolveOnChangeSublinear, then ranks
+   * the resulting entries by `|current - prev_solution[row]|` and
+   * returns the top-k.
+   *
+   * Pure-TS — no WASM bridge. Same complexity class as the
+   * underlying orchestrator: end-to-end SubLinear in n.
+   */
+  private async handleContrastiveSolveOnChangeSublinear(params: any) {
+    try {
+      if (!Array.isArray(params.prev_solution)) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          'Missing or invalid parameter: prev_solution (must be number array)',
+        );
+      }
+      const k: number = typeof params.k === 'number' ? params.k : 3;
+      if (k < 1) {
+        throw new McpError(ErrorCode.InvalidParams, 'k must be >= 1');
+      }
+
+      // Delegate the orchestrator work to the existing handler.
+      // Returns content[0].text as JSON with {entries, closure_size, ...}.
+      const inner = await this.handleSolveOnChangeSublinear({
+        matrix: params.matrix,
+        vector: params.vector,
+        delta_indices: params.delta_indices,
+        closure_depth: params.closure_depth,
+        max_terms: params.max_terms,
+        tolerance: params.tolerance,
+      });
+
+      type Entry = { row: number; value: number };
+      type InnerOut = {
+        entries: Entry[];
+        closure_size: number;
+        max_terms: number;
+        closure_depth: number;
+        note?: string;
+      };
+      const innerJson: InnerOut = JSON.parse(
+        (inner.content[0] as any).text,
+      );
+
+      const prev: number[] = params.prev_solution;
+      // Score each closure entry: anomaly = |current - prev[row]|.
+      const scored: Array<{ row: number; baseline: number; current: number; anomaly: number }> = [];
+      for (const e of innerJson.entries) {
+        if (e.row < 0 || e.row >= prev.length) continue;
+        const baseline = prev[e.row];
+        const current = e.value;
+        scored.push({
+          row: e.row,
+          baseline,
+          current,
+          anomaly: Math.abs(current - baseline),
+        });
+      }
+      // Sort descending by anomaly; tie-break ascending by row (deterministic).
+      scored.sort((a, b) => {
+        if (b.anomaly !== a.anomaly) return b.anomaly - a.anomaly;
+        return a.row - b.row;
+      });
+      const topK = scored.slice(0, k);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                top_k: topK,
+                closure_size: innerJson.closure_size,
+                k_returned: topK.length,
+                max_terms: innerJson.max_terms,
+                closure_depth: innerJson.closure_depth,
+                note:
+                  topK.length < k
+                    ? `Closure produced only ${topK.length} valid entries, fewer than k=${k}. Increase closure_depth or check matrix shape.`
+                    : `Top-${k} anomalies from a ${innerJson.closure_size}-row closure.`,
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      };
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `contrastiveSolveOnChangeSublinear error: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
