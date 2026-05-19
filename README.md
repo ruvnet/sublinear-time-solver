@@ -49,6 +49,25 @@ npx sublinear-time-solver help-examples
 ```
 
 
+## 🧮 Complexity as a First-Class API Surface
+
+Every public solver, sampler, and analyser in this crate declares its **worst-case complexity class at the type level** (`Complexity` trait, compile-time `const CLASS`) and at the **MCP wire level** (`x-complexity` JSON Schema extension on every tool). Callers with a J/decision budget — Cognitum reflex loops, RuView change detection, Ruflo agentic inner loops — can refuse anything over budget at *tool-list time*, not after the call returns.
+
+The 12-tier taxonomy (`Logarithmic` → `DoubleExponential`, plus `Adaptive { default, worst }` for solvers that degrade on hard inputs) lives in `src/complexity.rs`. The decision rationale and full 6-item roadmap is in [`docs/adr/ADR-001-complexity-as-architecture.md`](docs/adr/ADR-001-complexity-as-architecture.md).
+
+Headline classes in v1.7+:
+
+| Solver | Class | Per-call cost |
+|---|---|---|
+| `SublinearNeumannSolver` (single entry) | `Adaptive { Logarithmic, Linear }` | `O(log n)` on DD systems; `O(n)` base case |
+| `OptimizedConjugateGradientSolver` | `Linear` | `O(k · nnz(A))`, k ≈ √κ(A) |
+| `NeumannSolver` | `Linear` | `O(k · nnz(A))` per iter |
+| `solve_on_change(prev, sparse_delta)` | `Linear` (in `nnz(A)`, with `k_warm ≪ k_cold`) | Steady-state cost for streaming workloads |
+| `find_anomalous_rows(baseline, current, k)` | `Linear` today, → `SubLinear` phase 2 | `O(n log k)` baseline; `O(k log n)` planned |
+| `coherence_score(matrix)` | `Linear` | `O(nnz(A))` — refuses near-singular solves before they run |
+
+Runtime introspection via `dyn ComplexityIntrospect`, or `mcp__sublinear__estimateComplexityClass` over the wire. Energy numbers (`J/solve`) — the metric that actually matters on a Pi Zero — captured via `examples/joules_per_decision.rs` (Linux RAPL / hwmon / time-only fallback).
+
 ## 🎯 What Can This Do?
 
 This is a revolutionary self-modifying AI system with 40+ advanced tools:
