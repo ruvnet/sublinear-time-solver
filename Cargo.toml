@@ -45,7 +45,10 @@ web-sys = { version = "0.3", features = ["console", "Window", "Performance", "Pe
 js-sys = { version = "0.3", optional = true }
 serde-wasm-bindgen = { version = "0.6", optional = true }
 console_error_panic_hook = { version = "0.1", optional = true }
-wee_alloc = { version = "0.4", optional = true }
+# wee_alloc removed 2026-05-19 — flagged unmaintained by RUSTSEC-2022-0054
+# and not referenced by anything in this crate's `src/` (only a separate
+# workspace crate `crates/neural-network-implementation/src/wasm.rs` used
+# it). Modern wasm-pack defaults are fine for our footprint.
 getrandom = { version = "0.2", features = ["js"], optional = true }
 fastrand = { version = "2.0", optional = true }
 
@@ -88,7 +91,7 @@ default = ["std", "serde"]
 std = ["env_logger", "lazy_static"]
 serde = ["dep:serde"]
 wasm = ["wasm-bindgen", "web-sys", "js-sys", "serde-wasm-bindgen", "console_error_panic_hook", "getrandom/js", "fastrand", "rand/getrandom"]
-wee_alloc = ["dep:wee_alloc"]
+# `wee_alloc` feature retired — see comment on the removed dep above.
 cli = ["clap", "tokio", "axum", "serde_json", "uuid", "colored"]
 dashboard = ["chrono", "csv", "bincode", "base64", "serde_yaml", "rmp-serde", "hostname", "num_cpus", "tokio", "serde_json"]
 simd = ["wide"]

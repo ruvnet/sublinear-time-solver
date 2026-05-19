@@ -40,11 +40,26 @@ version = 2
 # the yanked version.
 yanked = "warn"
 
-# `ignore = [...]` is where we'd whitelist specific RUSTSEC IDs with
-# an expiry comment if we ever needed to ship a release knowing a
-# transitive is flagged but un-fixable that day. Keep this empty by
-# default — every entry must have a justification + expiry below it.
-ignore = []
+# `ignore = [...]` is where we whitelist specific RUSTSEC IDs with a
+# justification + expiry comment when a transitive is flagged but
+# un-fixable that day. Every entry MUST carry a justification and an
+# explicit re-review date (we revisit on each minor release at minimum).
+ignore = [
+    # paste 1.0.15 — unmaintained (archived upstream 2024-10).
+    # Pulled transitively via `nalgebra 0.32 → simba → paste`.
+    # No actual vulnerability, just informational. Bumping nalgebra
+    # to 0.33 / 0.34 doesn't drop paste — it's entrenched in the
+    # simba dep tree until simba migrates to `pastey`. Re-review on
+    # 2026-08-01 or when nalgebra/simba publishes a paste-free release.
+    "RUSTSEC-2024-0436",
+
+    # bincode 1.x — unmaintained, 2.x is API-incompatible. Only used
+    # by `src/temporal_nexus/dashboard/exporter.rs:374` (one call site).
+    # Migration to bincode 2.x is queued for the next minor (will land
+    # before re-review). Informational only — no CVE.
+    # Re-review on 2026-07-01.
+    "RUSTSEC-2025-0141",
+]
 
 # ─────────────────────────────────────────────────────────────────────
 # 2) bans — explicit crate-name allow/block list

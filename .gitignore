@@ -8,7 +8,8 @@ yarn-error.log*
 pnpm-debug.log*
 .pnpm-store/
 .yarn/
-package-lock.json
+# package-lock.json is now committed (see supply-chain workflow). yarn
+# / pnpm aren't used in this repo so their lockfiles stay ignored.
 yarn.lock
 pnpm-lock.yaml
 
@@ -19,7 +20,10 @@ pnpm-lock.yaml
 debug/
 target/
 pkg/
-Cargo.lock
+# Cargo.lock is now committed (see supply-chain workflow): the
+# RUSTSEC scan + cargo-deny + lockfile-integrity gates all need a
+# canonical lockfile to compare against. Library-vs-binary commit
+# guidance has shifted toward commit-the-lock for security in 2024+.
 
 # General build outputs
 # dist/

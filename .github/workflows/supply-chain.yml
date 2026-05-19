@@ -47,12 +47,19 @@ env:
 jobs:
   # ─────────────────────────────────────────────────────────────────
   # Layer 1: PR-time dependency review (GitHub native)
+  #
+  # Requires the repo's "Dependency graph" feature to be enabled in
+  # Settings → Code security and analysis. If it's off, the action
+  # exits with "Dependency review is not supported on this repository".
+  # We `continue-on-error: true` so this layer is informational until
+  # the setting is flipped — the other 4 layers still gate.
   # ─────────────────────────────────────────────────────────────────
   dependency-review:
     name: dependency-review (PRs only)
     runs-on: ubuntu-latest
     # Schedule + push runs have no PR diff to review; skip cleanly.
     if: github.event_name == 'pull_request'
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: dependency-review-action
@@ -115,12 +122,14 @@ jobs:
         with:
           node-version: '20'
       - name: npm ci (no scripts)
-        # `--ignore-scripts` is the single highest-leverage anti-supply-
-        # chain mitigation on the npm side: it disables `preinstall`,
-        # `install`, and `postinstall` lifecycle hooks. A compromised
-        # transitive dep typically delivers its payload via one of these.
-        # Tests / publish still need scripts; CI doesn't.
-        run: npm ci --ignore-scripts
+        # `--ignore-scripts` is the single highest-leverage anti-
+        # supply-chain mitigation on the npm side: it disables
+        # preinstall / install / postinstall lifecycle hooks. A
+        # compromised transitive typically delivers its payload via
+        # one of these. Tests / publish need scripts; CI doesn't.
+        # `npm ci` requires the committed package-lock.json (now in
+        # git per the supply-chain workflow's reproducibility need).
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: npm audit (production deps, high+ severity)
         # `--omit=dev` skips dev-only deps (criterion, proptest, etc.) so
         # the audit reflects what ACTUALLY ships in the published tarball.
@@ -142,12 +151,15 @@ jobs:
         with:
           node-version: '20'
       - name: Cargo.lock is up to date
-        # `cargo update --locked` exits non-zero if Cargo.lock would
-        # change. The check catches the case where a PR bumps a
-        # version in Cargo.toml but forgets to refresh the lock —
-        # the next CI run would silently float to a different version.
-        run: cargo update --locked --dry-run
+        # `cargo metadata --locked` exits non-zero if Cargo.lock is
+        # missing entries or doesn't match Cargo.toml. (The earlier
+        # `cargo update --locked --dry-run` was wrong — `--locked`
+        # *forbids* updating the lockfile, so combining with `update`
+        # always errors.) `cargo metadata` only reads, no network on
+        # cache hit.
+        run: cargo metadata --locked --format-version 1 > /dev/null
       - name: package-lock.json is up to date
-        # `npm ci` verifies the lock against package.json and refuses
-        # to drift. `--ignore-scripts` keeps it side-effect free.
-        run: npm ci --ignore-scripts
+        # `npm ci` verifies the committed lock against package.json
+        # and refuses to drift. `--ignore-scripts` keeps it side-
+        # effect free in case a transitive sneaks in a postinstall.
+        run: npm ci --ignore-scripts --no-audit --no-fund
