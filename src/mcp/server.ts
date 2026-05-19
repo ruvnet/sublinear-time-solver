@@ -427,6 +427,41 @@ export class SublinearSolverMCPServer {
             required: ['method'],
           },
         },
+        // ADR-001 #6 phase-2A (Rust src/closure.rs). Wire-callable
+        // bounded-depth row-graph BFS. Lets agents preview the
+        // closure of a sparse delta before committing to a solve —
+        // a free way to size the SubLinear orchestrator's work.
+        {
+          name: 'closureIndices',
+          description:
+            'Return the bounded-depth row-graph closure of `seeds` in `matrix`: rows reachable from the seeds in at most `depth` hops via A\'s nonzero pattern. Sorted ascending, deduplicated. This is the input to every SubLinear change-driven primitive (solve_on_change_sublinear, contrastive_solve_on_change_sublinear). Use this BEFORE invoking those to size the per-event work: |closure| ≪ n is the SubLinear regime; |closure| ≈ n means depth is too high or matrix is too dense for SubLinear to win on this event.',
+          'x-complexity': {
+            class: 'SubLinear',
+            detail:
+              'O(depth · branch · |closure|). Independent of n when depth · branch ≪ n. Widens to Linear at full diameter.',
+            edgeSafe: true,
+          },
+          inputSchema: {
+            type: 'object',
+            properties: {
+              matrix: {
+                type: 'object',
+                description: 'Matrix A in dense or sparse-COO format. Same shape accepted by `solve`.',
+              },
+              seeds: {
+                type: 'array',
+                items: { type: 'number', minimum: 0 },
+                description: 'Seed row indices (e.g., the indices field of a SparseDelta).',
+              },
+              depth: {
+                type: 'number',
+                minimum: 0,
+                description: 'Maximum hop depth. `0` returns the seed set; `1` adds direct neighbours; etc. Pick `depth ≈ optimal_neumann_terms(coherence, ...)` for a SubLinear inner solve.',
+              },
+            },
+            required: ['matrix', 'seeds', 'depth'],
+          },
+        },
         // ADR-001 roadmap item #3 (Rust src/coherence.rs). Wire-
         // callable coherence-score tool. Lets agents check matrix
         // feasibility BEFORE invoking a solver — completes the
@@ -605,6 +640,8 @@ export class SublinearSolverMCPServer {
             return await this.handleVerifySparseSolution(args as any);
           case 'coherenceScore':
             return await this.handleCoherenceScore(args as any);
+          case 'closureIndices':
+            return await this.handleClosureIndices(args as any);
           // Temporal tools
           case 'predictWithTemporalAdvantage':
           case 'validateTemporalAdvantage':
@@ -1839,6 +1876,131 @@ export class SublinearSolverMCPServer {
       throw new McpError(
         ErrorCode.InternalError,
         `coherenceScore error: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Wire-callable bounded-depth row-graph BFS. Mirrors Rust's
+   * `closure::closure_indices(matrix, seeds, depth)`:
+   *
+   *   closure_0 = seeds
+   *   closure_{d+1} = closure_d ∪ {j : ∃ i ∈ closure_d, A[i,j] ≠ 0}
+   *
+   * Pure-TS — no WASM bridge. Cost O(depth · branch · |closure|).
+   */
+  private async handleClosureIndices(params: any) {
+    try {
+      if (!params.matrix) {
+        throw new McpError(ErrorCode.InvalidParams, 'Missing required parameter: matrix');
+      }
+      if (!Array.isArray(params.seeds)) {
+        throw new McpError(ErrorCode.InvalidParams, 'Missing or invalid parameter: seeds (must be number array)');
+      }
+      if (typeof params.depth !== 'number' || params.depth < 0 || !Number.isInteger(params.depth)) {
+        throw new McpError(ErrorCode.InvalidParams, 'depth must be a non-negative integer');
+      }
+
+      const matrix = params.matrix;
+      const n: number = matrix.rows ?? 0;
+      const depth: number = params.depth;
+
+      if (n === 0) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({ closure: [], size: 0 }, null, 2),
+            },
+          ],
+        };
+      }
+
+      // Build a per-row adjacency list once (lazy expansion would
+      // re-scan the matrix per row at every depth; up-front is
+      // cheaper for bounded-depth BFS).
+      const adj: number[][] = Array.from({ length: n }, () => []);
+      if (matrix.format === 'coo' && matrix.data && matrix.data.rowIndices && matrix.data.colIndices) {
+        const ri = matrix.data.rowIndices;
+        const ci = matrix.data.colIndices;
+        for (let k = 0; k < ri.length; k++) {
+          const r = ri[k];
+          const c = ci[k];
+          if (r >= 0 && r < n && c !== r) {
+            adj[r].push(c);
+          }
+        }
+      } else if (matrix.data && Array.isArray(matrix.data[0])) {
+        for (let i = 0; i < n; i++) {
+          const row = matrix.data[i];
+          if (!Array.isArray(row)) continue;
+          for (let j = 0; j < row.length; j++) {
+            const v = row[j];
+            if (v !== 0 && j !== i) {
+              adj[i].push(j);
+            }
+          }
+        }
+      } else {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          'matrix must be in dense or sparse-COO format',
+        );
+      }
+
+      // BFS-style expansion, deduped via a visited Set.
+      const visited = new Set<number>();
+      const seeds: number[] = params.seeds.filter(
+        (s: any) => typeof s === 'number' && s >= 0 && s < n,
+      );
+      let frontier: number[] = [];
+      for (const s of seeds) {
+        if (!visited.has(s)) {
+          visited.add(s);
+          frontier.push(s);
+        }
+      }
+
+      for (let d = 0; d < depth; d++) {
+        if (frontier.length === 0) break;
+        const next: number[] = [];
+        for (const row of frontier) {
+          for (const col of adj[row]) {
+            if (!visited.has(col)) {
+              visited.add(col);
+              next.push(col);
+            }
+          }
+        }
+        frontier = next;
+      }
+
+      const out = Array.from(visited).sort((a, b) => a - b);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                closure: out,
+                size: out.length,
+                note: out.length >= n
+                  ? `Closure covers the full matrix (${out.length}/${n} rows). SubLinear orchestrators will degrade to Linear cost; pick a smaller depth.`
+                  : `Closure covers ${out.length}/${n} rows (${((out.length / n) * 100).toFixed(1)}%). SubLinear orchestrators apply.`,
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      };
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `closureIndices error: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
