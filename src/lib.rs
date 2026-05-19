@@ -134,8 +134,9 @@ pub use incremental::{IncrementalSolver, SparseDelta, IncrementalConfig};
 // most from baseline? Backbone of RuView / Cognitum wake-on-event.
 pub mod contrastive;
 pub use contrastive::{
-    contrastive_solve_on_change, find_anomalous_rows, find_anomalous_rows_in_subset,
-    find_rows_above_threshold, AnomalyRow, ContrastiveSolveOnChangeOp,
+    contrastive_solve_on_change, contrastive_solve_on_change_sublinear, find_anomalous_rows,
+    find_anomalous_rows_in_subset, find_rows_above_threshold, AnomalyRow,
+    ContrastiveSolveOnChangeOp, ContrastiveSolveOnChangeSublinearOp,
 };
 
 // Bounded-depth row-graph closure (ADR-001 #6 phase-2A). Turns a sparse
@@ -144,6 +145,16 @@ pub use contrastive::{
 // with `incremental::SparseDelta` and `contrastive::find_anomalous_rows_in_subset`.
 pub mod closure;
 pub use closure::{closure_indices, ClosureIndicesOp};
+
+// Single-entry sublinear Neumann (ADR-001 #6 phase-2B). Compute `x[i]`
+// without materialising the full solution; SubLinear in `n` for sparse
+// DD matrices with bounded depth. Inner primitive for the next-revision
+// `contrastive_solve_on_change` that drops the orchestrator end-to-end
+// to SubLinear.
+pub mod entry;
+pub use entry::{
+    solve_single_entries_neumann, solve_single_entry_neumann, SolveSingleEntryNeumannOp,
+};
 
 // Sublinear algorithms with mathematically rigorous O(log n) complexity
 pub mod sublinear;

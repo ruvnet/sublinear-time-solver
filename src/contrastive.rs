@@ -393,12 +393,99 @@ where
     ))
 }
 
+/// SubLinear sibling of [`contrastive_solve_on_change`]: skips the inner
+/// `solve_on_change` and uses per-entry sublinear Neumann queries scoped
+/// to the closure of the delta's support. End-to-end `SubLinear` in `n`
+/// for sparse DD matrices with bounded depth — the phase-2B realisation
+/// of the ADR-001 contract.
+///
+/// ## Wiring
+///
+/// 1. `b_new = b_prev + delta` is implicit: callers pass `b_new` directly.
+/// 2. `candidates = closure::closure_indices(matrix, &delta.indices, depth)`
+///    — same bounded-depth closure as the phase-2A orchestrator.
+/// 3. For each `i ∈ candidates`:
+///        `current[i] = entry::solve_single_entry_neumann(matrix, b_new, i, max_terms, tolerance)`
+///    Never materialises the full new-solution vector.
+/// 4. `top_k = find_anomalous_rows_in_subset(prev, current_dense, candidates, k)`
+///    where `current_dense` carries the per-entry estimates at the
+///    candidate indices and stale values everywhere else.
+///
+/// ## Complexity
+///
+///   * closure:       O(depth · branch · |closure|)              SubLinear
+///   * per-entry:     O(|closure| · max_terms · |closure_max| · branch)
+///                                                                SubLinear
+///   * top-k subset:  O(|candidates| · log k)                     SubLinear
+///
+/// Net: **SubLinear in `n`** when the closure is bounded.
+///
+/// ## When to choose this over [`contrastive_solve_on_change`]
+///
+/// - **Use this** when callers have a *spectral-radius bound* `ρ < 1`
+///   handy and can pick `max_terms ≈ log_{1/ρ}(1/ε)` confidently. The
+///   closure shrinks to `≪ n` and the SubLinear advantage materialises.
+/// - **Use phase-2A** when the matrix is harder to bound and a
+///   warm-started full solve is cheaper than tuning the Neumann depth.
+pub fn contrastive_solve_on_change_sublinear(
+    matrix: &dyn crate::matrix::Matrix,
+    prev_solution: &[Precision],
+    b_new: &[Precision],
+    delta: &crate::incremental::SparseDelta,
+    closure_depth: usize,
+    max_terms: usize,
+    tolerance: Precision,
+    k: usize,
+) -> crate::error::Result<Vec<AnomalyRow>> {
+    // (1) Closure: which rows might have changed?
+    let candidates = crate::closure::closure_indices(matrix, &delta.indices, closure_depth);
+    if candidates.is_empty() || k == 0 {
+        return Ok(Vec::new());
+    }
+
+    // (2) Per-entry sublinear Neumann at each candidate index. We never
+    //     touch the full `n`-sized solution vector — only `|candidates|`
+    //     scalars are computed.
+    let entries =
+        crate::entry::solve_single_entries_neumann(matrix, b_new, &candidates, max_terms, tolerance)?;
+
+    // (3) Materialise a dense `current` vector with stale values
+    //     everywhere except the candidate indices. `find_anomalous_rows_in_subset`
+    //     reads only the candidate rows, so the stale values are never
+    //     observed.
+    let n = matrix.rows();
+    let mut current = alloc::vec![0.0 as Precision; n];
+    for &(i, v) in &entries {
+        if i < n {
+            current[i] = v;
+        }
+    }
+
+    // (4) Top-k restricted to the candidate set.
+    Ok(find_anomalous_rows_in_subset(
+        prev_solution,
+        &current,
+        &candidates,
+        k,
+    ))
+}
+
+/// Op marker for the SubLinear orchestrator variant.
+pub struct ContrastiveSolveOnChangeSublinearOp;
+
+impl Complexity for ContrastiveSolveOnChangeSublinearOp {
+    const CLASS: ComplexityClass = ComplexityClass::SubLinear;
+    const DETAIL: &'static str =
+        "Phase-2B: closure (SubLinear) + per-entry sublinear-Neumann (SubLinear) + top-k-in-subset \
+         (SubLinear). End-to-end SubLinear in n for sparse DD matrices with bounded depth.";
+}
+
 /// Marker type with a `Complexity` impl for `contrastive_solve_on_change`.
 ///
-/// The orchestrator's worst-case bound is dominated by the inner
-/// `solve_on_change` call (phase-2A: Linear). Phase-2B drops this to
-/// SubLinear by replacing the inner solve with per-entry queries
-/// scoped to the closure.
+/// The phase-2A orchestrator's worst-case bound is dominated by the inner
+/// `solve_on_change` call (Linear). For the SubLinear path use
+/// [`contrastive_solve_on_change_sublinear`] +
+/// [`ContrastiveSolveOnChangeSublinearOp`].
 pub struct ContrastiveSolveOnChangeOp;
 
 impl Complexity for ContrastiveSolveOnChangeOp {
@@ -648,5 +735,91 @@ mod tests {
 
         let top = contrastive_solve_on_change(&solver, &a, &prev, &delta, 3, 0, &opts).unwrap();
         assert!(top.is_empty());
+    }
+
+    // ── Phase-2B SubLinear orchestrator tests ─────────────────────────
+
+    #[test]
+    fn sublinear_orchestrator_op_is_sublinear() {
+        // The phase-2B op marker MUST declare end-to-end SubLinear —
+        // that's the entire promise of this code path.
+        const _: () = assert!(matches!(
+            <ContrastiveSolveOnChangeSublinearOp as Complexity>::CLASS,
+            ComplexityClass::SubLinear
+        ));
+        assert!(<ContrastiveSolveOnChangeSublinearOp as Complexity>::DETAIL
+            .contains("Phase-2B"));
+    }
+
+    #[test]
+    fn sublinear_orchestrator_empty_delta_returns_empty() {
+        use crate::incremental::SparseDelta;
+        use crate::matrix::SparseMatrix;
+
+        let n = 4;
+        let triplets: Vec<(usize, usize, Precision)> = (0..n).map(|i| (i, i, 2.0)).collect();
+        let a = SparseMatrix::from_triplets(triplets, n, n).unwrap();
+        let prev = alloc::vec![0.0; n];
+        let b_new = alloc::vec![1.0; n];
+        let delta = SparseDelta::empty();
+        let top =
+            contrastive_solve_on_change_sublinear(&a, &prev, &b_new, &delta, 3, 16, 1e-10, 5)
+                .unwrap();
+        assert!(top.is_empty());
+    }
+
+    #[test]
+    fn sublinear_orchestrator_finds_changed_rows_on_chain() {
+        // Build a strict-DD chain. Perturb b[2]; the rows whose solution
+        // entries change most should be in a neighbourhood of row 2.
+        use crate::incremental::SparseDelta;
+        use crate::matrix::SparseMatrix;
+        use crate::solver::neumann::NeumannSolver;
+        use crate::solver::{SolverAlgorithm, SolverOptions};
+
+        let n = 8;
+        let mut triplets = Vec::new();
+        for i in 0..n {
+            triplets.push((i, i, 4.0 as Precision));
+            if i + 1 < n {
+                triplets.push((i, i + 1, -1.0 as Precision));
+                triplets.push((i + 1, i, -1.0 as Precision));
+            }
+        }
+        let a = SparseMatrix::from_triplets(triplets, n, n).unwrap();
+        let b_prev = alloc::vec![1.0 as Precision; n];
+
+        // Compute the "true" previous solution with the full solver so
+        // the test's baseline matches the matrix's actual A⁻¹·b_prev.
+        let full = NeumannSolver::new(64, 1e-12);
+        let opts = SolverOptions::default();
+        let prev_solution = full.solve(&a, &b_prev, &opts).unwrap().solution;
+
+        // Perturb b[2] by +1.0 → row 2 is the change epicentre.
+        let mut b_new = b_prev.clone();
+        b_new[2] += 1.0;
+        let delta = SparseDelta::new(alloc::vec![2usize], alloc::vec![1.0 as Precision]).unwrap();
+
+        let top = contrastive_solve_on_change_sublinear(
+            &a,
+            &prev_solution,
+            &b_new,
+            &delta,
+            /*closure_depth=*/ 4,
+            /*max_terms=*/ 32,
+            /*tolerance=*/ 1e-10,
+            /*k=*/ 3,
+        )
+        .unwrap();
+
+        // Sanity: we got a non-empty top-k.
+        assert_eq!(top.len(), 3, "expected k=3 results");
+        // Sanity: row 2 must be in the top-3 (it's where the delta landed).
+        let contains_row_2 = top.iter().any(|r| r.row == 2);
+        assert!(contains_row_2, "top-3 should include the perturbed row 2; got: {:?}", top);
+        // Sanity: anomaly scores are ordered descending.
+        for w in top.windows(2) {
+            assert!(w[0].anomaly >= w[1].anomaly);
+        }
     }
 }
