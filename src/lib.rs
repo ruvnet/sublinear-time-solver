@@ -141,6 +141,12 @@ pub use coherence::{
 pub mod budget;
 pub use budget::{BudgetExhausted, PlanBudget};
 
+// Sparse solve witness (ADR-001 open question #3). Per-entry residual
+// audit restricted to the closure; same SubLinear complexity class as
+// the orchestrator whose output it verifies.
+pub mod witness;
+pub use witness::{verify_sparse_solution, VerifySparseSolutionOp, WitnessReport};
+
 // Contrastive search (ADR-001 roadmap item #6). Boundary-crossing primitive
 // for change-driven activation: which rows of the current solution diverged
 // most from baseline? Backbone of RuView / Cognitum wake-on-event.
