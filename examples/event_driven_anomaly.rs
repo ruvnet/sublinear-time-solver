@@ -42,9 +42,9 @@
 
 use std::time::Instant;
 use sublinear_solver::{
-    contrastive_solve_on_change_sublinear, delta_below_solve_threshold, optimal_neumann_terms,
-    solve_on_change_sublinear, AnomalyRow, Matrix, NeumannSolver, SolverAlgorithm, SolverOptions,
-    SparseDelta, SparseMatrix,
+    contrastive_solve_on_change_sublinear_auto, delta_below_solve_threshold,
+    solve_on_change_sublinear_auto, AnomalyRow, Matrix, NeumannSolver, SolverAlgorithm,
+    SolverOptions, SparseDelta, SparseMatrix,
 };
 use sublinear_solver::coherence::coherence_score;
 
@@ -100,14 +100,11 @@ fn main() {
         .map(|i| matrix.get(i, i).unwrap_or(0.0).abs())
         .filter(|x| *x > 0.0)
         .fold(f64::INFINITY, |a, b| if a < b { a } else { b });
-    // ── Adaptive Neumann-term selection (PR #37): pick max_terms from
-    //    the coherence + tolerance bound instead of guessing. ──
-    let b_inf = b_prev.iter().map(|x| x.abs()).fold(0.0_f64, f64::max);
-    let auto_terms =
-        optimal_neumann_terms(coherence, b_inf, min_diag, 1e-8).unwrap_or(32);
+    // ── PR #38: orchestrators are now fully auto-tuned. We still cache
+    //    (coherence, min_diag) here for the O(|δ|) skip gate (PR #34) —
+    //    that's not auto, by design (cheaper to probe than recompute). ──
     println!(
-        "gate cache:   coherence={coherence:.3}, min_diag={min_diag:.3}, \
-         auto_terms={auto_terms} (skip=1e-6, tol=1e-8)\n"
+        "gate cache:   coherence={coherence:.3}, min_diag={min_diag:.3} (skip=1e-6, tol=1e-8)\n"
     );
 
     // ── Event stream. Each entry is (event_label, sensor_index, delta_value).
@@ -122,16 +119,13 @@ fn main() {
         ("sensor #155 outlier", 155, 3.25),
     ];
 
-    println!("event stream (closure_depth=4, max_terms=24, tolerance=1e-8, skip=1e-6):");
+    println!("event stream (auto-tuned closure + max_terms, tolerance=1e-8, skip=1e-6):");
     println!(
         "{:<22} {:>10} {:>12} {:>14} {:>14}",
         "event", "closure", "latency_us", "top_anomaly", "score"
     );
     println!("{}", "─".repeat(74));
 
-    let closure_depth = 4usize;
-    // `max_terms` is now auto-tuned per matrix via the adaptive helper.
-    let max_terms = auto_terms;
     let tolerance = 1e-8_f64;
     let skip_threshold = 1.0e-6_f64;
     let top_k = 3usize;
@@ -153,30 +147,24 @@ fn main() {
         let mut b_new = b_prev.clone();
         delta.apply_to(&mut b_new).expect("apply");
 
-        // (1) Sparse delta-solve over the closure only.
-        let sparse_entries = solve_on_change_sublinear(
-            &matrix,
-            &prev_solution,
-            &b_new,
-            &delta,
-            closure_depth,
-            max_terms,
-            tolerance,
-        )
-        .expect("sublinear delta-solve");
+        // (1) Sparse delta-solve over the closure only — auto-tuned.
+        //     The orchestrator computes coherence + picks
+        //     closure_depth + max_terms internally; caller only supplies
+        //     the tolerance contract.
+        let sparse_entries =
+            solve_on_change_sublinear_auto(&matrix, &prev_solution, &b_new, &delta, tolerance)
+                .expect("auto-tuned delta-solve");
 
-        // (2) Contrastive top-k anomaly detection, same closure scope.
-        let top: Vec<AnomalyRow> = contrastive_solve_on_change_sublinear(
+        // (2) Contrastive top-k anomaly detection — auto-tuned sibling.
+        let top: Vec<AnomalyRow> = contrastive_solve_on_change_sublinear_auto(
             &matrix,
             &prev_solution,
             &b_new,
             &delta,
-            closure_depth,
-            max_terms,
             tolerance,
             top_k,
         )
-        .expect("sublinear contrastive solve");
+        .expect("auto-tuned contrastive solve");
 
         let total_us = t_total.elapsed().as_micros();
         let closure_n = sparse_entries.len();
@@ -199,16 +187,17 @@ fn main() {
         "  coherence gate O(|δ|)        ~0 µs    skip tiny deltas before any solve"
     );
     println!(
-        "  per-event      SubLinear   closure=17 rows    independent of n=256"
+        "  per-event      SubLinear   auto-tuned closure_depth+max_terms from coherence={coherence:.3}"
     );
     println!();
-    println!("Per-event latency is *bounded by closure size*, not n. The coherence");
-    println!("gate further short-circuits tiny / noisy events in O(|δ|) before");
-    println!("any closure computation runs — the 'no event, no work' discipline");
-    println!("of ADR-001 in action. Doubling n (or growing the state space to");
-    println!("10⁴+ rows) leaves both the gate latency *and* the per-event closure");
-    println!("cost essentially unchanged — the architectural win that lets RuView /");
-    println!("Cognitum sustain change-driven loops over large state spaces without");
-    println!("burning the J/decision budget. See");
+    println!("The orchestrators are now magic-number-free: pass tolerance, get top-k.");
+    println!("Closure depth + Neumann terms are picked from the Neumann-envelope");
+    println!("bound (PRs #37 + #38) — provably sufficient, never over-budget. On");
+    println!("this low-coherence (c=0.2) test matrix, that math correctly demands a");
+    println!("wide closure to reach 1e-8 tolerance. Higher-coherence matrices");
+    println!("(c≥0.5) auto-pick tighter closures, pulling per-event cost down by");
+    println!("orders of magnitude. The coherence gate short-circuits tiny / noisy");
+    println!("events in O(|δ|) before any closure computation runs — the 'no");
+    println!("event, no work' discipline of ADR-001 in action. See");
     println!("docs/adr/ADR-001-complexity-as-architecture.md.");
 }
