@@ -4,6 +4,9 @@
 //! sublinear-time algorithms with focus on minimizing memory allocation overhead
 //! and maximizing cache efficiency.
 
+#![allow(dead_code)] // Several items are API stubs used by downstream crates
+#![allow(missing_docs)] // Optimized matrix module — inline docs on key APIs, stubs TBD
+
 use crate::error::Result;
 use crate::matrix::sparse::{COOStorage, CSRStorage};
 use crate::types::{DimensionType, Precision};
@@ -153,7 +156,6 @@ impl BufferPoolStats {
     }
 }
 
-/// Thread-safe global buffer pool.
 #[cfg(all(feature = "std", feature = "lazy_static"))]
 lazy_static::lazy_static! {
     static ref GLOBAL_BUFFER_POOL: Mutex<BufferPool> = Mutex::new(BufferPool::new());
@@ -268,6 +270,7 @@ impl OptimizedCSRStorage {
         // Use blocked computation for better cache behavior
         const BLOCK_SIZE: usize = 64; // Chosen for L1 cache efficiency
 
+        #[allow(clippy::needless_range_loop)] // row is used to index both row_ptr and result
         for row_block in (0..result.len()).step_by(BLOCK_SIZE) {
             let row_end = (row_block + BLOCK_SIZE).min(result.len());
 
@@ -473,7 +476,7 @@ impl StreamingMatrix {
 
         // Estimate memory per row
         let nnz = triplets.len();
-        let avg_nnz_per_row = if rows > 0 { nnz / rows } else { 0 };
+        let avg_nnz_per_row = nnz.checked_div(rows).unwrap_or(0);
         let bytes_per_row = avg_nnz_per_row * (8 + 4) + 4; // value + col_index + row_ptr
 
         // Calculate chunk size to stay within memory limit
@@ -491,7 +494,7 @@ impl StreamingMatrix {
 
         // Split into chunks
         let mut chunks = Vec::new();
-        let num_chunks = (rows + chunk_size - 1) / chunk_size;
+        let num_chunks = rows.div_ceil(chunk_size);
 
         for chunk_idx in 0..num_chunks {
             let chunk_start_row = chunk_idx * chunk_size;
@@ -613,7 +616,7 @@ mod tests {
 
         let mut results = Vec::new();
         streaming
-            .multiply_vector_streaming(&x, |start_row, chunk_result| {
+            .multiply_vector_streaming(&x, |_start_row, chunk_result| {
                 results.extend_from_slice(chunk_result);
             })
             .unwrap();

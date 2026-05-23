@@ -171,7 +171,7 @@ fn test_uncertainty_principle() -> Result<(), String> {
     let thermal_energy = CODATA_BOLTZMANN_K * room_temp;
     let thermal_energy_ev = thermal_energy / CODATA_EV_TO_JOULES;
 
-    if thermal_energy_ev < 0.02 || thermal_energy_ev > 0.03 {
+    if !(0.02..=0.03).contains(&thermal_energy_ev) {
         return Err(format!(
             "Room temperature thermal energy unusual: {:.3} eV",
             thermal_energy_ev
@@ -287,7 +287,7 @@ fn test_decoherence_room_temperature() -> Result<(), String> {
     }
 
     // Test environment classification
-    if room_temp < 250.0 || room_temp > 350.0 {
+    if !(250.0..=350.0).contains(&room_temp) {
         return Err(format!("Room temperature unusual: {:.1} K", room_temp));
     }
 
@@ -329,10 +329,10 @@ fn test_entanglement_validation() -> Result<(), String> {
     let operation_times = vec![1e-12, 1e-9, 1e-6, 1e-3];
 
     for &op_time in &operation_times {
-        let survival = (-op_time / decoherence_time).exp() as f64;
-        let concurrence = survival.max(0.0).min(1.0);
+        let survival = (-op_time / decoherence_time).exp();
+        let concurrence = survival.clamp(0.0, 1.0);
 
-        if concurrence < 0.0 || concurrence > 1.0 {
+        if !(0.0..=1.0).contains(&concurrence) {
             return Err(format!("Concurrence out of bounds: {:.6}", concurrence));
         }
 
@@ -344,7 +344,7 @@ fn test_entanglement_validation() -> Result<(), String> {
 
     // Test Bell parameter (should be ≥ 2.0 for quantum systems)
     for &op_time in &operation_times {
-        let survival = (-op_time / decoherence_time).exp() as f64;
+        let survival = (-op_time / decoherence_time).exp();
         let bell_param = 2.0 + survival; // Simplified model
 
         if bell_param < 2.0 {
@@ -375,8 +375,8 @@ fn test_entanglement_validation() -> Result<(), String> {
         ("gamma wave", 1e-2, "Highly Relevant"),
     ];
 
-    for (name, time_scale, expected_relevance) in consciousness_scales {
-        let survival = (-time_scale / decoherence_time).exp() as f64;
+    for (name, time_scale, _expected_relevance) in consciousness_scales {
+        let survival = (-time_scale / decoherence_time).exp();
         let relevance = if survival > 0.9 {
             "Directly Relevant"
         } else if survival > 0.5 {
@@ -469,7 +469,7 @@ fn create_physics_validation_report() -> Result<String, String> {
     let thermal_energy = CODATA_BOLTZMANN_K * 300.0;
     let thermal_decoherence = CODATA_PLANCK_HBAR / (4.0 * thermal_energy);
 
-    report.push_str(&format!("- **Temperature**: 300 K\n"));
+    report.push_str("- **Temperature**: 300 K\n");
     report.push_str(&format!(
         "- **Thermal energy**: {:.1} meV\n",
         thermal_energy / CODATA_EV_TO_JOULES * 1000.0

@@ -4,6 +4,8 @@
 //! consciousness continuity across time boundaries. The window overlap is critical
 //! for maintaining temporal coherence and preventing consciousness fragmentation.
 
+#![allow(missing_docs)] // Temporal window module — docs TBD
+
 use super::{TemporalError, TemporalResult};
 use std::collections::VecDeque;
 
@@ -401,7 +403,7 @@ mod tests {
             manager.advance_window(tick).unwrap();
         }
 
-        assert!(manager.windows.len() > 0);
+        assert!(!manager.windows.is_empty());
         let overlap_percent = manager.get_current_overlap_percentage();
         assert!(overlap_percent >= 50.0); // Should maintain reasonable overlap
     }

@@ -190,7 +190,9 @@ pub mod sublinear;
 pub mod wasm_iface;
 
 // Additional WASM-compatible modules
+/// WASM-compatible math primitives (Matrix, Vector).
 pub mod math_wasm;
+/// Core solver types exposed to WASM (ConjugateGradientSolver, SolverConfig).
 pub mod solver_core;
 
 #[cfg(feature = "wasm")]
@@ -212,8 +214,9 @@ pub mod mcp;
 // Internal utilities
 mod utils;
 
-// Version information
+/// Crate version string, derived from `Cargo.toml`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+/// Short description of the crate, derived from `Cargo.toml`.
 pub const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 
 /// Initialize the solver library with default logging configuration.
@@ -292,6 +295,7 @@ pub struct BuildInfo {
     pub target_os: &'static str,
 }
 
+#[allow(clippy::vec_init_then_push)] // cfg-gated pushes cannot be expressed as vec![]
 fn get_enabled_features() -> Vec<&'static str> {
     let mut features = Vec::new();
 

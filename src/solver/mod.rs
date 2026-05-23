@@ -3,6 +3,8 @@
 //! This module implements the core solver algorithms including Neumann series,
 //! forward/backward push methods, and hybrid random-walk approaches.
 
+#![allow(missing_docs)] // Solver module — inline docs present on public API, stubs TBD
+
 use crate::error::{Result, SolverError};
 use crate::matrix::Matrix;
 use crate::types::{
@@ -182,7 +184,7 @@ impl SolverResult {
     }
 
     /// Create an error result.
-    pub fn error(error: SolverError) -> Self {
+    pub fn error(_error: SolverError) -> Self {
         Self {
             solution: Vec::new(),
             residual_norm: Precision::INFINITY,
@@ -608,7 +610,6 @@ impl SolverAlgorithm for HybridSolver {
 #[cfg(all(test, feature = "std"))]
 mod tests {
     use super::*;
-    use crate::matrix::SparseMatrix;
 
     #[test]
     fn test_solver_options() {

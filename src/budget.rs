@@ -35,6 +35,8 @@
 //! budget per worker. The single-threaded planning case (the
 //! common one) stays zero-cost.
 
+#![allow(missing_docs)] // PlanBudget module — full docs TBD
+
 use crate::complexity::ComplexityClass;
 use core::fmt;
 

@@ -19,6 +19,9 @@
 //! - **Negativity**: Positive partial transpose criterion
 //! - **Bell Inequality**: CHSH inequality violation
 
+#![allow(dead_code)] // Several fields reserved for future entanglement-state logging
+#![allow(missing_docs)] // Quantum entanglement module — docs TBD
+
 use crate::temporal_nexus::quantum::QuantumResult;
 
 /// Entanglement validator for temporal consciousness correlations

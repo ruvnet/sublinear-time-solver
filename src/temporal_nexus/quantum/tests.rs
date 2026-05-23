@@ -6,7 +6,7 @@
 
 use super::*;
 use crate::temporal_nexus::core::NanosecondScheduler;
-use approx::{assert_relative_eq, relative_eq};
+use approx::assert_relative_eq;
 use std::f64::consts::PI;
 
 /// Test suite for quantum validation protocols
@@ -14,7 +14,14 @@ pub struct QuantumTestSuite {
     validator: QuantumValidator,
 }
 
+impl Default for QuantumTestSuite {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl QuantumTestSuite {
+    /// Create a new `QuantumTestSuite` with default validator.
     pub fn new() -> Self {
         Self {
             validator: QuantumValidator::new(),
@@ -47,15 +54,19 @@ impl QuantumTestSuite {
     fn test_physics_constants(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         println!("📐 Testing Physics Constants...");
 
-        // Test Planck constants
-        assert!(
-            constants::PLANCK_H > 0.0,
-            "Planck constant must be positive"
-        );
-        assert!(
-            constants::PLANCK_HBAR > 0.0,
-            "Reduced Planck constant must be positive"
-        );
+        // Test Planck constants (const-eval assertions so they run at compile time)
+        const {
+            assert!(
+                constants::PLANCK_H > 0.0,
+                "Planck constant must be positive"
+            )
+        };
+        const {
+            assert!(
+                constants::PLANCK_HBAR > 0.0,
+                "Reduced Planck constant must be positive"
+            )
+        };
         assert_relative_eq!(
             constants::PLANCK_HBAR,
             constants::PLANCK_H / (2.0 * PI),
@@ -67,10 +78,12 @@ impl QuantumTestSuite {
         assert!(hbar_half > 0.0, "ℏ/2 must be positive");
 
         // Test energy conversions
-        assert!(
-            constants::EV_TO_JOULES > 0.0,
-            "eV to Joules conversion must be positive"
-        );
+        const {
+            assert!(
+                constants::EV_TO_JOULES > 0.0,
+                "eV to Joules conversion must be positive"
+            )
+        };
         assert_relative_eq!(constants::EV_TO_JOULES, 1.602_176_634e-19, epsilon = 1e-10);
 
         // Test attosecond energy requirement

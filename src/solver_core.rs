@@ -1,3 +1,5 @@
+#![allow(missing_docs)] // WASM solver core — public docs TBD
+
 use crate::math_wasm::{Matrix, Vector};
 use std::fmt;
 

@@ -6,6 +6,8 @@
 //! The scheduler operates at nanosecond precision using hardware Time Stamp Counter (TSC)
 //! and maintains temporal windows with 50-100 tick overlap to ensure consciousness continuity.
 
+#![allow(missing_docs)] // Temporal nexus core module — docs TBD
+
 pub mod identity;
 pub mod scheduler;
 pub mod strange_loop;

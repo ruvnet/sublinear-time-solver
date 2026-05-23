@@ -99,11 +99,11 @@ fn bench_optimized_cg(c: &mut Criterion) {
 /// solve paths on a small RHS perturbation:
 ///
 ///   - `cold_full`:    full NeumannSolver::solve(b_new) — Linear in n
-///   - `warm_full`:    IncrementalSolver::solve_on_change — Linear in n
-///                     with k_warm ≪ k_cold (warm-start over prev)
+///   - `warm_full`:    IncrementalSolver::solve_on_change — Linear in n,
+///     with k_warm ≪ k_cold (warm-start over prev)
 ///   - `sparse_closure`: solve_on_change_sublinear — SubLinear in n
-///                     (returns only the closure entries, never
-///                     materialises the full vector)
+///     (returns only the closure entries, never
+///     materialises the full vector)
 ///
 /// Architectural property: on increasing `n` the three curves diverge.
 /// `cold_full` and `warm_full` grow linearly with `n`; `sparse_closure`

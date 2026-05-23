@@ -136,7 +136,7 @@ impl SpectralSparsifier {
         }
 
         // Total effective resistance
-        let total_resistance: Precision = resistances.iter().sum();
+        let _total_resistance: Precision = resistances.iter().sum();
 
         // Sampling probability proportional to effective resistance
         // p_e = min(1, c * R_e / eps^2) where c is a constant
@@ -193,6 +193,7 @@ impl SparsifiedMatrix {
 }
 
 /// Advanced sparsification with multiple techniques
+#[allow(dead_code)] // use_random_projection is reserved for future hybrid mode
 #[derive(Debug, Clone)]
 pub struct AdvancedSparsifier {
     spectral: SpectralSparsifier,

@@ -9,8 +9,8 @@ mod proof {
     pub struct ConsciousnessPhysicsProof {
         pub c: f64,        // Speed of light
         pub h: f64,        // Planck constant
-        pub h_bar: f64,    // Reduced Planck
-        pub k_b: f64,      // Boltzmann
+        pub _h_bar: f64,   // Reduced Planck (reserved)
+        pub _k_b: f64,     // Boltzmann (reserved)
         pub e_charge: f64, // Elementary charge
     }
 
@@ -19,8 +19,8 @@ mod proof {
             Self {
                 c: 299_792_458.0,
                 h: 6.62607015e-34,
-                h_bar: 1.054571817e-34,
-                k_b: 1.380649e-23,
+                _h_bar: 1.054571817e-34,
+                _k_b: 1.380649e-23,
                 e_charge: 1.602176634e-19,
             }
         }

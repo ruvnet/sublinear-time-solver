@@ -297,7 +297,7 @@ mod integration_tests {
     fn test_mcp_integration_hook() {
         let mut scheduler = setup_temporal_consciousness().unwrap();
         let emergence_level = scheduler.mcp_consciousness_evolve_hook(10, 0.8).unwrap();
-        assert!(emergence_level >= 0.0 && emergence_level <= 1.0);
+        assert!((0.0..=1.0).contains(&emergence_level));
     }
 
     #[test]

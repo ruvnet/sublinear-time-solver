@@ -21,6 +21,9 @@
 //! This provides a fundamental bound on computation speed that cannot be
 //! violated by any physical system, quantum or classical.
 
+#![allow(dead_code)] // Several fields reserved for future quantum speed-limit telemetry
+#![allow(missing_docs)] // Quantum speed limits module — docs TBD
+
 use crate::temporal_nexus::quantum::{constants, QuantumError, QuantumResult};
 
 /// Margolus-Levitin theorem validator for quantum speed limits
