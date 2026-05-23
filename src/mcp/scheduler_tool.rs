@@ -3,12 +3,12 @@
 //! Provides MCP server endpoints for ultra-low latency scheduling operations.
 //! Created by rUv - https://github.com/ruvnet
 
-use nanosecond_scheduler::{Config, Scheduler, Task, Priority};
+use nanosecond_scheduler::{Config, Priority, Scheduler, Task};
+use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
-use std::collections::HashMap;
-use parking_lot::RwLock;
 
 /// MCP tool for nanosecond scheduler operations
 pub struct SchedulerTool {
@@ -23,7 +23,10 @@ impl SchedulerTool {
     }
 
     /// Create a new scheduler instance
-    pub fn create_scheduler(&self, params: CreateSchedulerParams) -> Result<SchedulerResponse, String> {
+    pub fn create_scheduler(
+        &self,
+        params: CreateSchedulerParams,
+    ) -> Result<SchedulerResponse, String> {
         let config = Config {
             tick_rate_ns: params.tick_rate_ns.unwrap_or(1000),
             max_tasks_per_tick: params.max_tasks_per_tick.unwrap_or(1000),
@@ -33,9 +36,13 @@ impl SchedulerTool {
         };
 
         let scheduler = Arc::new(Scheduler::new(config));
-        let id = params.id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+        let id = params
+            .id
+            .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
 
-        self.schedulers.write().insert(id.clone(), scheduler.clone());
+        self.schedulers
+            .write()
+            .insert(id.clone(), scheduler.clone());
 
         Ok(SchedulerResponse {
             id,
@@ -48,7 +55,8 @@ impl SchedulerTool {
     /// Schedule a task on a scheduler
     pub fn schedule_task(&self, params: ScheduleTaskParams) -> Result<TaskResponse, String> {
         let schedulers = self.schedulers.read();
-        let scheduler = schedulers.get(&params.scheduler_id)
+        let scheduler = schedulers
+            .get(&params.scheduler_id)
             .ok_or("Scheduler not found")?;
 
         let priority = match params.priority.as_deref() {
@@ -67,8 +75,9 @@ impl SchedulerTool {
             move || {
                 // Task execution logged internally
             },
-            delay
-        ).with_priority(priority);
+            delay,
+        )
+        .with_priority(priority);
 
         scheduler.schedule(task);
 
@@ -86,7 +95,8 @@ impl SchedulerTool {
     /// Execute a scheduler tick
     pub fn tick_scheduler(&self, params: TickParams) -> Result<TickResponse, String> {
         let schedulers = self.schedulers.read();
-        let scheduler = schedulers.get(&params.scheduler_id)
+        let scheduler = schedulers
+            .get(&params.scheduler_id)
             .ok_or("Scheduler not found")?;
 
         let start = std::time::Instant::now();
@@ -103,7 +113,8 @@ impl SchedulerTool {
     /// Get scheduler metrics
     pub fn get_metrics(&self, params: MetricsParams) -> Result<MetricsResponse, String> {
         let schedulers = self.schedulers.read();
-        let scheduler = schedulers.get(&params.scheduler_id)
+        let scheduler = schedulers
+            .get(&params.scheduler_id)
             .ok_or("Scheduler not found")?;
 
         let metrics = scheduler.metrics();
@@ -167,12 +178,16 @@ impl SchedulerTool {
                 "GOOD"
             } else {
                 "ACCEPTABLE"
-            }.to_string(),
+            }
+            .to_string(),
         })
     }
 
     /// Test temporal consciousness features
-    pub fn test_consciousness(&self, params: ConsciousnessParams) -> Result<ConsciousnessResponse, String> {
+    pub fn test_consciousness(
+        &self,
+        params: ConsciousnessParams,
+    ) -> Result<ConsciousnessResponse, String> {
         let config = Config {
             lipschitz_constant: params.lipschitz_constant.unwrap_or(0.9),
             window_size: params.window_size.unwrap_or(100),
@@ -202,7 +217,8 @@ impl SchedulerTool {
                 "Perfect convergence achieved - consciousness emerges from temporal continuity"
             } else {
                 "Convergence in progress"
-            }.to_string(),
+            }
+            .to_string(),
         })
     }
 
@@ -219,7 +235,11 @@ impl SchedulerTool {
 
     /// Destroy a scheduler
     pub fn destroy_scheduler(&self, params: DestroyParams) -> Result<DestroyResponse, String> {
-        let removed = self.schedulers.write().remove(&params.scheduler_id).is_some();
+        let removed = self
+            .schedulers
+            .write()
+            .remove(&params.scheduler_id)
+            .is_some();
 
         if removed {
             Ok(DestroyResponse {

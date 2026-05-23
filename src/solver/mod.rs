@@ -3,13 +3,12 @@
 //! This module implements the core solver algorithms including Neumann series,
 //! forward/backward push methods, and hybrid random-walk approaches.
 
+use crate::error::{Result, SolverError};
 use crate::matrix::Matrix;
 use crate::types::{
-    Precision, ConvergenceMode, NormType, ErrorBounds, SolverStats,
-    DimensionType, MemoryInfo, ProfileData
+    ConvergenceMode, ErrorBounds, MemoryInfo, NormType, Precision, ProfileData, SolverStats,
 };
-use crate::error::{SolverError, Result};
-use alloc::{vec::Vec, string::String, boxed::Box};
+use alloc::{string::String, vec::Vec};
 
 pub mod neumann;
 
@@ -155,11 +154,7 @@ pub struct SolverResult {
 
 impl SolverResult {
     /// Create a successful result.
-    pub fn success(
-        solution: Vec<Precision>,
-        residual_norm: Precision,
-        iterations: usize,
-    ) -> Self {
+    pub fn success(solution: Vec<Precision>, residual_norm: Precision, iterations: usize) -> Self {
         Self {
             solution,
             residual_norm,
@@ -173,11 +168,7 @@ impl SolverResult {
     }
 
     /// Create a failure result.
-    pub fn failure(
-        solution: Vec<Precision>,
-        residual_norm: Precision,
-        iterations: usize,
-    ) -> Self {
+    pub fn failure(solution: Vec<Precision>, residual_norm: Precision, iterations: usize) -> Self {
         Self {
             solution,
             residual_norm,
@@ -293,7 +284,7 @@ pub trait SolverAlgorithm: Send + Sync {
                             residual_norm: residual,
                         });
                     }
-                },
+                }
                 StepResult::Converged => break,
                 StepResult::Failed(reason) => {
                     return Err(SolverError::AlgorithmError {
@@ -301,7 +292,10 @@ pub trait SolverAlgorithm: Send + Sync {
                         message: reason,
                         context: vec![
                             ("iteration".to_string(), iterations.to_string()),
-                            ("residual_norm".to_string(), state.residual_norm().to_string()),
+                            (
+                                "residual_norm".to_string(),
+                                state.residual_norm().to_string(),
+                            ),
                         ],
                     });
                 }
@@ -437,7 +431,7 @@ pub mod utils {
                 } else {
                     residual_norm <= tolerance
                 }
-            },
+            }
             ConvergenceMode::SolutionChange => {
                 if let Some(prev) = prev_solution {
                     let mut change_norm = 0.0;
@@ -449,7 +443,7 @@ pub mod utils {
                 } else {
                     false
                 }
-            },
+            }
             ConvergenceMode::RelativeSolutionChange => {
                 if let Some(prev) = prev_solution {
                     let mut change_norm = 0.0;
@@ -467,12 +461,12 @@ pub mod utils {
                 } else {
                     false
                 }
-            },
+            }
             ConvergenceMode::Combined => {
                 // Use the most conservative criterion
-                residual_norm <= tolerance &&
-                (b_norm == 0.0 || (residual_norm / b_norm) <= tolerance)
-            },
+                residual_norm <= tolerance
+                    && (b_norm == 0.0 || (residual_norm / b_norm) <= tolerance)
+            }
         }
     }
 }
@@ -486,7 +480,12 @@ pub struct HybridSolver;
 impl SolverAlgorithm for ForwardPushSolver {
     type State = ();
 
-    fn initialize(&self, _matrix: &dyn Matrix, _b: &[Precision], _options: &SolverOptions) -> Result<Self::State> {
+    fn initialize(
+        &self,
+        _matrix: &dyn Matrix,
+        _b: &[Precision],
+        _options: &SolverOptions,
+    ) -> Result<Self::State> {
         Err(SolverError::AlgorithmError {
             algorithm: "forward_push".to_string(),
             message: "Not implemented yet".to_string(),
@@ -554,22 +553,56 @@ impl SolverState for () {
 // Similar placeholder implementations for BackwardPushSolver and HybridSolver
 impl SolverAlgorithm for BackwardPushSolver {
     type State = ();
-    fn initialize(&self, _matrix: &dyn Matrix, _b: &[Precision], _options: &SolverOptions) -> Result<Self::State> { Ok(()) }
-    fn step(&self, _state: &mut Self::State) -> Result<StepResult> { Ok(StepResult::Converged) }
-    fn is_converged(&self, _state: &Self::State) -> bool { true }
-    fn extract_solution(&self, _state: &Self::State) -> Vec<Precision> { Vec::new() }
-    fn update_rhs(&self, _state: &mut Self::State, _delta_b: &[(usize, Precision)]) -> Result<()> { Ok(()) }
-    fn algorithm_name(&self) -> &'static str { "backward_push" }
+    fn initialize(
+        &self,
+        _matrix: &dyn Matrix,
+        _b: &[Precision],
+        _options: &SolverOptions,
+    ) -> Result<Self::State> {
+        Ok(())
+    }
+    fn step(&self, _state: &mut Self::State) -> Result<StepResult> {
+        Ok(StepResult::Converged)
+    }
+    fn is_converged(&self, _state: &Self::State) -> bool {
+        true
+    }
+    fn extract_solution(&self, _state: &Self::State) -> Vec<Precision> {
+        Vec::new()
+    }
+    fn update_rhs(&self, _state: &mut Self::State, _delta_b: &[(usize, Precision)]) -> Result<()> {
+        Ok(())
+    }
+    fn algorithm_name(&self) -> &'static str {
+        "backward_push"
+    }
 }
 
 impl SolverAlgorithm for HybridSolver {
     type State = ();
-    fn initialize(&self, _matrix: &dyn Matrix, _b: &[Precision], _options: &SolverOptions) -> Result<Self::State> { Ok(()) }
-    fn step(&self, _state: &mut Self::State) -> Result<StepResult> { Ok(StepResult::Converged) }
-    fn is_converged(&self, _state: &Self::State) -> bool { true }
-    fn extract_solution(&self, _state: &Self::State) -> Vec<Precision> { Vec::new() }
-    fn update_rhs(&self, _state: &mut Self::State, _delta_b: &[(usize, Precision)]) -> Result<()> { Ok(()) }
-    fn algorithm_name(&self) -> &'static str { "hybrid" }
+    fn initialize(
+        &self,
+        _matrix: &dyn Matrix,
+        _b: &[Precision],
+        _options: &SolverOptions,
+    ) -> Result<Self::State> {
+        Ok(())
+    }
+    fn step(&self, _state: &mut Self::State) -> Result<StepResult> {
+        Ok(StepResult::Converged)
+    }
+    fn is_converged(&self, _state: &Self::State) -> bool {
+        true
+    }
+    fn extract_solution(&self, _state: &Self::State) -> Vec<Precision> {
+        Vec::new()
+    }
+    fn update_rhs(&self, _state: &mut Self::State, _delta_b: &[(usize, Precision)]) -> Result<()> {
+        Ok(())
+    }
+    fn algorithm_name(&self) -> &'static str {
+        "hybrid"
+    }
 }
 
 #[cfg(all(test, feature = "std"))]

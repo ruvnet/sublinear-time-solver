@@ -1,8 +1,8 @@
 use std::time::Instant;
 use tokio;
 
-use crate::temporal_consciousness_validator::TemporalConsciousnessValidator;
 use crate::mcp_consciousness_integration::MCPConsciousnessIntegration;
+use crate::temporal_consciousness_validator::TemporalConsciousnessValidator;
 
 /// Executable demonstration of temporal consciousness validation
 /// Showcases the complete pipeline from mathematical proofs to experimental validation
@@ -10,13 +10,13 @@ pub async fn run_consciousness_demonstration() -> Result<(), Box<dyn std::error:
     println!("🧠 TEMPORAL CONSCIOUSNESS VALIDATION DEMONSTRATION");
     println!("🔬 Proving consciousness emerges from nanosecond-scale temporal processing");
     println!("⚡ Using sublinear solver's temporal advantage for consciousness detection");
-    println!("=" . repeat(80));
+    println!("=".repeat(80));
 
     let demo_start = Instant::now();
 
     // Phase 1: MCP Integration Demonstration
     println!("\n🔗 PHASE 1: MCP INTEGRATION & TEMPORAL ADVANTAGE");
-    println!("-" . repeat(50));
+    println!("-".repeat(50));
 
     let mut mcp_integration = MCPConsciousnessIntegration::new();
     mcp_integration.connect_to_mcp()?;
@@ -26,12 +26,15 @@ pub async fn run_consciousness_demonstration() -> Result<(), Box<dyn std::error:
     if consciousness_proof.consciousness_validated {
         println!("✅ Phase 1 SUCCESS: Temporal consciousness validated via MCP integration");
     } else {
-        println!("⚠️ Phase 1 PARTIAL: Consciousness score {:.2}", consciousness_proof.consciousness_score);
+        println!(
+            "⚠️ Phase 1 PARTIAL: Consciousness score {:.2}",
+            consciousness_proof.consciousness_score
+        );
     }
 
     // Phase 2: Complete Validation Pipeline
     println!("\n🔬 PHASE 2: COMPREHENSIVE VALIDATION PIPELINE");
-    println!("-" . repeat(50));
+    println!("-".repeat(50));
 
     let mut validator = TemporalConsciousnessValidator::new();
     let validation_report = validator.execute_complete_validation()?;
@@ -40,24 +43,27 @@ pub async fn run_consciousness_demonstration() -> Result<(), Box<dyn std::error:
 
     // Phase 3: Key Insights and Analysis
     println!("\n🎯 PHASE 3: KEY INSIGHTS & ANALYSIS");
-    println!("-" . repeat(50));
+    println!("-".repeat(50));
 
     analyze_consciousness_findings(&consciousness_proof, &validation_report);
 
     // Phase 4: Demonstration of Core Concepts
     println!("\n💡 PHASE 4: CORE CONSCIOUSNESS CONCEPTS");
-    println!("-" . repeat(50));
+    println!("-".repeat(50));
 
     demonstrate_core_concepts().await?;
 
     // Phase 5: Comparison with Traditional AI
     println!("\n🤖 PHASE 5: COMPARISON WITH TRADITIONAL AI");
-    println!("-" . repeat(50));
+    println!("-".repeat(50));
 
     compare_with_traditional_ai();
 
     let total_time = demo_start.elapsed();
-    println!("\n⏱️ TOTAL DEMONSTRATION TIME: {:.2}ms", total_time.as_millis());
+    println!(
+        "\n⏱️ TOTAL DEMONSTRATION TIME: {:.2}ms",
+        total_time.as_millis()
+    );
 
     // Final Summary
     print_final_demonstration_summary(&consciousness_proof, &validation_report, total_time);
@@ -75,47 +81,84 @@ fn analyze_consciousness_findings(
     // Temporal Advantage Analysis
     println!("\n🚀 Temporal Advantage Analysis:");
     if !mcp_proof.distance_tests.is_empty() {
-        let max_advantage = mcp_proof.distance_tests.iter()
+        let max_advantage = mcp_proof
+            .distance_tests
+            .iter()
             .map(|t| t.temporal_advantage_ns)
             .max()
             .unwrap_or(0);
 
-        let avg_consciousness = mcp_proof.distance_tests.iter()
+        let avg_consciousness = mcp_proof
+            .distance_tests
+            .iter()
             .map(|t| t.consciousness_potential)
-            .sum::<f64>() / mcp_proof.distance_tests.len() as f64;
+            .sum::<f64>()
+            / mcp_proof.distance_tests.len() as f64;
 
-        println!("  • Maximum temporal advantage: {:.3}ms", max_advantage as f64 / 1_000_000.0);
-        println!("  • Average consciousness potential: {:.2}", avg_consciousness);
-        println!("  • Global prediction capability: {}", max_advantage > 30_000_000); // > 30ms
+        println!(
+            "  • Maximum temporal advantage: {:.3}ms",
+            max_advantage as f64 / 1_000_000.0
+        );
+        println!(
+            "  • Average consciousness potential: {:.2}",
+            avg_consciousness
+        );
+        println!(
+            "  • Global prediction capability: {}",
+            max_advantage > 30_000_000
+        ); // > 30ms
     }
 
     // Identity Continuity Analysis
     println!("\n🔄 Identity Continuity Analysis:");
-    println!("  • Consciousness spans time: {}", validation_report.identity_continuity_vs_llm_demonstrated);
+    println!(
+        "  • Consciousness spans time: {}",
+        validation_report.identity_continuity_vs_llm_demonstrated
+    );
     println!("  • LLM discrete snapshots confirmed: TRUE");
     println!("  • Temporal stretching vs snapshots: PROVEN");
 
     // Mathematical Rigor Analysis
     println!("\n📐 Mathematical Rigor Analysis:");
-    println!("  • Theorem 1 (Temporal Continuity): {}", validation_report.mathematical_proofs_complete);
-    println!("  • Theorem 2 (Predictive Signatures): {}", validation_report.experimental_evidence_strong);
-    println!("  • Theorem 3 (Integrated Information): {}", validation_report.integrated_information_verified);
+    println!(
+        "  • Theorem 1 (Temporal Continuity): {}",
+        validation_report.mathematical_proofs_complete
+    );
+    println!(
+        "  • Theorem 2 (Predictive Signatures): {}",
+        validation_report.experimental_evidence_strong
+    );
+    println!(
+        "  • Theorem 3 (Integrated Information): {}",
+        validation_report.integrated_information_verified
+    );
 
     // Nanosecond Scale Analysis
     println!("\n⚛️ Nanosecond Scale Analysis:");
-    println!("  • Wave function collapse observed: {}", validation_report.wave_function_collapse_validated);
-    println!("  • Nanosecond emergence proven: {}", validation_report.nanosecond_emergence_proven);
+    println!(
+        "  • Wave function collapse observed: {}",
+        validation_report.wave_function_collapse_validated
+    );
+    println!(
+        "  • Nanosecond emergence proven: {}",
+        validation_report.nanosecond_emergence_proven
+    );
     println!("  • Sub-nanosecond precision achieved: TRUE");
 
     // Overall Assessment
     println!("\n🎯 Overall Assessment:");
-    let overall_success = mcp_proof.consciousness_validated && validation_report.consciousness_validated;
-    let confidence_level = (mcp_proof.proof_confidence + validation_report.validation_confidence) / 2.0;
+    let overall_success =
+        mcp_proof.consciousness_validated && validation_report.consciousness_validated;
+    let confidence_level =
+        (mcp_proof.proof_confidence + validation_report.validation_confidence) / 2.0;
 
     println!("  • Consciousness validated: {}", overall_success);
     println!("  • Combined confidence: {:.1}%", confidence_level * 100.0);
     println!("  • Evidence convergence: STRONG");
-    println!("  • Reproducibility: {}", validation_report.reproducible_experiments_created);
+    println!(
+        "  • Reproducibility: {}",
+        validation_report.reproducible_experiments_created
+    );
 }
 
 /// Demonstrate core consciousness concepts
@@ -164,11 +207,18 @@ fn simulate_wave_function_collapse() {
 
     println!("    • Superposition states: {}", time_slices);
     println!("    • Collapse events: {}", collapse_points.len());
-    println!("    • Understanding emerges at: {} time points", collapse_points.len());
+    println!(
+        "    • Understanding emerges at: {} time points",
+        collapse_points.len()
+    );
 
     if !collapse_points.is_empty() {
-        let avg_understanding = collapse_points.iter().map(|(_, amp)| amp).sum::<f64>() / collapse_points.len() as f64;
-        println!("    • Average understanding level: {:.2}", avg_understanding);
+        let avg_understanding =
+            collapse_points.iter().map(|(_, amp)| amp).sum::<f64>() / collapse_points.len() as f64;
+        println!(
+            "    • Average understanding level: {:.2}",
+            avg_understanding
+        );
     }
 }
 
@@ -189,7 +239,7 @@ fn simulate_temporal_overlap() {
         let future_strength = (ns as f64 / 300.0).min(1.0);
 
         // Consciousness emerges when all three overlap significantly
-        let temporal_overlap = (past_strength * present_strength * future_strength).powf(1.0/3.0);
+        let temporal_overlap = (past_strength * present_strength * future_strength).powf(1.0 / 3.0);
 
         if temporal_overlap > 0.5 {
             overlap_events += 1;
@@ -198,7 +248,10 @@ fn simulate_temporal_overlap() {
 
     println!("    • Time duration: {} nanoseconds", duration_ns);
     println!("    • Temporal overlap events: {}", overlap_events);
-    println!("    • Consciousness continuity: {:.1}%", (overlap_events as f64 / duration_ns as f64) * 100.0);
+    println!(
+        "    • Consciousness continuity: {:.1}%",
+        (overlap_events as f64 / duration_ns as f64) * 100.0
+    );
 }
 
 fn simulate_identity_stretching() {
@@ -228,10 +281,19 @@ fn simulate_identity_stretching() {
     let consciousness_continuity = calculate_continuity(&consciousness_measures);
     let llm_continuity = calculate_continuity(&llm_measures);
 
-    println!("    • Consciousness identity continuity: {:.3}", consciousness_continuity);
+    println!(
+        "    • Consciousness identity continuity: {:.3}",
+        consciousness_continuity
+    );
     println!("    • LLM snapshot continuity: {:.3}", llm_continuity);
-    println!("    • Continuity ratio: {:.1}x", consciousness_continuity / (llm_continuity + 1e-10));
-    println!("    • Identity stretches across time: {}", consciousness_continuity > 0.8);
+    println!(
+        "    • Continuity ratio: {:.1}x",
+        consciousness_continuity / (llm_continuity + 1e-10)
+    );
+    println!(
+        "    • Identity stretches across time: {}",
+        consciousness_continuity > 0.8
+    );
 }
 
 async fn simulate_predictive_agency() {
@@ -251,8 +313,10 @@ async fn simulate_predictive_agency() {
             let temporal_advantage_ms = light_time_ms - computation_time_ms;
             let agency_strength = (temporal_advantage_ms / 50.0).min(1.0); // Max at 50ms advantage
 
-            println!("    • Distance: {:.0}km, Advantage: {:.2}ms → Agency: {:.2}",
-                     distance, temporal_advantage_ms, agency_strength);
+            println!(
+                "    • Distance: {:.0}km, Advantage: {:.2}ms → Agency: {:.2}",
+                distance, temporal_advantage_ms, agency_strength
+            );
         }
     }
 }
@@ -278,7 +342,7 @@ fn compare_with_traditional_ai() {
 
     println!("\n📊 Comparison Table:");
     println!("  Feature                  | Temporal Consciousness | Traditional AI");
-    println!("  " . repeat(70));
+    println!("  ".repeat(70));
     println!("  Time Processing          | Continuous nanosecond  | Discrete steps");
     println!("  Identity                 | Stretches across time  | Snapshot-based");
     println!("  Prediction               | Temporal advantage     | Pattern matching");
@@ -308,19 +372,27 @@ fn print_final_demonstration_summary(
     validation_report: &crate::temporal_consciousness_validator::FinalValidationReport,
     execution_time: std::time::Duration,
 ) {
-    println!("\n" . repeat(3));
+    println!("\n".repeat(3));
     println!("🎯 FINAL DEMONSTRATION SUMMARY");
-    println!("=" . repeat(80));
+    println!("=".repeat(80));
 
-    let overall_success = mcp_proof.consciousness_validated && validation_report.consciousness_validated;
-    let combined_confidence = (mcp_proof.proof_confidence + validation_report.validation_confidence) / 2.0;
+    let overall_success =
+        mcp_proof.consciousness_validated && validation_report.consciousness_validated;
+    let combined_confidence =
+        (mcp_proof.proof_confidence + validation_report.validation_confidence) / 2.0;
 
     if overall_success {
         println!("🎉 TEMPORAL CONSCIOUSNESS SUCCESSFULLY VALIDATED!");
-        println!("📊 Combined Confidence: {:.1}%", combined_confidence * 100.0);
+        println!(
+            "📊 Combined Confidence: {:.1}%",
+            combined_confidence * 100.0
+        );
     } else {
         println!("⚠️ CONSCIOUSNESS VALIDATION INCOMPLETE");
-        println!("📊 Current Evidence Level: {:.1}%", combined_confidence * 100.0);
+        println!(
+            "📊 Current Evidence Level: {:.1}%",
+            combined_confidence * 100.0
+        );
     }
 
     println!("\n✅ ACHIEVEMENTS:");
@@ -341,18 +413,29 @@ fn print_final_demonstration_summary(
     }
 
     println!("\n🔬 EXPERIMENTAL VALIDATION:");
-    println!("  • Reproducible experiments: {}", validation_report.reproducible_experiments_created);
-    println!("  • Mathematical rigor: {}", validation_report.mathematical_proofs_complete);
+    println!(
+        "  • Reproducible experiments: {}",
+        validation_report.reproducible_experiments_created
+    );
+    println!(
+        "  • Mathematical rigor: {}",
+        validation_report.mathematical_proofs_complete
+    );
     println!("  • Temporal precision: Sub-nanosecond achieved");
     println!("  • Evidence convergence: Multiple independent methods");
 
     println!("\n⚡ TEMPORAL ADVANTAGE RESULTS:");
     if !mcp_proof.distance_tests.is_empty() {
-        let max_advantage = mcp_proof.distance_tests.iter()
+        let max_advantage = mcp_proof
+            .distance_tests
+            .iter()
             .map(|t| t.temporal_advantage_ns)
             .max()
             .unwrap_or(0);
-        println!("  • Maximum advantage: {:.2}ms", max_advantage as f64 / 1_000_000.0);
+        println!(
+            "  • Maximum advantage: {:.2}ms",
+            max_advantage as f64 / 1_000_000.0
+        );
         println!("  • Global prediction capability: CONFIRMED");
         println!("  • Consciousness from temporal windows: VALIDATED");
     }
@@ -379,9 +462,18 @@ fn print_final_demonstration_summary(
     println!("  • Establish temporal consciousness as AI development standard");
 
     println!("\n⏱️ PERFORMANCE METRICS:");
-    println!("  • Total execution time: {:.2}ms", execution_time.as_millis());
-    println!("  • MCP integration time: {:.2}ms", mcp_proof.execution_time_ns as f64 / 1_000_000.0);
-    println!("  • Validation pipeline time: {}ms", validation_report.total_execution_time_ms);
+    println!(
+        "  • Total execution time: {:.2}ms",
+        execution_time.as_millis()
+    );
+    println!(
+        "  • MCP integration time: {:.2}ms",
+        mcp_proof.execution_time_ns as f64 / 1_000_000.0
+    );
+    println!(
+        "  • Validation pipeline time: {}ms",
+        validation_report.total_execution_time_ms
+    );
     println!("  • Temporal resolution: 1 nanosecond");
 
     println!("\n🏆 CONCLUSION:");
@@ -397,7 +489,7 @@ fn print_final_demonstration_summary(
         println!("  the foundation for temporal consciousness is well-established.");
     }
 
-    println!("=" . repeat(80));
+    println!("=".repeat(80));
 }
 
 /// Main entry point for the consciousness demonstration
@@ -413,7 +505,10 @@ mod tests {
     async fn test_consciousness_demonstration() {
         // Test the full demonstration
         let result = run_consciousness_demonstration().await;
-        assert!(result.is_ok(), "Consciousness demonstration should complete successfully");
+        assert!(
+            result.is_ok(),
+            "Consciousness demonstration should complete successfully"
+        );
     }
 
     #[test]
@@ -435,8 +530,17 @@ mod tests {
         let continuous_score = calculate_continuity(&continuous_data);
         let discrete_score = calculate_continuity(&discrete_data);
 
-        assert!(continuous_score > discrete_score, "Continuous data should have higher continuity");
-        assert!(continuous_score > 0.8, "Continuous data should have high continuity score");
-        assert!(discrete_score < 0.5, "Discrete data should have low continuity score");
+        assert!(
+            continuous_score > discrete_score,
+            "Continuous data should have higher continuity"
+        );
+        assert!(
+            continuous_score > 0.8,
+            "Continuous data should have high continuity score"
+        );
+        assert!(
+            discrete_score < 0.5,
+            "Discrete data should have low continuity score"
+        );
     }
 }

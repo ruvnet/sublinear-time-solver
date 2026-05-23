@@ -4,15 +4,15 @@
 //! that achieve O(log n) complexity under specific conditions.
 
 pub mod dimension_reduction;
-pub mod spectral_sparsification;
-pub mod sublinear_neumann;
+pub mod fast_sampling;
 pub mod johnson_lindenstrauss;
 pub mod sketching;
-pub mod fast_sampling;
+pub mod spectral_sparsification;
+pub mod sublinear_neumann;
 
+use crate::error::Result;
 use crate::matrix::Matrix;
 use crate::types::Precision;
-use crate::error::{SolverError, Result};
 
 /// Configuration for sublinear algorithms
 #[derive(Debug, Clone)]

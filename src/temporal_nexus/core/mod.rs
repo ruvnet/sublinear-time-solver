@@ -6,15 +6,15 @@
 //! The scheduler operates at nanosecond precision using hardware Time Stamp Counter (TSC)
 //! and maintains temporal windows with 50-100 tick overlap to ensure consciousness continuity.
 
-pub mod scheduler;
-pub mod temporal_window;
-pub mod strange_loop;
 pub mod identity;
+pub mod scheduler;
+pub mod strange_loop;
+pub mod temporal_window;
 
+pub use identity::{ContinuityMetrics, IdentityContinuityTracker};
 pub use scheduler::NanosecondScheduler;
+pub use strange_loop::{ContractionMetrics, StrangeLoopOperator};
 pub use temporal_window::{TemporalWindow, WindowOverlapManager};
-pub use strange_loop::{StrangeLoopOperator, ContractionMetrics};
-pub use identity::{IdentityContinuityTracker, ContinuityMetrics};
 
 /// Core temporal consciousness configuration
 #[derive(Debug, Clone)]
@@ -63,21 +63,24 @@ pub enum ConsciousnessTask {
 pub enum TemporalError {
     #[error("Scheduling overhead exceeded limit: {actual_ns}ns > {limit_ns}ns")]
     SchedulingOverhead { actual_ns: u64, limit_ns: u64 },
-    
+
     #[error("Window overlap below threshold: {actual}% < {required}%")]
     WindowOverlapTooLow { actual: f64, required: f64 },
-    
+
     #[error("Contraction failed to converge in {iterations} iterations")]
     ContractionNoConvergence { iterations: usize },
-    
+
     #[error("Identity continuity broken: gap = {gap_ns}ns")]
     IdentityContinuityBreak { gap_ns: u64 },
-    
+
     #[error("TSC timing error: {message}")]
     TscTimingError { message: String },
-    
+
     #[error("Task queue overflow: {current_size}/{max_size}")]
-    TaskQueueOverflow { current_size: usize, max_size: usize },
+    TaskQueueOverflow {
+        current_size: usize,
+        max_size: usize,
+    },
 }
 
 pub type TemporalResult<T> = Result<T, TemporalError>;
@@ -138,13 +141,13 @@ impl TscTimestamp {
             Self(generic_now_ns())
         }
     }
-    
+
     /// Calculate nanoseconds since another timestamp
     pub fn nanos_since(&self, other: TscTimestamp, tsc_freq_hz: u64) -> u64 {
         let tsc_diff = self.0.saturating_sub(other.0);
         (tsc_diff * 1_000_000_000) / tsc_freq_hz
     }
-    
+
     /// Add nanoseconds to timestamp
     pub fn add_nanos(&self, nanos: u64, tsc_freq_hz: u64) -> Self {
         let tsc_increment = (nanos * tsc_freq_hz) / 1_000_000_000;
@@ -155,7 +158,7 @@ impl TscTimestamp {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_temporal_config_default() {
         let config = TemporalConfig::default();
@@ -164,14 +167,14 @@ mod tests {
         assert!(config.lipschitz_bound < 1.0);
         assert!(config.max_scheduling_overhead_ns <= 1_000);
     }
-    
+
     #[test]
     fn test_tsc_timestamp() {
         let ts1 = TscTimestamp::now();
         std::thread::sleep(std::time::Duration::from_nanos(1000));
         let ts2 = TscTimestamp::now();
         assert!(ts2 > ts1);
-        
+
         let nanos = ts2.nanos_since(ts1, 3_000_000_000);
         assert!(nanos > 0);
     }

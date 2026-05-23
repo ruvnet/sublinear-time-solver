@@ -61,7 +61,10 @@ fn validate_codata_2018_constants() -> Result<(), String> {
     let calculated_hbar = CODATA_PLANCK_H / (2.0 * PI);
     let relationship_error = (CODATA_PLANCK_HBAR - calculated_hbar).abs() / calculated_hbar;
     if relationship_error > 1e-9 {
-        return Err(format!("Planck constant relative error: {:.2e}", relationship_error));
+        return Err(format!(
+            "Planck constant relative error: {:.2e}",
+            relationship_error
+        ));
     }
     println!("✓ Planck relationship: ℏ = h/(2π)");
 
@@ -99,10 +102,16 @@ fn test_margolus_levitin_bound() -> Result<(), String> {
     let required_energy_ev = required_energy / CODATA_EV_TO_JOULES;
 
     if required_energy_ev > 1.0 {
-        return Err(format!("Nanosecond consciousness requires unreasonable energy: {:.2e} eV", required_energy_ev));
+        return Err(format!(
+            "Nanosecond consciousness requires unreasonable energy: {:.2e} eV",
+            required_energy_ev
+        ));
     }
 
-    println!("✓ Nanosecond consciousness energy: {:.2e} J ({:.2e} eV)", required_energy, required_energy_ev);
+    println!(
+        "✓ Nanosecond consciousness energy: {:.2e} J ({:.2e} eV)",
+        required_energy, required_energy_ev
+    );
 
     // Test attosecond bound
     let attosecond = 1e-18;
@@ -111,10 +120,16 @@ fn test_margolus_levitin_bound() -> Result<(), String> {
 
     // Should be approximately 1.03 keV
     if (attosecond_energy_kev - 1.03).abs() > 0.1 {
-        return Err(format!("Attosecond energy calculation error: {:.2} keV vs expected 1.03 keV", attosecond_energy_kev));
+        return Err(format!(
+            "Attosecond energy calculation error: {:.2} keV vs expected 1.03 keV",
+            attosecond_energy_kev
+        ));
     }
 
-    println!("✓ Attosecond energy requirement: {:.2} keV", attosecond_energy_kev);
+    println!(
+        "✓ Attosecond energy requirement: {:.2} keV",
+        attosecond_energy_kev
+    );
 
     Ok(())
 }
@@ -129,21 +144,26 @@ fn test_uncertainty_principle() -> Result<(), String> {
 
     // Test various energy-time combinations
     let test_cases = vec![
-        (1e-15, 1e-9),   // 1 fJ, 1 ns
-        (1e-18, 1e-6),   // 1 aJ, 1 µs
-        (1e-12, 1e-12),  // 1 pJ, 1 ps
-        (1e-21, 1e-3),   // 1 zJ, 1 ms
+        (1e-15, 1e-9),  // 1 fJ, 1 ns
+        (1e-18, 1e-6),  // 1 aJ, 1 µs
+        (1e-12, 1e-12), // 1 pJ, 1 ps
+        (1e-21, 1e-3),  // 1 zJ, 1 ms
     ];
 
     for (energy, time) in test_cases {
         let product = energy * time;
         if product < min_uncertainty {
-            return Err(format!("Uncertainty violation: ΔE⋅Δt = {:.2e} < ℏ/2 = {:.2e}", product, min_uncertainty));
+            return Err(format!(
+                "Uncertainty violation: ΔE⋅Δt = {:.2e} < ℏ/2 = {:.2e}",
+                product, min_uncertainty
+            ));
         }
 
         let margin = product / min_uncertainty;
-        println!("✓ E={:.0e}J, t={:.0e}s: ΔE⋅Δt = {:.2e} J⋅s (margin: {:.1}×)",
-                energy, time, product, margin);
+        println!(
+            "✓ E={:.0e}J, t={:.0e}s: ΔE⋅Δt = {:.2e} J⋅s (margin: {:.1}×)",
+            energy, time, product, margin
+        );
     }
 
     // Test thermal energy at room temperature
@@ -152,10 +172,16 @@ fn test_uncertainty_principle() -> Result<(), String> {
     let thermal_energy_ev = thermal_energy / CODATA_EV_TO_JOULES;
 
     if thermal_energy_ev < 0.02 || thermal_energy_ev > 0.03 {
-        return Err(format!("Room temperature thermal energy unusual: {:.3} eV", thermal_energy_ev));
+        return Err(format!(
+            "Room temperature thermal energy unusual: {:.3} eV",
+            thermal_energy_ev
+        ));
     }
 
-    println!("✓ Room temperature thermal energy: {:.1} meV", thermal_energy_ev * 1000.0);
+    println!(
+        "✓ Room temperature thermal energy: {:.1} meV",
+        thermal_energy_ev * 1000.0
+    );
 
     Ok(())
 }
@@ -178,10 +204,16 @@ fn test_attosecond_feasibility() -> Result<(), String> {
     let energy_ratio = required_energy_j / thermal_energy;
 
     if energy_ratio < 1000.0 {
-        return Err(format!("Attosecond energy only {:.0}× thermal energy (expected >1000×)", energy_ratio));
+        return Err(format!(
+            "Attosecond energy only {:.0}× thermal energy (expected >1000×)",
+            energy_ratio
+        ));
     }
 
-    println!("✓ Energy ratio to thermal: {:.0}× room temperature", energy_ratio);
+    println!(
+        "✓ Energy ratio to thermal: {:.0}× room temperature",
+        energy_ratio
+    );
 
     // Test theoretical feasibility
     println!("✓ Theoretically feasible: YES (quantum mechanics allows)");
@@ -192,7 +224,7 @@ fn test_attosecond_feasibility() -> Result<(), String> {
         "Energy requirement: 1.03 keV",
         "Current hardware limitations",
         "Decoherence at room temperature",
-        "Thermal noise interference"
+        "Thermal noise interference",
     ];
 
     println!("✓ Limiting factors:");
@@ -226,7 +258,10 @@ fn test_decoherence_room_temperature() -> Result<(), String> {
         return Err("Decoherence time calculation invalid".to_string());
     }
 
-    println!("✓ Thermal decoherence time: {:.2e} s", thermal_decoherence_time);
+    println!(
+        "✓ Thermal decoherence time: {:.2e} s",
+        thermal_decoherence_time
+    );
 
     // Test coherence preservation for different operation times
     let operation_times = vec![1e-12, 1e-9, 1e-6, 1e-3];
@@ -235,13 +270,20 @@ fn test_decoherence_room_temperature() -> Result<(), String> {
         let coherence_factor = (-op_time / thermal_decoherence_time).exp();
         let coherence_percent = coherence_factor * 100.0;
 
-        let status = if coherence_percent > 90.0 { "EXCELLENT" }
-                    else if coherence_percent > 50.0 { "GOOD" }
-                    else if coherence_percent > 10.0 { "POOR" }
-                    else { "LOST" };
+        let status = if coherence_percent > 90.0 {
+            "EXCELLENT"
+        } else if coherence_percent > 50.0 {
+            "GOOD"
+        } else if coherence_percent > 10.0 {
+            "POOR"
+        } else {
+            "LOST"
+        };
 
-        println!("✓ Operation time {:.0e}s: {:.1}% coherence ({status})",
-                op_time, coherence_percent);
+        println!(
+            "✓ Operation time {:.0e}s: {:.1}% coherence ({status})",
+            op_time, coherence_percent
+        );
     }
 
     // Test environment classification
@@ -265,7 +307,10 @@ fn test_entanglement_validation() -> Result<(), String> {
     // At t=0, survival should be 1.0
     let survival_t0 = (-0.0_f64 / decoherence_time).exp();
     if (survival_t0 - 1.0).abs() > 1e-10 {
-        return Err(format!("Entanglement survival at t=0 should be 1.0, got {:.6}", survival_t0));
+        return Err(format!(
+            "Entanglement survival at t=0 should be 1.0, got {:.6}",
+            survival_t0
+        ));
     }
     println!("✓ Entanglement survival at t=0: {:.6}", survival_t0);
 
@@ -273,7 +318,10 @@ fn test_entanglement_validation() -> Result<(), String> {
     let survival_td = (-1.0_f64).exp();
     let expected_survival = 1.0 / std::f64::consts::E;
     if (survival_td - expected_survival).abs() > 1e-6 {
-        return Err(format!("Entanglement survival at t=τd incorrect: {:.6} vs {:.6}", survival_td, expected_survival));
+        return Err(format!(
+            "Entanglement survival at t=τd incorrect: {:.6} vs {:.6}",
+            survival_td, expected_survival
+        ));
     }
     println!("✓ Entanglement survival at t=τd: {:.6}", survival_td);
 
@@ -288,7 +336,10 @@ fn test_entanglement_validation() -> Result<(), String> {
             return Err(format!("Concurrence out of bounds: {:.6}", concurrence));
         }
 
-        println!("✓ Operation time {:.0e}s: concurrence = {:.6}", op_time, concurrence);
+        println!(
+            "✓ Operation time {:.0e}s: concurrence = {:.6}",
+            op_time, concurrence
+        );
     }
 
     // Test Bell parameter (should be ≥ 2.0 for quantum systems)
@@ -297,12 +348,21 @@ fn test_entanglement_validation() -> Result<(), String> {
         let bell_param = 2.0 + survival; // Simplified model
 
         if bell_param < 2.0 {
-            return Err(format!("Bell parameter below classical bound: {:.6}", bell_param));
+            return Err(format!(
+                "Bell parameter below classical bound: {:.6}",
+                bell_param
+            ));
         }
 
-        let violation = if bell_param > 2.0 { "QUANTUM" } else { "CLASSICAL" };
-        println!("✓ Operation time {:.0e}s: Bell parameter = {:.6} ({violation})",
-                op_time, bell_param);
+        let violation = if bell_param > 2.0 {
+            "QUANTUM"
+        } else {
+            "CLASSICAL"
+        };
+        println!(
+            "✓ Operation time {:.0e}s: Bell parameter = {:.6} ({violation})",
+            op_time, bell_param
+        );
     }
 
     // Test consciousness relevance assessment
@@ -317,10 +377,15 @@ fn test_entanglement_validation() -> Result<(), String> {
 
     for (name, time_scale, expected_relevance) in consciousness_scales {
         let survival = (-time_scale / decoherence_time).exp() as f64;
-        let relevance = if survival > 0.9 { "Directly Relevant" }
-                       else if survival > 0.5 { "Highly Relevant" }
-                       else if survival > 0.1 { "Potentially Relevant" }
-                       else { "Theoretical" };
+        let relevance = if survival > 0.9 {
+            "Directly Relevant"
+        } else if survival > 0.5 {
+            "Highly Relevant"
+        } else if survival > 0.1 {
+            "Potentially Relevant"
+        } else {
+            "Theoretical"
+        };
 
         println!("✓ {}: {:.0e}s, relevance = {}", name, time_scale, relevance);
     }
@@ -350,11 +415,26 @@ fn create_physics_validation_report() -> Result<String, String> {
 
     // Physics Constants Section
     report.push_str("## Physics Constants Validation (CODATA 2018)\n");
-    report.push_str(&format!("- **Planck constant (h)**: {:.10e} J⋅s ✅\n", CODATA_PLANCK_H));
-    report.push_str(&format!("- **Reduced Planck (ℏ)**: {:.10e} J⋅s ✅\n", CODATA_PLANCK_HBAR));
-    report.push_str(&format!("- **Boltzmann (kB)**: {:.10e} J/K ✅\n", CODATA_BOLTZMANN_K));
-    report.push_str(&format!("- **Speed of light (c)**: {:.0} m/s ✅\n", CODATA_SPEED_OF_LIGHT));
-    report.push_str(&format!("- **eV to Joules**: {:.10e} ✅\n", CODATA_EV_TO_JOULES));
+    report.push_str(&format!(
+        "- **Planck constant (h)**: {:.10e} J⋅s ✅\n",
+        CODATA_PLANCK_H
+    ));
+    report.push_str(&format!(
+        "- **Reduced Planck (ℏ)**: {:.10e} J⋅s ✅\n",
+        CODATA_PLANCK_HBAR
+    ));
+    report.push_str(&format!(
+        "- **Boltzmann (kB)**: {:.10e} J/K ✅\n",
+        CODATA_BOLTZMANN_K
+    ));
+    report.push_str(&format!(
+        "- **Speed of light (c)**: {:.0} m/s ✅\n",
+        CODATA_SPEED_OF_LIGHT
+    ));
+    report.push_str(&format!(
+        "- **eV to Joules**: {:.10e} ✅\n",
+        CODATA_EV_TO_JOULES
+    ));
     report.push_str("- **Fundamental relationships**: ℏ = h/(2π) ✅\n\n");
 
     // Computational Bounds Section
@@ -364,14 +444,25 @@ fn create_physics_validation_report() -> Result<String, String> {
     let consciousness_energy = CODATA_PLANCK_H / (4.0 * 1e-9);
     let attosecond_energy = CODATA_PLANCK_H / (4.0 * 1e-18);
 
-    report.push_str(&format!("- **Margolus-Levitin bound** (1 fJ): {:.2e} s ✅\n", min_time));
-    report.push_str(&format!("- **Consciousness scale** (1 ns): {:.2e} J ({:.2e} eV) ✅\n",
-                           consciousness_energy, consciousness_energy / CODATA_EV_TO_JOULES));
-    report.push_str(&format!("- **Attosecond requirement**: {:.2} keV ✅\n",
-                           attosecond_energy / CODATA_EV_TO_JOULES / 1000.0));
+    report.push_str(&format!(
+        "- **Margolus-Levitin bound** (1 fJ): {:.2e} s ✅\n",
+        min_time
+    ));
+    report.push_str(&format!(
+        "- **Consciousness scale** (1 ns): {:.2e} J ({:.2e} eV) ✅\n",
+        consciousness_energy,
+        consciousness_energy / CODATA_EV_TO_JOULES
+    ));
+    report.push_str(&format!(
+        "- **Attosecond requirement**: {:.2} keV ✅\n",
+        attosecond_energy / CODATA_EV_TO_JOULES / 1000.0
+    ));
 
     let min_uncertainty = CODATA_PLANCK_HBAR / 2.0;
-    report.push_str(&format!("- **Minimum uncertainty**: {:.2e} J⋅s ✅\n\n", min_uncertainty));
+    report.push_str(&format!(
+        "- **Minimum uncertainty**: {:.2e} J⋅s ✅\n\n",
+        min_uncertainty
+    ));
 
     // Decoherence Analysis Section
     report.push_str("## Decoherence Analysis (Room Temperature)\n");
@@ -379,9 +470,14 @@ fn create_physics_validation_report() -> Result<String, String> {
     let thermal_decoherence = CODATA_PLANCK_HBAR / (4.0 * thermal_energy);
 
     report.push_str(&format!("- **Temperature**: 300 K\n"));
-    report.push_str(&format!("- **Thermal energy**: {:.1} meV\n",
-                           thermal_energy / CODATA_EV_TO_JOULES * 1000.0));
-    report.push_str(&format!("- **Thermal decoherence time**: {:.2e} s ✅\n", thermal_decoherence));
+    report.push_str(&format!(
+        "- **Thermal energy**: {:.1} meV\n",
+        thermal_energy / CODATA_EV_TO_JOULES * 1000.0
+    ));
+    report.push_str(&format!(
+        "- **Thermal decoherence time**: {:.2e} s ✅\n",
+        thermal_decoherence
+    ));
     report.push_str("- **Coherence preservation**:\n");
     report.push_str("  - 1 ps operations: >99% coherence ✅\n");
     report.push_str("  - 1 ns operations: >90% coherence ✅\n");

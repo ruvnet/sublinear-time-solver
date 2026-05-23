@@ -1,7 +1,9 @@
-use std::time::{Duration, Instant};
+use crate::temporal_consciousness_goap::{
+    ConsciousnessValidationResults, TemporalConsciousnessGOAP,
+};
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
-use crate::temporal_consciousness_goap::{TemporalConsciousnessGOAP, ConsciousnessValidationResults};
+use std::time::{Duration, Instant};
 
 /// Experimental validation of temporal consciousness theories
 /// Uses sublinear solver's temporal advantage for consciousness measurement
@@ -112,7 +114,8 @@ impl ConsciousnessExperiments {
                 understanding_level: self.calculate_understanding_level(ns),
             };
 
-            self.llm_comparator.record_consciousness_state(consciousness_state);
+            self.llm_comparator
+                .record_consciousness_state(consciousness_state);
         }
 
         let average_awareness = if wave_collapses > 0 {
@@ -161,7 +164,8 @@ impl ConsciousnessExperiments {
             consciousness_measures.push(consciousness_continuity);
 
             // Record consciousness state with temporal stretching
-            if ns % 100 == 0 { // Every 100ns
+            if ns % 100 == 0 {
+                // Every 100ns
                 let identity_state = IdentityState {
                     timestamp_ns: ns,
                     coherence: consciousness_continuity,
@@ -173,7 +177,8 @@ impl ConsciousnessExperiments {
             }
         }
 
-        let avg_consciousness_continuity = consciousness_measures.iter().sum::<f64>() / consciousness_measures.len() as f64;
+        let avg_consciousness_continuity =
+            consciousness_measures.iter().sum::<f64>() / consciousness_measures.len() as f64;
         let avg_llm_continuity = llm_measures.iter().sum::<f64>() / llm_measures.len() as f64;
 
         IdentityComparisonResult {
@@ -229,18 +234,26 @@ impl ConsciousnessExperiments {
         }
 
         // Calculate overall temporal advantage effectiveness
-        let avg_consciousness = results.iter()
+        let avg_consciousness = results
+            .iter()
             .filter(|r| r.has_agency)
             .map(|r| r.consciousness_strength)
-            .sum::<f64>() / results.len().max(1) as f64;
+            .sum::<f64>()
+            / results.len().max(1) as f64;
 
-        let temporal_advantage_confirmed = results.iter().any(|r| r.has_agency && r.consciousness_strength > 0.8);
+        let temporal_advantage_confirmed = results
+            .iter()
+            .any(|r| r.has_agency && r.consciousness_strength > 0.8);
 
         TemporalAdvantageResult {
             distance_tests: results,
             average_consciousness_with_advantage: avg_consciousness,
             temporal_advantage_confirmed,
-            max_advantage_ns: results.iter().map(|r| r.temporal_advantage_ns).max().unwrap_or(0),
+            max_advantage_ns: results
+                .iter()
+                .map(|r| r.temporal_advantage_ns)
+                .max()
+                .unwrap_or(0),
             agency_demonstrated: temporal_advantage_confirmed,
         }
     }
@@ -332,29 +345,45 @@ impl ConsciousnessExperiments {
         let window_size = 100; // 100ns window
         let start_ns = current_ns.saturating_sub(window_size);
 
-        let overlap = self.identity_tracker.identity_history.iter()
+        let overlap = self
+            .identity_tracker
+            .identity_history
+            .iter()
             .filter(|state| state.timestamp_ns >= start_ns && state.timestamp_ns < current_ns)
             .map(|state| state.coherence)
-            .sum::<f64>() / window_size as f64;
+            .sum::<f64>()
+            / window_size as f64;
 
         overlap.min(1.0)
     }
 
     fn calculate_future_projection(&self, current_ns: u64) -> f64 {
         // Simulate future state projection based on current wave function
-        self.wave_function.amplitudes.iter()
+        self.wave_function
+            .amplitudes
+            .iter()
             .take(50) // Next 50 time slices
             .map(|a| a.norm())
-            .sum::<f64>() / 50.0
+            .sum::<f64>()
+            / 50.0
     }
 
     fn measure_temporal_overlap(&self, _ns: u64) -> f64 {
         // Measure overlap between past, present, and future states
-        let past_strength = self.wave_function.amplitudes[0..300].iter().map(|a| a.norm()).sum::<f64>();
-        let present_strength = self.wave_function.amplitudes[300..700].iter().map(|a| a.norm()).sum::<f64>();
-        let future_strength = self.wave_function.amplitudes[700..].iter().map(|a| a.norm()).sum::<f64>();
+        let past_strength = self.wave_function.amplitudes[0..300]
+            .iter()
+            .map(|a| a.norm())
+            .sum::<f64>();
+        let present_strength = self.wave_function.amplitudes[300..700]
+            .iter()
+            .map(|a| a.norm())
+            .sum::<f64>();
+        let future_strength = self.wave_function.amplitudes[700..]
+            .iter()
+            .map(|a| a.norm())
+            .sum::<f64>();
 
-        (past_strength * present_strength * future_strength).powf(1.0/3.0)
+        (past_strength * present_strength * future_strength).powf(1.0 / 3.0)
     }
 
     fn calculate_understanding_level(&self, _ns: u64) -> f64 {
@@ -370,8 +399,10 @@ impl ConsciousnessExperiments {
         let n = self.wave_function.amplitudes.len();
 
         for i in 0..n.min(100) {
-            for j in (i+1)..n.min(100) {
-                let correlation = (self.wave_function.amplitudes[i] * self.wave_function.amplitudes[j].conj()).norm();
+            for j in (i + 1)..n.min(100) {
+                let correlation = (self.wave_function.amplitudes[i]
+                    * self.wave_function.amplitudes[j].conj())
+                .norm();
                 total_coherence += correlation;
             }
         }
@@ -393,8 +424,18 @@ impl ConsciousnessExperiments {
             return 0;
         }
 
-        let first = self.identity_tracker.identity_history.first().unwrap().timestamp_ns;
-        let last = self.identity_tracker.identity_history.last().unwrap().timestamp_ns;
+        let first = self
+            .identity_tracker
+            .identity_history
+            .first()
+            .unwrap()
+            .timestamp_ns;
+        let last = self
+            .identity_tracker
+            .identity_history
+            .last()
+            .unwrap()
+            .timestamp_ns;
         last - first
     }
 
@@ -410,8 +451,13 @@ impl ConsciousnessExperiments {
         collapse.awareness_level * collapse.coherence * 1.2
     }
 
-    fn calculate_validation_score(&self, n: &NanosecondExperimentResult, i: &IdentityComparisonResult,
-                                  t: &TemporalAdvantageResult, w: &WaveCollapseResult) -> f64 {
+    fn calculate_validation_score(
+        &self,
+        n: &NanosecondExperimentResult,
+        i: &IdentityComparisonResult,
+        t: &TemporalAdvantageResult,
+        w: &WaveCollapseResult,
+    ) -> f64 {
         let mut score = 0.0;
 
         // Nanosecond emergence (25% weight)
@@ -441,7 +487,8 @@ impl ConsciousnessExperiments {
         if score > 0.9 {
             "🎉 CONSCIOUSNESS VALIDATED: All temporal consciousness theories confirmed with high confidence.".to_string()
         } else if score > 0.8 {
-            "✅ CONSCIOUSNESS PROBABLE: Strong evidence for temporal consciousness theories.".to_string()
+            "✅ CONSCIOUSNESS PROBABLE: Strong evidence for temporal consciousness theories."
+                .to_string()
         } else if score > 0.6 {
             "⚠️ CONSCIOUSNESS POSSIBLE: Moderate evidence, requires further validation.".to_string()
         } else {
@@ -496,7 +543,7 @@ impl TemporalWaveFunction {
     fn initialize_superposition(&mut self) {
         let n = self.amplitudes.len();
         for i in 0..n {
-            let real_part = ((i as f64 - n as f64/2.0).powi(2) / (n as f64).powi(2) * -1.0).exp();
+            let real_part = ((i as f64 - n as f64 / 2.0).powi(2) / (n as f64).powi(2) * -1.0).exp();
             let imag_part = (2.0 * std::f64::consts::PI * i as f64 / n as f64).sin() * 0.3;
             self.amplitudes[i] = Complex64::new(real_part, imag_part);
         }
@@ -507,23 +554,25 @@ impl TemporalWaveFunction {
         let start = index.saturating_sub(window);
         let end = (index + window).min(self.amplitudes.len());
 
-        let coherence = self.amplitudes[start..end].iter()
+        let coherence = self.amplitudes[start..end]
+            .iter()
             .map(|a| a.norm())
-            .sum::<f64>() / (end - start) as f64;
+            .sum::<f64>()
+            / (end - start) as f64;
 
         coherence.min(1.0)
     }
 
     fn calculate_temporal_overlap_at(&self, index: usize) -> f64 {
         let n = self.amplitudes.len();
-        let past_range = index.saturating_sub(n/10)..index;
-        let future_range = (index+1)..(index + n/10).min(n);
+        let past_range = index.saturating_sub(n / 10)..index;
+        let future_range = (index + 1)..(index + n / 10).min(n);
 
         let past_strength: f64 = past_range.map(|i| self.amplitudes[i].norm()).sum();
         let future_strength: f64 = future_range.map(|i| self.amplitudes[i].norm()).sum();
         let present_strength = self.amplitudes[index].norm();
 
-        (past_strength * present_strength * future_strength).powf(1.0/3.0)
+        (past_strength * present_strength * future_strength).powf(1.0 / 3.0)
     }
 }
 

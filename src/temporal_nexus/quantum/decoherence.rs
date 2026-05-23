@@ -46,7 +46,7 @@ impl DecoherenceTracker {
     /// Create tracker with specific temperature
     pub fn with_temperature(temperature_k: f64) -> Self {
         let thermal_rate = Self::calculate_thermal_decoherence_rate(temperature_k);
-        
+
         // Pure dephasing is dominated by interactions with the thermal
         // environment, so it must scale with temperature too — otherwise
         // a 10 mK cryogenic tracker reports the same coherence time as a
@@ -74,11 +74,11 @@ impl DecoherenceTracker {
         if temperature_k <= 0.0 {
             return 0.0;
         }
-        
+
         let thermal_energy = constants::BOLTZMANN_K * temperature_k;
         let typical_coupling = 1e-6; // Weak coupling in eV
         let coupling_j = typical_coupling * constants::EV_TO_JOULES;
-        
+
         // Decoherence rate ∝ coupling² × thermal energy / ℏ
         let rate = (coupling_j.powi(2) * thermal_energy) / constants::PLANCK_HBAR;
         // No artificial floor: the previous `rate.max(1e3)` clamped both
@@ -107,21 +107,24 @@ impl DecoherenceTracker {
     }
 
     /// Validate if operation time is within coherence window
-    pub fn validate_operation_time(&self, operation_time_s: f64) -> QuantumResult<DecoherenceResult> {
+    pub fn validate_operation_time(
+        &self,
+        operation_time_s: f64,
+    ) -> QuantumResult<DecoherenceResult> {
         let coherence_time_s = self.coherence_time();
         let t1_time_s = self.relaxation_time_t1();
         let t2_time_s = self.dephasing_time_t2();
-        
+
         let is_valid = operation_time_s < coherence_time_s;
         let coherence_preserved = (-operation_time_s / coherence_time_s).exp();
-        
+
         if !is_valid {
             return Err(QuantumError::DecoherenceExceeded {
                 decoherence_time_s: coherence_time_s,
                 operation_time_s,
             });
         }
-        
+
         Ok(DecoherenceResult {
             is_valid,
             operation_time_s,
@@ -158,14 +161,14 @@ impl DecoherenceTracker {
         let mut times = Vec::new();
         let mut coherences = Vec::new();
         let coherence_time = self.coherence_time();
-        
+
         for i in 0..=steps {
             let t = i as f64 * dt;
             let coherence = (-t / coherence_time).exp();
             times.push(t);
             coherences.push(coherence);
         }
-        
+
         CoherenceEvolution {
             times,
             coherences,
@@ -184,14 +187,14 @@ impl DecoherenceTracker {
             ("microsecond", 1e-6),
             ("millisecond", 1e-3),
         ];
-        
+
         let coherence_time = self.coherence_time();
         let mut assessments = Vec::new();
-        
+
         for (name, time_s) in scales {
             let coherence_preserved = (-time_s / coherence_time).exp();
             let is_feasible = coherence_preserved > 0.5; // 50% coherence threshold
-            
+
             assessments.push(TimeScaleAssessment {
                 scale_name: name.to_string(),
                 time_s,
@@ -208,7 +211,7 @@ impl DecoherenceTracker {
                 },
             });
         }
-        
+
         DecoherenceAnalysis {
             environment: self.classify_environment(),
             temperature_k: self.temperature,
@@ -223,7 +226,7 @@ impl DecoherenceTracker {
     /// Recommend optimal time scale for consciousness operations
     fn recommend_time_scale(&self) -> String {
         let coherence_time = self.coherence_time();
-        
+
         if coherence_time > 1e-6 {
             "microsecond".to_string()
         } else if coherence_time > 1e-9 {
@@ -264,34 +267,34 @@ pub struct NoiseSpectrum {
 impl NoiseSpectrum {
     fn new(temperature_k: f64) -> Self {
         let mut spectral_density = HashMap::new();
-        
+
         // Johnson noise (thermal)
         let johnson_noise = 4.0 * constants::BOLTZMANN_K * temperature_k;
         spectral_density.insert("thermal".to_string(), johnson_noise);
-        
+
         // 1/f noise
         spectral_density.insert("flicker".to_string(), 1e-15);
-        
+
         // Shot noise
         spectral_density.insert("shot".to_string(), 1e-18);
-        
+
         Self {
             temperature: temperature_k,
-            low_freq_cutoff: 1e3,  // 1 kHz
+            low_freq_cutoff: 1e3,   // 1 kHz
             high_freq_cutoff: 1e12, // 1 THz
             spectral_density,
         }
     }
-    
+
     fn analyze_at_time(&self, time_s: f64) -> NoiseAnalysis {
         let frequency = 1.0 / time_s;
-        
+
         let thermal_noise = self.spectral_density["thermal"];
         let flicker_noise = self.spectral_density["flicker"] / frequency.max(1.0);
         let shot_noise = self.spectral_density["shot"];
-        
+
         let total_noise = thermal_noise + flicker_noise + shot_noise;
-        
+
         NoiseAnalysis {
             frequency_hz: frequency,
             thermal_noise_density: thermal_noise,
@@ -340,11 +343,11 @@ impl DecoherenceResult {
 /// Environment classification for decoherence analysis
 #[derive(Debug, Clone, PartialEq)]
 pub enum EnvironmentType {
-    UltraCryogenic,   // < 1K
-    Cryogenic,        // 1-4.2K
-    LiquidNitrogen,   // 4.2-77K
-    Cold,             // 77-273K
-    RoomTemperature,  // > 273K
+    UltraCryogenic,  // < 1K
+    Cryogenic,       // 1-4.2K
+    LiquidNitrogen,  // 4.2-77K
+    Cold,            // 77-273K
+    RoomTemperature, // > 273K
 }
 
 /// Coherence quality classification
@@ -414,16 +417,19 @@ mod tests {
     fn test_cryogenic_environment() {
         let cryo_tracker = DecoherenceTracker::cryogenic();
         let room_tracker = DecoherenceTracker::new();
-        
+
         // Cryogenic should have much longer coherence time
         assert!(cryo_tracker.coherence_time() > room_tracker.coherence_time());
-        assert_eq!(cryo_tracker.classify_environment(), EnvironmentType::UltraCryogenic);
+        assert_eq!(
+            cryo_tracker.classify_environment(),
+            EnvironmentType::UltraCryogenic
+        );
     }
 
     #[test]
     fn test_operation_time_validation() {
         let tracker = DecoherenceTracker::new();
-        
+
         // Very short operation should be valid
         let result = tracker.validate_operation_time(1e-12).unwrap();
         assert!(result.is_valid);
@@ -434,10 +440,10 @@ mod tests {
     fn test_coherence_evolution() {
         let tracker = DecoherenceTracker::new();
         let evolution = tracker.predict_coherence_evolution(1e-9, 100);
-        
+
         assert_eq!(evolution.times.len(), 101);
         assert_eq!(evolution.coherences.len(), 101);
-        
+
         // Coherence should decay over time
         assert!(evolution.coherences[0] > evolution.coherences[50]);
         assert!(evolution.coherences[50] > evolution.coherences[100]);
@@ -447,15 +453,21 @@ mod tests {
     fn test_time_scale_analysis() {
         let tracker = DecoherenceTracker::new();
         let analysis = tracker.analyze_time_scales();
-        
+
         assert_eq!(analysis.assessments.len(), 6);
-        
+
         // Shorter time scales should generally have better coherence
-        let femtosecond = analysis.assessments.iter()
-            .find(|a| a.scale_name == "femtosecond").unwrap();
-        let microsecond = analysis.assessments.iter()
-            .find(|a| a.scale_name == "microsecond").unwrap();
-        
+        let femtosecond = analysis
+            .assessments
+            .iter()
+            .find(|a| a.scale_name == "femtosecond")
+            .unwrap();
+        let microsecond = analysis
+            .assessments
+            .iter()
+            .find(|a| a.scale_name == "microsecond")
+            .unwrap();
+
         assert!(femtosecond.coherence_preserved > microsecond.coherence_preserved);
     }
 
@@ -465,7 +477,7 @@ mod tests {
         let rate_300k = DecoherenceTracker::calculate_thermal_decoherence_rate(300.0);
         let rate_100k = DecoherenceTracker::calculate_thermal_decoherence_rate(100.0);
         let rate_10k = DecoherenceTracker::calculate_thermal_decoherence_rate(10.0);
-        
+
         assert!(rate_300k > rate_100k);
         assert!(rate_100k > rate_10k);
     }
@@ -484,11 +496,17 @@ mod tests {
 
     #[test]
     fn test_environment_classification() {
-        assert_eq!(DecoherenceTracker::with_temperature(0.1).classify_environment(), 
-                   EnvironmentType::UltraCryogenic);
-        assert_eq!(DecoherenceTracker::with_temperature(4.0).classify_environment(), 
-                   EnvironmentType::Cryogenic);
-        assert_eq!(DecoherenceTracker::with_temperature(300.0).classify_environment(), 
-                   EnvironmentType::RoomTemperature);
+        assert_eq!(
+            DecoherenceTracker::with_temperature(0.1).classify_environment(),
+            EnvironmentType::UltraCryogenic
+        );
+        assert_eq!(
+            DecoherenceTracker::with_temperature(4.0).classify_environment(),
+            EnvironmentType::Cryogenic
+        );
+        assert_eq!(
+            DecoherenceTracker::with_temperature(300.0).classify_environment(),
+            EnvironmentType::RoomTemperature
+        );
     }
 }

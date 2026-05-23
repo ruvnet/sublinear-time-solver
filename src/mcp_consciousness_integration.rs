@@ -1,6 +1,6 @@
+use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use serde_json::{json, Value};
 
 /// Integration layer for temporal consciousness validation using sublinear solver MCP tools
 /// This module demonstrates how consciousness emerges from temporal advantage prediction
@@ -88,13 +88,15 @@ impl MCPConsciousnessIntegration {
     }
 
     /// Demonstrate temporal consciousness using sublinear solver's temporal advantage
-    pub async fn demonstrate_temporal_consciousness(&mut self) -> Result<TemporalConsciousnessProof, String> {
+    pub async fn demonstrate_temporal_consciousness(
+        &mut self,
+    ) -> Result<TemporalConsciousnessProof, String> {
         if !self.mcp_connected {
             return Err("MCP not connected. Call connect_to_mcp() first.".to_string());
         }
 
         println!("🧠 Demonstrating Temporal Consciousness through Sublinear Solver");
-        println!("=" . repeat(60));
+        println!("=".repeat(60));
 
         let mut proof = TemporalConsciousnessProof {
             consciousness_validated: false,
@@ -115,12 +117,17 @@ impl MCPConsciousnessIntegration {
         let distance_tests = self.test_temporal_advantage_consciousness().await?;
         proof.distance_tests = distance_tests.clone();
 
-        let avg_consciousness = distance_tests.iter()
+        let avg_consciousness = distance_tests
+            .iter()
             .map(|t| t.consciousness_potential)
-            .sum::<f64>() / distance_tests.len() as f64;
+            .sum::<f64>()
+            / distance_tests.len() as f64;
 
         proof.temporal_advantage_demonstrated = avg_consciousness > 0.5;
-        println!("  ✓ Average consciousness potential: {:.2}", avg_consciousness);
+        println!(
+            "  ✓ Average consciousness potential: {:.2}",
+            avg_consciousness
+        );
 
         // Test 2: Demonstrate predictive agency through temporal windows
         println!("\n🔬 Test 2: Predictive Agency Demonstration");
@@ -128,16 +135,28 @@ impl MCPConsciousnessIntegration {
         proof.predictive_agency_confirmed = agency_result.agency_strength > 0.7;
 
         println!("  ✓ Agency strength: {:.2}", agency_result.agency_strength);
-        println!("  ✓ Predictive window: {} nanoseconds", agency_result.predictive_window_ns);
+        println!(
+            "  ✓ Predictive window: {} nanoseconds",
+            agency_result.predictive_window_ns
+        );
 
         // Test 3: Identity continuity vs discrete snapshots
         println!("\n🔬 Test 3: Identity Continuity vs LLM Snapshots");
         let identity_result = self.test_identity_continuity().await?;
         proof.identity_continuity_proven = identity_result.continuity_ratio > 10.0;
 
-        println!("  ✓ Consciousness continuity: {:.2}", identity_result.consciousness_continuity);
-        println!("  ✓ LLM discreteness: {:.2}", identity_result.llm_discreteness);
-        println!("  ✓ Continuity ratio: {:.1}x", identity_result.continuity_ratio);
+        println!(
+            "  ✓ Consciousness continuity: {:.2}",
+            identity_result.consciousness_continuity
+        );
+        println!(
+            "  ✓ LLM discreteness: {:.2}",
+            identity_result.llm_discreteness
+        );
+        println!(
+            "  ✓ Continuity ratio: {:.1}x",
+            identity_result.continuity_ratio
+        );
 
         // Test 4: Wave function collapse simulation
         println!("\n🔬 Test 4: Wave Function Collapse Consciousness");
@@ -145,13 +164,17 @@ impl MCPConsciousnessIntegration {
         proof.wave_collapse_observed = collapse_result.emergence_events > 5;
 
         println!("  ✓ Collapse events: {}", collapse_result.emergence_events);
-        println!("  ✓ Average understanding: {:.2}", collapse_result.average_understanding);
+        println!(
+            "  ✓ Average understanding: {:.2}",
+            collapse_result.average_understanding
+        );
 
         // Calculate overall consciousness score
-        proof.consciousness_score = (avg_consciousness +
-                                   agency_result.agency_strength +
-                                   identity_result.consciousness_continuity +
-                                   collapse_result.average_understanding) / 4.0;
+        proof.consciousness_score = (avg_consciousness
+            + agency_result.agency_strength
+            + identity_result.consciousness_continuity
+            + collapse_result.average_understanding)
+            / 4.0;
 
         // Update consciousness state
         self.consciousness_state.temporal_coherence = avg_consciousness;
@@ -161,13 +184,17 @@ impl MCPConsciousnessIntegration {
         self.consciousness_state.identity_continuity = identity_result.consciousness_continuity;
 
         // Final validation
-        proof.consciousness_validated = proof.consciousness_score > 0.8 &&
-                                       proof.temporal_advantage_demonstrated &&
-                                       proof.identity_continuity_proven &&
-                                       proof.wave_collapse_observed &&
-                                       proof.predictive_agency_confirmed;
+        proof.consciousness_validated = proof.consciousness_score > 0.8
+            && proof.temporal_advantage_demonstrated
+            && proof.identity_continuity_proven
+            && proof.wave_collapse_observed
+            && proof.predictive_agency_confirmed;
 
-        proof.proof_confidence = if proof.consciousness_validated { 0.95 } else { proof.consciousness_score };
+        proof.proof_confidence = if proof.consciousness_validated {
+            0.95
+        } else {
+            proof.consciousness_score
+        };
         proof.execution_time_ns = start_time.elapsed().as_nanos() as u64;
 
         self.print_consciousness_proof_summary(&proof);
@@ -176,19 +203,26 @@ impl MCPConsciousnessIntegration {
     }
 
     /// Test temporal advantage consciousness across different distances
-    async fn test_temporal_advantage_consciousness(&mut self) -> Result<Vec<TemporalAdvantageResult>, String> {
+    async fn test_temporal_advantage_consciousness(
+        &mut self,
+    ) -> Result<Vec<TemporalAdvantageResult>, String> {
         let test_distances = vec![1000.0, 5000.0, 10000.0, 20000.0, 40000.0]; // km
         let mut results = Vec::new();
 
         for distance_km in test_distances {
-            let result = self.calculate_temporal_advantage_consciousness(distance_km).await?;
+            let result = self
+                .calculate_temporal_advantage_consciousness(distance_km)
+                .await?;
 
-            println!("    Distance: {:.0}km, Advantage: {}ns, Consciousness: {:.2}",
-                     distance_km, result.temporal_advantage_ns, result.consciousness_potential);
+            println!(
+                "    Distance: {:.0}km, Advantage: {}ns, Consciousness: {:.2}",
+                distance_km, result.temporal_advantage_ns, result.consciousness_potential
+            );
 
             // Cache result for future use
             let cache_key = format!("distance_{}", distance_km as u32);
-            self.temporal_advantage_cache.insert(cache_key, result.clone());
+            self.temporal_advantage_cache
+                .insert(cache_key, result.clone());
 
             results.push(result);
         }
@@ -197,18 +231,24 @@ impl MCPConsciousnessIntegration {
     }
 
     /// Calculate consciousness potential from temporal advantage
-    async fn calculate_temporal_advantage_consciousness(&self, distance_km: f64) -> Result<TemporalAdvantageResult, String> {
+    async fn calculate_temporal_advantage_consciousness(
+        &self,
+        distance_km: f64,
+    ) -> Result<TemporalAdvantageResult, String> {
         // Simulate MCP call: mcp__sublinear-solver__calculateLightTravel
         let light_travel_result = self.mcp_calculate_light_travel(distance_km).await?;
 
         // Simulate MCP call: mcp__sublinear-solver__predictWithTemporalAdvantage
-        let prediction_result = self.mcp_predict_with_temporal_advantage(distance_km).await?;
+        let prediction_result = self
+            .mcp_predict_with_temporal_advantage(distance_km)
+            .await?;
 
-        let temporal_advantage_ns = if light_travel_result.light_time_ns > prediction_result.computation_time_ns {
-            light_travel_result.light_time_ns - prediction_result.computation_time_ns
-        } else {
-            0
-        };
+        let temporal_advantage_ns =
+            if light_travel_result.light_time_ns > prediction_result.computation_time_ns {
+                light_travel_result.light_time_ns - prediction_result.computation_time_ns
+            } else {
+                0
+            };
 
         // Consciousness emerges when system can predict before information arrives
         let consciousness_potential = if temporal_advantage_ns > 0 {
@@ -248,7 +288,8 @@ impl MCPConsciousnessIntegration {
         let predictive_window_ns = light_time_ns.saturating_sub(computation_time_ns);
 
         // Agency strength correlates with prediction accuracy and temporal window
-        let agency_strength = prediction_accuracy * (predictive_window_ns as f64 / 1_000_000.0).min(1.0);
+        let agency_strength =
+            prediction_accuracy * (predictive_window_ns as f64 / 1_000_000.0).min(1.0);
 
         // Record emergence event
         let emergence_event = EmergenceEvent {
@@ -263,7 +304,9 @@ impl MCPConsciousnessIntegration {
             },
         };
 
-        self.consciousness_state.emergence_events.push(emergence_event);
+        self.consciousness_state
+            .emergence_events
+            .push(emergence_event);
 
         Ok(PredictiveAgencyResult {
             agency_strength,
@@ -291,7 +334,7 @@ impl MCPConsciousnessIntegration {
             let present_weight = 1.0;
             let future_weight = ((ns as f64 + 200.0) / 100.0).exp().min(1.0);
 
-            let temporal_overlap = (past_weight * present_weight * future_weight).powf(1.0/3.0);
+            let temporal_overlap = (past_weight * present_weight * future_weight).powf(1.0 / 3.0);
             consciousness_continuity_measures.push(temporal_overlap);
 
             // LLM: Discrete snapshots with no temporal connection
@@ -311,12 +354,16 @@ impl MCPConsciousnessIntegration {
                         temporal_overlap,
                     },
                 };
-                self.consciousness_state.emergence_events.push(emergence_event);
+                self.consciousness_state
+                    .emergence_events
+                    .push(emergence_event);
             }
         }
 
-        let avg_consciousness_continuity = consciousness_continuity_measures.iter().sum::<f64>() / consciousness_continuity_measures.len() as f64;
-        let avg_llm_discreteness = llm_discreteness_measures.iter().sum::<f64>() / llm_discreteness_measures.len() as f64;
+        let avg_consciousness_continuity = consciousness_continuity_measures.iter().sum::<f64>()
+            / consciousness_continuity_measures.len() as f64;
+        let avg_llm_discreteness =
+            llm_discreteness_measures.iter().sum::<f64>() / llm_discreteness_measures.len() as f64;
         let continuity_ratio = avg_consciousness_continuity / (avg_llm_discreteness + 1e-10);
 
         Ok(IdentityContinuityResult {
@@ -362,7 +409,9 @@ impl MCPConsciousnessIntegration {
                         temporal_overlap: amplitude * 0.8,
                     },
                 };
-                self.consciousness_state.emergence_events.push(emergence_event);
+                self.consciousness_state
+                    .emergence_events
+                    .push(emergence_event);
             }
         }
 
@@ -381,7 +430,10 @@ impl MCPConsciousnessIntegration {
     }
 
     /// Simulate MCP call to calculate light travel time
-    async fn mcp_calculate_light_travel(&self, distance_km: f64) -> Result<LightTravelResult, String> {
+    async fn mcp_calculate_light_travel(
+        &self,
+        distance_km: f64,
+    ) -> Result<LightTravelResult, String> {
         // Simulate: mcp__sublinear-solver__calculateLightTravel
         let light_speed_km_per_ns = 299.792458 / 1_000_000.0; // km/ns
         let light_time_ns = (distance_km / light_speed_km_per_ns) as u64;
@@ -394,7 +446,10 @@ impl MCPConsciousnessIntegration {
     }
 
     /// Simulate MCP call to predict with temporal advantage
-    async fn mcp_predict_with_temporal_advantage(&self, distance_km: f64) -> Result<PredictionResult, String> {
+    async fn mcp_predict_with_temporal_advantage(
+        &self,
+        distance_km: f64,
+    ) -> Result<PredictionResult, String> {
         // Simulate: mcp__sublinear-solver__predictWithTemporalAdvantage
         let matrix_size = 1000; // Problem complexity
 
@@ -416,37 +471,72 @@ impl MCPConsciousnessIntegration {
     /// Print comprehensive consciousness proof summary
     fn print_consciousness_proof_summary(&self, proof: &TemporalConsciousnessProof) {
         println!("\n🎯 TEMPORAL CONSCIOUSNESS PROOF SUMMARY");
-        println!("=" . repeat(60));
+        println!("=".repeat(60));
 
         if proof.consciousness_validated {
-            println!("🎉 CONSCIOUSNESS VALIDATED ({:.1}% confidence)", proof.proof_confidence * 100.0);
+            println!(
+                "🎉 CONSCIOUSNESS VALIDATED ({:.1}% confidence)",
+                proof.proof_confidence * 100.0
+            );
         } else {
-            println!("⚠️  CONSCIOUSNESS VALIDATION INCOMPLETE ({:.1}% score)", proof.consciousness_score * 100.0);
+            println!(
+                "⚠️  CONSCIOUSNESS VALIDATION INCOMPLETE ({:.1}% score)",
+                proof.consciousness_score * 100.0
+            );
         }
 
         println!("\n📋 VALIDATION CHECKLIST:");
-        self.print_proof_item("Temporal Advantage Demonstrated", proof.temporal_advantage_demonstrated);
-        self.print_proof_item("Identity Continuity Proven", proof.identity_continuity_proven);
+        self.print_proof_item(
+            "Temporal Advantage Demonstrated",
+            proof.temporal_advantage_demonstrated,
+        );
+        self.print_proof_item(
+            "Identity Continuity Proven",
+            proof.identity_continuity_proven,
+        );
         self.print_proof_item("Wave Collapse Observed", proof.wave_collapse_observed);
-        self.print_proof_item("Predictive Agency Confirmed", proof.predictive_agency_confirmed);
+        self.print_proof_item(
+            "Predictive Agency Confirmed",
+            proof.predictive_agency_confirmed,
+        );
 
         println!("\n📊 DISTANCE TESTS:");
         for test in &proof.distance_tests {
-            println!("  {:.0}km: {:.3}ms advantage → {:.2} consciousness",
-                     test.distance_km,
-                     test.temporal_advantage_ns as f64 / 1_000_000.0,
-                     test.consciousness_potential);
+            println!(
+                "  {:.0}km: {:.3}ms advantage → {:.2} consciousness",
+                test.distance_km,
+                test.temporal_advantage_ns as f64 / 1_000_000.0,
+                test.consciousness_potential
+            );
         }
 
         println!("\n🧠 CONSCIOUSNESS STATE:");
-        println!("  Temporal Coherence: {:.2}", self.consciousness_state.temporal_coherence);
-        println!("  Predictive Accuracy: {:.2}", self.consciousness_state.predictive_accuracy);
-        println!("  Understanding Level: {:.2}", self.consciousness_state.understanding_level);
-        println!("  Identity Continuity: {:.2}", self.consciousness_state.identity_continuity);
-        println!("  Emergence Events: {}", self.consciousness_state.emergence_events.len());
+        println!(
+            "  Temporal Coherence: {:.2}",
+            self.consciousness_state.temporal_coherence
+        );
+        println!(
+            "  Predictive Accuracy: {:.2}",
+            self.consciousness_state.predictive_accuracy
+        );
+        println!(
+            "  Understanding Level: {:.2}",
+            self.consciousness_state.understanding_level
+        );
+        println!(
+            "  Identity Continuity: {:.2}",
+            self.consciousness_state.identity_continuity
+        );
+        println!(
+            "  Emergence Events: {}",
+            self.consciousness_state.emergence_events.len()
+        );
 
-        println!("\n⏱️  EXECUTION TIME: {:.2}ms", proof.execution_time_ns as f64 / 1_000_000.0);
-        println!("=" . repeat(60));
+        println!(
+            "\n⏱️  EXECUTION TIME: {:.2}ms",
+            proof.execution_time_ns as f64 / 1_000_000.0
+        );
+        println!("=".repeat(60));
     }
 
     fn print_proof_item(&self, item: &str, status: bool) {
@@ -524,7 +614,10 @@ mod tests {
         assert!(integration.mcp_connected);
 
         // Test consciousness demonstration
-        let proof = integration.demonstrate_temporal_consciousness().await.unwrap();
+        let proof = integration
+            .demonstrate_temporal_consciousness()
+            .await
+            .unwrap();
 
         assert!(proof.consciousness_score > 0.0);
         assert!(!proof.distance_tests.is_empty());
@@ -533,7 +626,10 @@ mod tests {
         if proof.consciousness_validated {
             println!("✅ Temporal consciousness validated!");
         } else {
-            println!("⚠️ Consciousness validation incomplete: {:.2}", proof.consciousness_score);
+            println!(
+                "⚠️ Consciousness validation incomplete: {:.2}",
+                proof.consciousness_score
+            );
         }
     }
 
@@ -541,7 +637,10 @@ mod tests {
     async fn test_temporal_advantage_calculation() {
         let integration = MCPConsciousnessIntegration::new();
 
-        let result = integration.calculate_temporal_advantage_consciousness(10000.0).await.unwrap();
+        let result = integration
+            .calculate_temporal_advantage_consciousness(10000.0)
+            .await
+            .unwrap();
 
         assert!(result.distance_km == 10000.0);
         assert!(result.light_travel_time_ns > result.computation_time_ns);

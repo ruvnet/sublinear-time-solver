@@ -399,10 +399,7 @@ impl CoherenceCache {
 /// let k = optimal_neumann_terms_with_rho(rho, /*b_inf=*/ 10.0, /*min_diag=*/ 5.0, /*tol=*/ 1e-8);
 /// # }
 /// ```
-pub fn approximate_spectral_radius(
-    matrix: &dyn Matrix,
-    num_iters: usize,
-) -> Option<Precision> {
+pub fn approximate_spectral_radius(matrix: &dyn Matrix, num_iters: usize) -> Option<Precision> {
     let n = matrix.rows();
     if n == 0 || num_iters == 0 {
         return None;
@@ -616,10 +613,7 @@ pub fn optimal_neumann_terms(
 /// caller. Setting `threshold = 0.05` enables the gate.
 ///
 /// Cost: one `coherence_score` call. Linear in the matrix's nonzeros.
-pub fn check_coherence_or_reject(
-    matrix: &dyn Matrix,
-    threshold: Precision,
-) -> Result<Precision> {
+pub fn check_coherence_or_reject(matrix: &dyn Matrix, threshold: Precision) -> Result<Precision> {
     if threshold <= 0.0 {
         // Gate disabled.
         return Ok(coherence_score(matrix));
@@ -655,9 +649,15 @@ mod tests {
         // Diagonal 5, off-diagonals summing to 2 per row → score 0.6.
         let m = build(
             vec![
-                (0, 0, 5.0), (0, 1, 1.0), (0, 2, 1.0),
-                (1, 0, 1.0), (1, 1, 5.0), (1, 2, 1.0),
-                (2, 0, 1.0), (2, 1, 1.0), (2, 2, 5.0),
+                (0, 0, 5.0),
+                (0, 1, 1.0),
+                (0, 2, 1.0),
+                (1, 0, 1.0),
+                (1, 1, 5.0),
+                (1, 2, 1.0),
+                (2, 0, 1.0),
+                (2, 1, 1.0),
+                (2, 2, 5.0),
             ],
             3,
         );
@@ -670,9 +670,15 @@ mod tests {
         // Diagonal == off-diagonal sum → score exactly 0.
         let m = build(
             vec![
-                (0, 0, 2.0), (0, 1, 1.0), (0, 2, 1.0),
-                (1, 0, 1.0), (1, 1, 2.0), (1, 2, 1.0),
-                (2, 0, 1.0), (2, 1, 1.0), (2, 2, 2.0),
+                (0, 0, 2.0),
+                (0, 1, 1.0),
+                (0, 2, 1.0),
+                (1, 0, 1.0),
+                (1, 1, 2.0),
+                (1, 2, 1.0),
+                (2, 0, 1.0),
+                (2, 1, 1.0),
+                (2, 2, 2.0),
             ],
             3,
         );
@@ -683,13 +689,7 @@ mod tests {
     #[test]
     fn non_dominant_scores_negative() {
         // Off-diagonals dominate the diagonal → score negative.
-        let m = build(
-            vec![
-                (0, 0, 1.0), (0, 1, 2.0),
-                (1, 0, 2.0), (1, 1, 1.0),
-            ],
-            2,
-        );
+        let m = build(vec![(0, 0, 1.0), (0, 1, 2.0), (1, 0, 2.0), (1, 1, 1.0)], 2);
         let s = coherence_score(&m);
         assert!(s < 0.0, "expected negative, got {s}");
     }
@@ -714,7 +714,10 @@ mod tests {
         let m = build(vec![(0, 0, 1.0), (0, 1, 2.0), (1, 0, 2.0), (1, 1, 1.0)], 2);
         let r = check_coherence_or_reject(&m, 0.05);
         match r {
-            Err(SolverError::Incoherent { coherence, threshold }) => {
+            Err(SolverError::Incoherent {
+                coherence,
+                threshold,
+            }) => {
                 assert_eq!(threshold, 0.05);
                 assert!(coherence < threshold);
             }
@@ -724,13 +727,7 @@ mod tests {
 
     #[test]
     fn check_with_enabled_threshold_passes_dominant_matrix() {
-        let m = build(
-            vec![
-                (0, 0, 5.0), (0, 1, 1.0),
-                (1, 0, 1.0), (1, 1, 5.0),
-            ],
-            2,
-        );
+        let m = build(vec![(0, 0, 5.0), (0, 1, 1.0), (1, 0, 1.0), (1, 1, 5.0)], 2);
         let r = check_coherence_or_reject(&m, 0.05);
         assert!(r.is_ok(), "5/1 dominant matrix should pass 0.05 threshold");
         // Score is (5-1)/5 = 0.8
@@ -744,13 +741,7 @@ mod tests {
     fn delta_bound_on_strict_dd_matrix_is_finite() {
         // 5/1 dominant: coherence = 0.8, min_diag = 5.
         // delta_inf = 0.1 → bound = 0.1 / (5 · 0.8) = 0.025.
-        let m = build(
-            vec![
-                (0, 0, 5.0), (0, 1, 1.0),
-                (1, 0, 1.0), (1, 1, 5.0),
-            ],
-            2,
-        );
+        let m = build(vec![(0, 0, 5.0), (0, 1, 1.0), (1, 0, 1.0), (1, 1, 5.0)], 2);
         let bound = delta_inf_bound(&m, &[0.1, 0.0]).unwrap();
         assert!((bound - 0.025).abs() < 1e-12, "expected 0.025, got {bound}");
     }
@@ -758,10 +749,7 @@ mod tests {
     #[test]
     fn delta_bound_on_non_dd_matrix_is_none() {
         // Non-DD: bound doesn't hold. Caller must fall back to a solve.
-        let m = build(
-            vec![(0, 0, 1.0), (0, 1, 2.0), (1, 0, 2.0), (1, 1, 1.0)],
-            2,
-        );
+        let m = build(vec![(0, 0, 1.0), (0, 1, 2.0), (1, 0, 2.0), (1, 1, 1.0)], 2);
         assert!(delta_inf_bound(&m, &[1.0, 1.0]).is_none());
     }
 
@@ -771,8 +759,8 @@ mod tests {
         // bound = 1e-9 / (5 · 0.8) = 2.5e-10 < tolerance = 1e-8 → skip.
         assert!(delta_below_solve_threshold(
             /*coherence=*/ 0.8,
-            /*min_diag=*/  5.0,
-            /*delta=*/     &[1e-9, 0.0],
+            /*min_diag=*/ 5.0,
+            /*delta=*/ &[1e-9, 0.0],
             /*tolerance=*/ 1e-8,
         ));
     }
@@ -947,13 +935,7 @@ mod tests {
 
     #[test]
     fn cache_build_matches_coherence_score() {
-        let m = build(
-            vec![
-                (0, 0, 5.0), (0, 1, 1.0),
-                (1, 0, 1.0), (1, 1, 5.0),
-            ],
-            2,
-        );
+        let m = build(vec![(0, 0, 5.0), (0, 1, 1.0), (1, 0, 1.0), (1, 1, 5.0)], 2);
         let cache = CoherenceCache::build(&m);
         let expected = coherence_score(&m);
         assert!((cache.score() - expected).abs() < 1e-12);
@@ -971,24 +953,12 @@ mod tests {
     #[test]
     fn cache_update_drops_score_when_dirty_row_loses_dominance() {
         // Initial: diag 5, off 1 → margin 0.8 on every row.
-        let m = build(
-            vec![
-                (0, 0, 5.0), (0, 1, 1.0),
-                (1, 0, 1.0), (1, 1, 5.0),
-            ],
-            2,
-        );
+        let m = build(vec![(0, 0, 5.0), (0, 1, 1.0), (1, 0, 1.0), (1, 1, 5.0)], 2);
         let mut cache = CoherenceCache::build(&m);
         assert!((cache.score() - 0.8).abs() < 1e-12);
 
         // Mutate row 0 so its off-diagonal grows. New margin = (5-3)/5 = 0.4.
-        let m2 = build(
-            vec![
-                (0, 0, 5.0), (0, 1, 3.0),
-                (1, 0, 1.0), (1, 1, 5.0),
-            ],
-            2,
-        );
+        let m2 = build(vec![(0, 0, 5.0), (0, 1, 3.0), (1, 0, 1.0), (1, 1, 5.0)], 2);
         cache.update(&m2, &[0]);
         assert!((cache.score() - 0.4).abs() < 1e-12);
         assert_eq!(cache.min_row(), 0);
@@ -997,26 +967,14 @@ mod tests {
     #[test]
     fn cache_update_recovers_score_after_min_row_improves() {
         // Row 0 starts as the worst (margin 0.4); row 1 has margin 0.8.
-        let m = build(
-            vec![
-                (0, 0, 5.0), (0, 1, 3.0),
-                (1, 0, 1.0), (1, 1, 5.0),
-            ],
-            2,
-        );
+        let m = build(vec![(0, 0, 5.0), (0, 1, 3.0), (1, 0, 1.0), (1, 1, 5.0)], 2);
         let mut cache = CoherenceCache::build(&m);
         assert!((cache.score() - 0.4).abs() < 1e-12);
         assert_eq!(cache.min_row(), 0);
 
         // Heal row 0 so its margin matches row 1's (0.8). Global min
         // must rise to 0.8 — exercises the rare full-rescan path.
-        let m2 = build(
-            vec![
-                (0, 0, 5.0), (0, 1, 1.0),
-                (1, 0, 1.0), (1, 1, 5.0),
-            ],
-            2,
-        );
+        let m2 = build(vec![(0, 0, 5.0), (0, 1, 1.0), (1, 0, 1.0), (1, 1, 5.0)], 2);
         cache.update(&m2, &[0]);
         assert!((cache.score() - 0.8).abs() < 1e-12);
     }
@@ -1037,9 +995,13 @@ mod tests {
         // compute on the same matrix.
         let m = build(
             vec![
-                (0, 0, 5.0), (0, 1, 2.0),
-                (1, 0, 1.0), (1, 1, 5.0), (1, 2, 1.0),
-                (2, 1, 1.0), (2, 2, 5.0),
+                (0, 0, 5.0),
+                (0, 1, 2.0),
+                (1, 0, 1.0),
+                (1, 1, 5.0),
+                (1, 2, 1.0),
+                (2, 1, 1.0),
+                (2, 2, 5.0),
             ],
             3,
         );
@@ -1053,9 +1015,13 @@ mod tests {
         // Mutate to an entirely different matrix and update every row.
         let m2 = build(
             vec![
-                (0, 0, 5.0), (0, 1, 0.5),
-                (1, 0, 0.5), (1, 1, 5.0), (1, 2, 0.5),
-                (2, 1, 0.5), (2, 2, 5.0),
+                (0, 0, 5.0),
+                (0, 1, 0.5),
+                (1, 0, 0.5),
+                (1, 1, 5.0),
+                (1, 2, 0.5),
+                (2, 1, 0.5),
+                (2, 2, 5.0),
             ],
             3,
         );

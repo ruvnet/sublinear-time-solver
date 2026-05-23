@@ -4,8 +4,8 @@
 //! This is a standalone test implementation that validates the NanosecondScheduler
 //! requirements without external dependencies. It generates a comprehensive test report.
 
-use std::time::{Duration, Instant};
 use std::collections::HashMap;
+use std::time::{Duration, Instant};
 
 /// Test configuration
 #[derive(Debug, Clone)]
@@ -219,7 +219,10 @@ impl TestSuiteRunner {
         Ok(report)
     }
 
-    fn run_timing_precision_tests(&self, report: &mut TestReport) -> Result<(), Box<dyn std::error::Error>> {
+    fn run_timing_precision_tests(
+        &self,
+        report: &mut TestReport,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let start_time = Instant::now();
         let mut assertions = 0;
         let mut passed = true;
@@ -233,7 +236,8 @@ impl TestSuiteRunner {
         });
 
         assertions += 1;
-        if duration < 500_000 || duration > 2_000_000 { // 0.5-2ms range
+        if duration < 500_000 || duration > 2_000_000 {
+            // 0.5-2ms range
             passed = false;
             failures.push("Basic timing measurement out of expected range".to_string());
         }
@@ -245,13 +249,15 @@ impl TestSuiteRunner {
                 // Minimal operation
                 let _x = 42;
             });
-            if dur < 1000 { // < 1μs
+            if dur < 1000 {
+                // < 1μs
                 sub_microsecond_count += 1;
             }
         }
 
         assertions += 1;
-        if sub_microsecond_count < 50 { // At least 50% should be sub-microsecond
+        if sub_microsecond_count < 50 {
+            // At least 50% should be sub-microsecond
             passed = false;
             failures.push("Sub-microsecond timing precision not achieved".to_string());
         }
@@ -268,7 +274,7 @@ impl TestSuiteRunner {
         assertions += 1;
         let avg_timing = timing_samples.iter().sum::<u64>() as f64 / timing_samples.len() as f64;
         if avg_timing > 1000.0 { // Average should be < 1μs for simple operations
-            // This is informational - modern systems can achieve this
+             // This is informational - modern systems can achieve this
         }
 
         let result = TestCategoryResult {
@@ -282,7 +288,10 @@ impl TestSuiteRunner {
         Ok(())
     }
 
-    fn run_strange_loop_tests(&self, report: &mut TestReport) -> Result<(), Box<dyn std::error::Error>> {
+    fn run_strange_loop_tests(
+        &self,
+        report: &mut TestReport,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let start_time = Instant::now();
         let mut assertions = 0;
         let mut passed = true;
@@ -302,10 +311,12 @@ impl TestSuiteRunner {
         }
 
         // Test 2: Convergence validation
-        let convergent_sequence: Vec<f64> = (0..200).map(|i| {
-            let x = i as f64 / 100.0;
-            0.9_f64.powf(i as f64) + 0.5 // Exponentially converging to 0.5
-        }).collect();
+        let convergent_sequence: Vec<f64> = (0..200)
+            .map(|i| {
+                let x = i as f64 / 100.0;
+                0.9_f64.powf(i as f64) + 0.5 // Exponentially converging to 0.5
+            })
+            .collect();
 
         assertions += 1;
         if !TestUtils::validate_convergence(&convergent_sequence, 0.01) {
@@ -336,7 +347,10 @@ impl TestSuiteRunner {
         Ok(())
     }
 
-    fn run_temporal_window_tests(&self, report: &mut TestReport) -> Result<(), Box<dyn std::error::Error>> {
+    fn run_temporal_window_tests(
+        &self,
+        report: &mut TestReport,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let start_time = Instant::now();
         let mut assertions = 0;
         let mut passed = true;
@@ -368,7 +382,7 @@ impl TestSuiteRunner {
 
         assertions += 1;
         if window_creation_time > 10_000 { // Should be < 10μs for 1000 windows
-            // This is a performance guideline
+             // This is a performance guideline
         }
 
         // Test 3: Overlap boundary management
@@ -395,7 +409,10 @@ impl TestSuiteRunner {
         Ok(())
     }
 
-    fn run_identity_continuity_tests(&self, report: &mut TestReport) -> Result<(), Box<dyn std::error::Error>> {
+    fn run_identity_continuity_tests(
+        &self,
+        report: &mut TestReport,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let start_time = Instant::now();
         let mut assertions = 0;
         let mut passed = true;
@@ -408,18 +425,28 @@ impl TestSuiteRunner {
         let identity_features_2 = vec![0.82, 0.58, 0.91, 0.69]; // Slight variation
 
         // Cosine similarity calculation
-        let dot_product: f64 = identity_features_1.iter()
+        let dot_product: f64 = identity_features_1
+            .iter()
             .zip(identity_features_2.iter())
             .map(|(a, b)| a * b)
             .sum();
 
-        let norm1: f64 = identity_features_1.iter().map(|x| x * x).sum::<f64>().sqrt();
-        let norm2: f64 = identity_features_2.iter().map(|x| x * x).sum::<f64>().sqrt();
+        let norm1: f64 = identity_features_1
+            .iter()
+            .map(|x| x * x)
+            .sum::<f64>()
+            .sqrt();
+        let norm2: f64 = identity_features_2
+            .iter()
+            .map(|x| x * x)
+            .sum::<f64>()
+            .sqrt();
 
         let similarity = dot_product / (norm1 * norm2);
 
         assertions += 1;
-        if similarity < 0.8 { // 80% similarity threshold
+        if similarity < 0.8 {
+            // 80% similarity threshold
             passed = false;
             failures.push("Identity similarity below threshold".to_string());
         }
@@ -427,16 +454,22 @@ impl TestSuiteRunner {
         // Test 2: Continuity break detection
         let identity_features_3 = vec![0.1, 0.2, 0.1, 0.2]; // Dramatically different
 
-        let dot_product_break: f64 = identity_features_1.iter()
+        let dot_product_break: f64 = identity_features_1
+            .iter()
             .zip(identity_features_3.iter())
             .map(|(a, b)| a * b)
             .sum();
 
-        let norm3: f64 = identity_features_3.iter().map(|x| x * x).sum::<f64>().sqrt();
+        let norm3: f64 = identity_features_3
+            .iter()
+            .map(|x| x * x)
+            .sum::<f64>()
+            .sqrt();
         let similarity_break = dot_product_break / (norm1 * norm3);
 
         assertions += 1;
-        if similarity_break > 0.5 { // Should detect discontinuity
+        if similarity_break > 0.5 {
+            // Should detect discontinuity
             passed = false;
             failures.push("Failed to detect identity discontinuity".to_string());
         }
@@ -456,11 +489,13 @@ impl TestSuiteRunner {
 
         assertions += 1;
         let final_identity = identity_sequence.last().unwrap();
-        let drift_distance = ((final_identity[0] - 1.0_f64).powi(2) +
-                              final_identity[1].powi(2) +
-                              final_identity[2].powi(2)).sqrt();
+        let drift_distance = ((final_identity[0] - 1.0_f64).powi(2)
+            + final_identity[1].powi(2)
+            + final_identity[2].powi(2))
+        .sqrt();
 
-        if drift_distance > 0.5 { // Should not drift too far
+        if drift_distance > 0.5 {
+            // Should not drift too far
             passed = false;
             failures.push("Identity drift exceeded acceptable bounds".to_string());
         }
@@ -476,7 +511,10 @@ impl TestSuiteRunner {
         Ok(())
     }
 
-    fn run_quantum_validation_tests(&self, report: &mut TestReport) -> Result<(), Box<dyn std::error::Error>> {
+    fn run_quantum_validation_tests(
+        &self,
+        report: &mut TestReport,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let start_time = Instant::now();
         let mut assertions = 0;
         let mut passed = true;
@@ -518,14 +556,15 @@ impl TestSuiteRunner {
 
         assertions += 1;
         if final_coherence < 0.5 { // Should maintain >50% coherence
-            // This is a reasonable threshold for practical systems
+             // This is a reasonable threshold for practical systems
         }
 
         // Test 4: Entanglement validation
         let entanglement_fidelity = 0.95; // 95% fidelity
 
         assertions += 1;
-        if entanglement_fidelity < 0.9 { // 90% threshold
+        if entanglement_fidelity < 0.9 {
+            // 90% threshold
             passed = false;
             failures.push("Entanglement fidelity below threshold".to_string());
         }
@@ -541,7 +580,10 @@ impl TestSuiteRunner {
         Ok(())
     }
 
-    fn run_performance_benchmarks(&self, report: &mut TestReport) -> Result<(), Box<dyn std::error::Error>> {
+    fn run_performance_benchmarks(
+        &self,
+        report: &mut TestReport,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let start_time = Instant::now();
         let mut assertions = 0;
         let mut passed = true;
@@ -563,7 +605,7 @@ impl TestSuiteRunner {
 
         assertions += 1;
         if avg_tick_time > 1000.0 { // > 1μs
-            // Note: This may fail on slower systems but demonstrates the target
+             // Note: This may fail on slower systems but demonstrates the target
         }
 
         // Test 2: >1M ticks/second throughput
@@ -614,7 +656,10 @@ impl TestSuiteRunner {
         Ok(())
     }
 
-    fn run_edge_case_tests(&self, report: &mut TestReport) -> Result<(), Box<dyn std::error::Error>> {
+    fn run_edge_case_tests(
+        &self,
+        report: &mut TestReport,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let start_time = Instant::now();
         let mut assertions = 0;
         let mut passed = true;
@@ -673,9 +718,10 @@ impl TestSuiteRunner {
         }
 
         assertions += 1;
-        let stress_avg = stress_durations.iter().sum::<u64>() as f64 / stress_durations.len() as f64;
+        let stress_avg =
+            stress_durations.iter().sum::<u64>() as f64 / stress_durations.len() as f64;
         if stress_avg > 10000.0 { // Should be < 10μs even under stress
-            // Stress test guideline
+             // Stress test guideline
         }
 
         let result = TestCategoryResult {
@@ -689,7 +735,10 @@ impl TestSuiteRunner {
         Ok(())
     }
 
-    fn run_integration_tests(&self, report: &mut TestReport) -> Result<(), Box<dyn std::error::Error>> {
+    fn run_integration_tests(
+        &self,
+        report: &mut TestReport,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let start_time = Instant::now();
         let mut assertions = 0;
         let mut passed = true;
@@ -710,12 +759,13 @@ impl TestSuiteRunner {
             // Simulate strange loop operation with Lipschitz constraint
             let previous_state = consciousness_state.clone();
             for i in 0..consciousness_state.len() {
-                consciousness_state[i] = lipschitz_constant * consciousness_state[i] +
-                                       0.1 * (tick as f64 / 100.0).sin();
+                consciousness_state[i] =
+                    lipschitz_constant * consciousness_state[i] + 0.1 * (tick as f64 / 100.0).sin();
             }
 
             // Verify Lipschitz constraint maintained
-            let state_change: f64 = consciousness_state.iter()
+            let state_change: f64 = consciousness_state
+                .iter()
                 .zip(previous_state.iter())
                 .map(|(new, old)| (new - old).powi(2))
                 .sum::<f64>()
@@ -734,14 +784,16 @@ impl TestSuiteRunner {
         let final_state = &consciousness_state;
         let initial_state = vec![0.5, 0.5, 0.5];
 
-        let continuity_measure: f64 = final_state.iter()
+        let continuity_measure: f64 = final_state
+            .iter()
             .zip(initial_state.iter())
             .map(|(f, i)| (f - i).powi(2))
             .sum::<f64>()
             .sqrt();
 
         assertions += 1;
-        if continuity_measure > 1.0 { // Should not drift too far
+        if continuity_measure > 1.0 {
+            // Should not drift too far
             passed = false;
             failures.push("Identity continuity lost during integration".to_string());
         }
@@ -758,7 +810,7 @@ impl TestSuiteRunner {
 
         assertions += 1;
         if integration_duration > 100_000 { // Should complete in < 100μs
-            // Integration performance guideline
+             // Integration performance guideline
         }
 
         // Test 4: Long-running stability
@@ -768,7 +820,8 @@ impl TestSuiteRunner {
                 std::hint::black_box(42);
             });
 
-            if tick_time > 10000 { // Any tick > 10μs indicates instability
+            if tick_time > 10000 {
+                // Any tick > 10μs indicates instability
                 stability_check = false;
                 break;
             }
@@ -807,7 +860,10 @@ impl TestSuiteRunner {
 }
 
 /// Generate comprehensive test report
-fn generate_test_report(report: &TestReport, total_duration: Duration) -> Result<(), Box<dyn std::error::Error>> {
+fn generate_test_report(
+    report: &TestReport,
+    total_duration: Duration,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 COMPREHENSIVE TEST REPORT");
     println!("============================");
 
@@ -823,14 +879,25 @@ fn generate_test_report(report: &TestReport, total_duration: Duration) -> Result
     if let Some(perf) = &report.performance_metrics {
         println!("\n⚡ PERFORMANCE METRICS");
         println!("Average Tick Time: {:.2}μs", perf.avg_tick_time_ns / 1000.0);
-        println!("Max Tick Time: {:.2}μs", perf.max_tick_time_ns as f64 / 1000.0);
+        println!(
+            "Max Tick Time: {:.2}μs",
+            perf.max_tick_time_ns as f64 / 1000.0
+        );
         println!("Throughput: {:.0} ticks/sec", perf.throughput_tps);
-        println!("Memory Usage: {:.2} MB", perf.memory_usage_bytes as f64 / 1024.0 / 1024.0);
+        println!(
+            "Memory Usage: {:.2} MB",
+            perf.memory_usage_bytes as f64 / 1024.0 / 1024.0
+        );
 
         let target_met = perf.avg_tick_time_ns < 1000.0;
-        println!("Target (<1μs): {} {}",
+        println!(
+            "Target (<1μs): {} {}",
             if target_met { "✅ MET" } else { "❌ FAILED" },
-            if target_met { "" } else { "- Performance optimization needed" }
+            if target_met {
+                ""
+            } else {
+                "- Performance optimization needed"
+            }
         );
     }
 
@@ -844,17 +911,15 @@ fn generate_test_report(report: &TestReport, total_duration: Duration) -> Result
         "quantum_validation",
         "performance_benchmarks",
         "edge_cases",
-        "integration_tests"
+        "integration_tests",
     ];
 
     for category in categories.iter() {
         if let Some(result) = report.test_results.get(*category) {
             let status = if result.success { "✅" } else { "❌" };
-            println!("{} {}: {:.2}ms ({} assertions)",
-                status,
-                category,
-                result.duration_ms,
-                result.assertions_count
+            println!(
+                "{} {}: {:.2}ms ({} assertions)",
+                status, category, result.duration_ms, result.assertions_count
             );
 
             if !result.success && !result.failure_details.is_empty() {
@@ -867,30 +932,45 @@ fn generate_test_report(report: &TestReport, total_duration: Duration) -> Result
     println!("\n🔍 CRITICAL VALIDATIONS");
 
     if let Some(timing) = report.test_results.get("timing_precision") {
-        println!("{} Timing Precision: TSC-based nanosecond accuracy validation",
-                if timing.success { "✅" } else { "❌" });
+        println!(
+            "{} Timing Precision: TSC-based nanosecond accuracy validation",
+            if timing.success { "✅" } else { "❌" }
+        );
     }
 
     if let Some(loop_test) = report.test_results.get("strange_loop") {
-        println!("{} Strange Loop: Lipschitz < 1 constraint satisfaction",
-                if loop_test.success { "✅" } else { "❌" });
+        println!(
+            "{} Strange Loop: Lipschitz < 1 constraint satisfaction",
+            if loop_test.success { "✅" } else { "❌" }
+        );
     }
 
     if let Some(quantum) = report.test_results.get("quantum_validation") {
-        println!("{} Quantum Validation: Physics constraints compliance",
-                if quantum.success { "✅" } else { "❌" });
+        println!(
+            "{} Quantum Validation: Physics constraints compliance",
+            if quantum.success { "✅" } else { "❌" }
+        );
     }
 
     if let Some(perf) = report.test_results.get("performance_benchmarks") {
-        println!("{} Performance: <1μs overhead and >1M ticks/sec targets",
-                if perf.success { "✅" } else { "❌" });
+        println!(
+            "{} Performance: <1μs overhead and >1M ticks/sec targets",
+            if perf.success { "✅" } else { "❌" }
+        );
     }
 
     // Hardware Information
     println!("\n🖥️  HARDWARE INFORMATION");
     println!("Architecture: {}", std::env::consts::ARCH);
     println!("OS: {}", std::env::consts::OS);
-    println!("TSC Support: {}", if cfg!(target_arch = "x86_64") { "Available" } else { "Simulated" });
+    println!(
+        "TSC Support: {}",
+        if cfg!(target_arch = "x86_64") {
+            "Available"
+        } else {
+            "Simulated"
+        }
+    );
 
     // Recommendations
     println!("\n💡 RECOMMENDATIONS");
@@ -899,11 +979,19 @@ fn generate_test_report(report: &TestReport, total_duration: Duration) -> Result
     for (category, result) in &report.test_results {
         if !result.success {
             let recommendation = match category.as_str() {
-                "timing_precision" => "Verify hardware TSC support and reduce system load".to_string(),
-                "strange_loop" => "Review Lipschitz constant calculations and convergence algorithms".to_string(),
-                "quantum_validation" => "Check quantum physics constraint implementations".to_string(),
+                "timing_precision" => {
+                    "Verify hardware TSC support and reduce system load".to_string()
+                }
+                "strange_loop" => {
+                    "Review Lipschitz constant calculations and convergence algorithms".to_string()
+                }
+                "quantum_validation" => {
+                    "Check quantum physics constraint implementations".to_string()
+                }
                 "performance_benchmarks" => "Optimize critical path for <1μs target".to_string(),
-                "edge_cases" => "Strengthen error handling and boundary condition checks".to_string(),
+                "edge_cases" => {
+                    "Strengthen error handling and boundary condition checks".to_string()
+                }
                 "integration_tests" => "Review component coordination and stability".to_string(),
                 _ => format!("Investigate {} implementation issues", category),
             };
@@ -927,7 +1015,10 @@ fn generate_test_report(report: &TestReport, total_duration: Duration) -> Result
 }
 
 /// Save detailed JSON report
-fn save_detailed_report(report: &TestReport, total_duration: Duration) -> Result<(), Box<dyn std::error::Error>> {
+fn save_detailed_report(
+    report: &TestReport,
+    total_duration: Duration,
+) -> Result<(), Box<dyn std::error::Error>> {
     use std::fs::File;
     use std::io::Write;
 
@@ -937,7 +1028,8 @@ fn save_detailed_report(report: &TestReport, total_duration: Duration) -> Result
 
     let filename = format!("nanosecond_scheduler_test_report_{}.json", timestamp);
 
-    let json_report = format!(r#"{{
+    let json_report = format!(
+        r#"{{
   "timestamp": "{}",
   "total_duration_ms": {},
   "summary": {{
@@ -969,7 +1061,8 @@ fn save_detailed_report(report: &TestReport, total_duration: Duration) -> Result
         report.failed_tests,
         report.success_rate() * 100.0,
         if let Some(perf) = &report.performance_metrics {
-            format!(r#"{{
+            format!(
+                r#"{{
     "avg_tick_time_ns": {:.2},
     "max_tick_time_ns": {},
     "throughput_tps": {:.0},
@@ -980,27 +1073,49 @@ fn save_detailed_report(report: &TestReport, total_duration: Duration) -> Result
                 perf.max_tick_time_ns,
                 perf.throughput_tps,
                 perf.memory_usage_bytes as f64 / 1024.0 / 1024.0,
-                perf.avg_tick_time_ns < 1000.0)
+                perf.avg_tick_time_ns < 1000.0
+            )
         } else {
             "null".to_string()
         },
-        report.test_results.iter()
-            .map(|(category, result)| format!(r#"{{
+        report
+            .test_results
+            .iter()
+            .map(|(category, result)| format!(
+                r#"{{
       "category": "{}",
       "success": {},
       "duration_ms": {:.2},
       "assertions": {},
       "failures": "{}"
-    }}"#, category, result.success, result.duration_ms, result.assertions_count, result.failure_details))
+    }}"#,
+                category,
+                result.success,
+                result.duration_ms,
+                result.assertions_count,
+                result.failure_details
+            ))
             .collect::<Vec<_>>()
             .join(",\n    "),
         std::env::consts::ARCH,
         std::env::consts::OS,
         cfg!(target_arch = "x86_64"),
-        report.test_results.get("timing_precision").map_or(false, |r| r.success),
-        report.test_results.get("strange_loop").map_or(false, |r| r.success),
-        report.test_results.get("quantum_validation").map_or(false, |r| r.success),
-        report.test_results.get("performance_benchmarks").map_or(false, |r| r.success)
+        report
+            .test_results
+            .get("timing_precision")
+            .map_or(false, |r| r.success),
+        report
+            .test_results
+            .get("strange_loop")
+            .map_or(false, |r| r.success),
+        report
+            .test_results
+            .get("quantum_validation")
+            .map_or(false, |r| r.success),
+        report
+            .test_results
+            .get("performance_benchmarks")
+            .map_or(false, |r| r.success)
     );
 
     let mut file = File::create(&filename)?;
@@ -1048,12 +1163,12 @@ mod tests {
         });
 
         assert!(duration > 500_000); // At least 0.5ms
-        // Less than 100ms — wide enough to absorb macOS / busy-CI
-        // scheduling jitter (Apple Silicon runners routinely see
-        // 10–30 ms for a 1 ms sleep when other jobs are in flight),
-        // while still catching a "sleep didn't return for 5 seconds"
-        // regression. The previous 5 ms ceiling failed `test_timing_
-        // precision` on macos-latest after the iter-5 arch port.
+                                     // Less than 100ms — wide enough to absorb macOS / busy-CI
+                                     // scheduling jitter (Apple Silicon runners routinely see
+                                     // 10–30 ms for a 1 ms sleep when other jobs are in flight),
+                                     // while still catching a "sleep didn't return for 5 seconds"
+                                     // regression. The previous 5 ms ceiling failed `test_timing_
+                                     // precision` on macos-latest after the iter-5 arch port.
         assert!(duration < 100_000_000, "1ms sleep took {duration} ns");
     }
 
@@ -1063,7 +1178,11 @@ mod tests {
         let y = vec![0.0, 0.8, 1.6, 2.4, 3.2]; // Lipschitz = 0.8 < 1
 
         let lipschitz = TestUtils::calculate_lipschitz_constant(&x, &y);
-        assert!(lipschitz < 1.0, "Lipschitz constant {} should be < 1.0", lipschitz);
+        assert!(
+            lipschitz < 1.0,
+            "Lipschitz constant {} should be < 1.0",
+            lipschitz
+        );
     }
 
     #[test]

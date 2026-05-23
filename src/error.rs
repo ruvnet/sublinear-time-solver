@@ -4,8 +4,8 @@
 //! and solver execution, providing detailed error information for debugging and
 //! recovery strategies.
 
-use core::fmt;
 use alloc::{string::String, vec::Vec};
+use core::fmt;
 
 /// Result type alias for solver operations.
 pub type Result<T> = core::result::Result<T, SolverError>;
@@ -23,7 +23,7 @@ pub enum SolverError {
         /// Sum of off-diagonal absolute values
         off_diagonal_sum: f64,
     },
-    
+
     /// Numerical instability detected during computation.
     NumericalInstability {
         /// Description of the instability
@@ -33,7 +33,7 @@ pub enum SolverError {
         /// Current residual norm when instability occurred
         residual_norm: f64,
     },
-    
+
     /// Coherence gate refused the solve: the matrix's diagonal-dominance
     /// margin dropped below the configured threshold, so the solver would
     /// have spent polynomial-time work on a near-singular system to
@@ -60,7 +60,7 @@ pub enum SolverError {
         /// Algorithm that failed to converge
         algorithm: String,
     },
-    
+
     /// Invalid input parameters or data.
     InvalidInput {
         /// Description of the invalid input
@@ -68,7 +68,7 @@ pub enum SolverError {
         /// Optional parameter name that was invalid
         parameter: Option<String>,
     },
-    
+
     /// Dimension mismatch between matrix and vector operations.
     DimensionMismatch {
         /// Expected dimension
@@ -78,7 +78,7 @@ pub enum SolverError {
         /// Context where mismatch occurred
         operation: String,
     },
-    
+
     /// Matrix format is not supported for the requested operation.
     UnsupportedMatrixFormat {
         /// Current matrix format
@@ -88,7 +88,7 @@ pub enum SolverError {
         /// Operation that was attempted
         operation: String,
     },
-    
+
     /// Memory allocation failure.
     MemoryAllocationError {
         /// Requested allocation size in bytes
@@ -96,7 +96,7 @@ pub enum SolverError {
         /// Available memory at time of failure (if known)
         available_memory: Option<usize>,
     },
-    
+
     /// Index out of bounds for matrix or vector access.
     IndexOutOfBounds {
         /// The invalid index
@@ -106,7 +106,7 @@ pub enum SolverError {
         /// Context where out-of-bounds access occurred
         context: String,
     },
-    
+
     /// Sparse matrix contains invalid data.
     InvalidSparseMatrix {
         /// Description of the invalid data
@@ -114,7 +114,7 @@ pub enum SolverError {
         /// Position where invalid data was found
         position: Option<(usize, usize)>,
     },
-    
+
     /// Algorithm-specific error conditions.
     AlgorithmError {
         /// Name of the algorithm
@@ -124,7 +124,7 @@ pub enum SolverError {
         /// Additional context data
         context: Vec<(String, String)>,
     },
-    
+
     /// WebAssembly binding error (when WASM feature is enabled).
     #[cfg(feature = "wasm")]
     WasmBindingError {
@@ -133,7 +133,7 @@ pub enum SolverError {
         /// JavaScript error if available
         js_error: Option<String>,
     },
-    
+
     /// I/O error for file operations (when std feature is enabled).
     #[cfg(feature = "std")]
     IoError {
@@ -143,7 +143,7 @@ pub enum SolverError {
         /// Context where I/O error occurred
         context: String,
     },
-    
+
     /// Serialization/deserialization error.
     #[cfg(feature = "serde")]
     SerializationError {
@@ -156,7 +156,7 @@ pub enum SolverError {
 
 impl SolverError {
     /// Check if this error indicates a recoverable condition.
-    /// 
+    ///
     /// Recoverable errors can potentially be resolved by adjusting
     /// algorithm parameters or switching to a different solver.
     pub fn is_recoverable(&self) -> bool {
@@ -169,12 +169,12 @@ impl SolverError {
             // broken — it's just below the budget the caller asked for.
             SolverError::Incoherent { .. } => true,
             SolverError::MatrixNotDiagonallyDominant { .. } => false, // Fundamental issue
-            SolverError::InvalidInput { .. } => false, // User error
-            SolverError::DimensionMismatch { .. } => false, // User error
-            SolverError::MemoryAllocationError { .. } => false, // System limitation
-            SolverError::IndexOutOfBounds { .. } => false, // Programming error
-            SolverError::InvalidSparseMatrix { .. } => false, // Data corruption
-            SolverError::UnsupportedMatrixFormat { .. } => true, // Can convert format
+            SolverError::InvalidInput { .. } => false,                // User error
+            SolverError::DimensionMismatch { .. } => false,           // User error
+            SolverError::MemoryAllocationError { .. } => false,       // System limitation
+            SolverError::IndexOutOfBounds { .. } => false,            // Programming error
+            SolverError::InvalidSparseMatrix { .. } => false,         // Data corruption
+            SolverError::UnsupportedMatrixFormat { .. } => true,      // Can convert format
             SolverError::AlgorithmError { .. } => true, // Algorithm-specific, might recover
             #[cfg(feature = "wasm")]
             SolverError::WasmBindingError { .. } => false, // Runtime environment issue
@@ -184,7 +184,7 @@ impl SolverError {
             SolverError::SerializationError { .. } => false, // Data format issue
         }
     }
-    
+
     /// Get suggested recovery strategy for recoverable errors.
     pub fn recovery_strategy(&self) -> Option<RecoveryStrategy> {
         match self {
@@ -192,24 +192,26 @@ impl SolverError {
                 // Suggest alternative algorithms
                 Some(match algorithm.as_str() {
                     "neumann" => RecoveryStrategy::SwitchAlgorithm("hybrid".to_string()),
-                    "forward_push" => RecoveryStrategy::SwitchAlgorithm("backward_push".to_string()),
+                    "forward_push" => {
+                        RecoveryStrategy::SwitchAlgorithm("backward_push".to_string())
+                    }
                     "backward_push" => RecoveryStrategy::SwitchAlgorithm("hybrid".to_string()),
                     _ => RecoveryStrategy::RelaxTolerance(10.0),
                 })
-            },
-            SolverError::NumericalInstability { .. } => {
-                Some(RecoveryStrategy::IncreasePrecision)
-            },
-            SolverError::UnsupportedMatrixFormat { required_format, .. } => {
-                Some(RecoveryStrategy::ConvertMatrixFormat(required_format.clone()))
-            },
+            }
+            SolverError::NumericalInstability { .. } => Some(RecoveryStrategy::IncreasePrecision),
+            SolverError::UnsupportedMatrixFormat {
+                required_format, ..
+            } => Some(RecoveryStrategy::ConvertMatrixFormat(
+                required_format.clone(),
+            )),
             SolverError::AlgorithmError { algorithm, .. } => {
                 Some(RecoveryStrategy::SwitchAlgorithm("neumann".to_string()))
-            },
+            }
             _ => None,
         }
     }
-    
+
     /// Get the error severity level.
     pub fn severity(&self) -> ErrorSeverity {
         match self {
@@ -271,73 +273,121 @@ pub enum ErrorSeverity {
 impl fmt::Display for SolverError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            SolverError::MatrixNotDiagonallyDominant { row, diagonal, off_diagonal_sum } => {
+            SolverError::MatrixNotDiagonallyDominant {
+                row,
+                diagonal,
+                off_diagonal_sum,
+            } => {
                 write!(f, "Matrix is not diagonally dominant at row {}: diagonal = {:.6}, off-diagonal sum = {:.6}", 
                        row, diagonal, off_diagonal_sum)
-            },
-            SolverError::NumericalInstability { reason, iteration, residual_norm } => {
-                write!(f, "Numerical instability at iteration {}: {} (residual = {:.2e})", 
-                       iteration, reason, residual_norm)
-            },
-            SolverError::ConvergenceFailure { iterations, residual_norm, tolerance, algorithm } => {
+            }
+            SolverError::NumericalInstability {
+                reason,
+                iteration,
+                residual_norm,
+            } => {
+                write!(
+                    f,
+                    "Numerical instability at iteration {}: {} (residual = {:.2e})",
+                    iteration, reason, residual_norm
+                )
+            }
+            SolverError::ConvergenceFailure {
+                iterations,
+                residual_norm,
+                tolerance,
+                algorithm,
+            } => {
                 write!(f, "Algorithm '{}' failed to converge after {} iterations: residual = {:.2e} > tolerance = {:.2e}",
                        algorithm, iterations, residual_norm, tolerance)
-            },
-            SolverError::Incoherent { coherence, threshold } => {
-                write!(f,
+            }
+            SolverError::Incoherent {
+                coherence,
+                threshold,
+            } => {
+                write!(
+                    f,
                     "Coherence gate refused solve: matrix coherence = {:.6} < threshold = {:.6} \
                      (ADR-001 item #3 — set SolverOptions::coherence_threshold to 0.0 to disable)",
                     coherence, threshold,
                 )
+            }
+            SolverError::InvalidInput { message, parameter } => match parameter {
+                Some(param) => write!(f, "Invalid input for parameter '{}': {}", param, message),
+                None => write!(f, "Invalid input: {}", message),
             },
-            SolverError::InvalidInput { message, parameter } => {
-                match parameter {
-                    Some(param) => write!(f, "Invalid input for parameter '{}': {}", param, message),
-                    None => write!(f, "Invalid input: {}", message),
+            SolverError::DimensionMismatch {
+                expected,
+                actual,
+                operation,
+            } => {
+                write!(
+                    f,
+                    "Dimension mismatch in {}: expected {}, got {}",
+                    operation, expected, actual
+                )
+            }
+            SolverError::UnsupportedMatrixFormat {
+                current_format,
+                required_format,
+                operation,
+            } => {
+                write!(
+                    f,
+                    "Operation '{}' requires {} format, but matrix is in {} format",
+                    operation, required_format, current_format
+                )
+            }
+            SolverError::MemoryAllocationError {
+                requested_size,
+                available_memory,
+            } => match available_memory {
+                Some(available) => write!(
+                    f,
+                    "Memory allocation failed: requested {} bytes, {} available",
+                    requested_size, available
+                ),
+                None => write!(
+                    f,
+                    "Memory allocation failed: requested {} bytes",
+                    requested_size
+                ),
+            },
+            SolverError::IndexOutOfBounds {
+                index,
+                max_index,
+                context,
+            } => {
+                write!(
+                    f,
+                    "Index {} out of bounds in {}: maximum valid index is {}",
+                    index, context, max_index
+                )
+            }
+            SolverError::InvalidSparseMatrix { reason, position } => match position {
+                Some((row, col)) => {
+                    write!(f, "Invalid sparse matrix at ({}, {}): {}", row, col, reason)
                 }
+                None => write!(f, "Invalid sparse matrix: {}", reason),
             },
-            SolverError::DimensionMismatch { expected, actual, operation } => {
-                write!(f, "Dimension mismatch in {}: expected {}, got {}", operation, expected, actual)
-            },
-            SolverError::UnsupportedMatrixFormat { current_format, required_format, operation } => {
-                write!(f, "Operation '{}' requires {} format, but matrix is in {} format", 
-                       operation, required_format, current_format)
-            },
-            SolverError::MemoryAllocationError { requested_size, available_memory } => {
-                match available_memory {
-                    Some(available) => write!(f, "Memory allocation failed: requested {} bytes, {} available", 
-                                             requested_size, available),
-                    None => write!(f, "Memory allocation failed: requested {} bytes", requested_size),
-                }
-            },
-            SolverError::IndexOutOfBounds { index, max_index, context } => {
-                write!(f, "Index {} out of bounds in {}: maximum valid index is {}", 
-                       index, context, max_index)
-            },
-            SolverError::InvalidSparseMatrix { reason, position } => {
-                match position {
-                    Some((row, col)) => write!(f, "Invalid sparse matrix at ({}, {}): {}", row, col, reason),
-                    None => write!(f, "Invalid sparse matrix: {}", reason),
-                }
-            },
-            SolverError::AlgorithmError { algorithm, message, .. } => {
+            SolverError::AlgorithmError {
+                algorithm, message, ..
+            } => {
                 write!(f, "Algorithm '{}' error: {}", algorithm, message)
-            },
+            }
             #[cfg(feature = "wasm")]
-            SolverError::WasmBindingError { message, js_error } => {
-                match js_error {
-                    Some(js_err) => write!(f, "WASM binding error: {} (JS: {})", message, js_err),
-                    None => write!(f, "WASM binding error: {}", message),
-                }
+            SolverError::WasmBindingError { message, js_error } => match js_error {
+                Some(js_err) => write!(f, "WASM binding error: {} (JS: {})", message, js_err),
+                None => write!(f, "WASM binding error: {}", message),
             },
             #[cfg(feature = "std")]
             SolverError::IoError { message, context } => {
                 write!(f, "I/O error in {}: {}", context, message)
-            },
+            }
             #[cfg(feature = "serde")]
             SolverError::SerializationError { message, data_type } => {
                 write!(f, "Serialization error for {}: {}", data_type, message)
-            },
+            }
         }
     }
 }
@@ -369,7 +419,7 @@ impl From<wasm_bindgen::JsValue> for SolverError {
         } else {
             "Unknown JavaScript error".to_string()
         };
-        
+
         SolverError::WasmBindingError {
             message,
             js_error: None,
@@ -380,7 +430,7 @@ impl From<wasm_bindgen::JsValue> for SolverError {
 #[cfg(all(test, feature = "std"))]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_error_recoverability() {
         let convergence_error = SolverError::ConvergenceFailure {
@@ -390,7 +440,7 @@ mod tests {
             algorithm: "neumann".to_string(),
         };
         assert!(convergence_error.is_recoverable());
-        
+
         let dimension_error = SolverError::DimensionMismatch {
             expected: 100,
             actual: 50,
@@ -398,7 +448,7 @@ mod tests {
         };
         assert!(!dimension_error.is_recoverable());
     }
-    
+
     #[test]
     fn test_recovery_strategies() {
         let error = SolverError::ConvergenceFailure {
@@ -407,14 +457,14 @@ mod tests {
             tolerance: 1e-6,
             algorithm: "neumann".to_string(),
         };
-        
+
         if let Some(RecoveryStrategy::SwitchAlgorithm(algo)) = error.recovery_strategy() {
             assert_eq!(algo, "hybrid");
         } else {
             panic!("Expected SwitchAlgorithm recovery strategy");
         }
     }
-    
+
     #[test]
     fn test_error_severity() {
         let memory_error = SolverError::MemoryAllocationError {
@@ -422,7 +472,7 @@ mod tests {
             available_memory: None,
         };
         assert_eq!(memory_error.severity(), ErrorSeverity::Critical);
-        
+
         let convergence_error = SolverError::ConvergenceFailure {
             iterations: 100,
             residual_norm: 1e-3,

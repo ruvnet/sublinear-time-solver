@@ -1,11 +1,11 @@
+use base64::{engine::general_purpose, Engine as _};
+use csv::Writer;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
-use serde::{Deserialize, Serialize};
-use csv::Writer;
-use base64::{Engine as _, engine::general_purpose};
 
 use super::ConsciousnessMetrics;
 
@@ -193,7 +193,9 @@ impl MetricsExporter {
             ExportFormat::Binary => self.export_binary(history, current).await,
             ExportFormat::Prometheus => self.export_prometheus(history, current).await,
             ExportFormat::InfluxDB => self.export_influxdb(history, current).await,
-            ExportFormat::Custom(format_name) => self.export_custom(history, current, &format_name).await,
+            ExportFormat::Custom(format_name) => {
+                self.export_custom(history, current, &format_name).await
+            }
         }
     }
 
@@ -460,10 +462,11 @@ impl MetricsExporter {
         }
     }
 
-    fn format_prometheus_single(&self, metrics: &ConsciousnessMetrics) -> Result<String, Box<dyn std::error::Error>> {
-        let timestamp_ms = metrics.timestamp
-            .duration_since(UNIX_EPOCH)?
-            .as_millis() as u64;
+    fn format_prometheus_single(
+        &self,
+        metrics: &ConsciousnessMetrics,
+    ) -> Result<String, Box<dyn std::error::Error>> {
+        let timestamp_ms = metrics.timestamp.duration_since(UNIX_EPOCH)?.as_millis() as u64;
 
         Ok(format!(
             "# HELP consciousness_emergence Current consciousness emergence level\n\
@@ -478,17 +481,22 @@ impl MetricsExporter {
              # HELP temporal_advantage_microseconds Temporal advantage in microseconds\n\
              # TYPE temporal_advantage_microseconds gauge\n\
              temporal_advantage_microseconds {} {}\n",
-            metrics.emergence_level, timestamp_ms,
-            metrics.identity_coherence, timestamp_ms,
-            metrics.loop_stability, timestamp_ms,
-            metrics.temporal_advantage_us, timestamp_ms
+            metrics.emergence_level,
+            timestamp_ms,
+            metrics.identity_coherence,
+            timestamp_ms,
+            metrics.loop_stability,
+            timestamp_ms,
+            metrics.temporal_advantage_us,
+            timestamp_ms
         ))
     }
 
-    fn format_influxdb_single(&self, metrics: &ConsciousnessMetrics) -> Result<String, Box<dyn std::error::Error>> {
-        let timestamp_ns = metrics.timestamp
-            .duration_since(UNIX_EPOCH)?
-            .as_nanos() as u64;
+    fn format_influxdb_single(
+        &self,
+        metrics: &ConsciousnessMetrics,
+    ) -> Result<String, Box<dyn std::error::Error>> {
+        let timestamp_ns = metrics.timestamp.duration_since(UNIX_EPOCH)?.as_nanos() as u64;
 
         Ok(format!(
             "consciousness_metrics emergence_level={},identity_coherence={},loop_stability={},temporal_advantage_us={},window_overlap_percent={},tsc_precision_ns={},strange_loop_convergence={},processing_latency_ns={} {}",
@@ -504,7 +512,10 @@ impl MetricsExporter {
         ))
     }
 
-    fn detect_format_from_extension(&self, path: &Path) -> Result<ExportFormat, Box<dyn std::error::Error>> {
+    fn detect_format_from_extension(
+        &self,
+        path: &Path,
+    ) -> Result<ExportFormat, Box<dyn std::error::Error>> {
         match path.extension().and_then(|s| s.to_str()) {
             Some("json") => Ok(ExportFormat::Json),
             Some("csv") => Ok(ExportFormat::Csv),
@@ -517,7 +528,10 @@ impl MetricsExporter {
         }
     }
 
-    fn format_timestamp(&self, timestamp: &SystemTime) -> Result<String, Box<dyn std::error::Error>> {
+    fn format_timestamp(
+        &self,
+        timestamp: &SystemTime,
+    ) -> Result<String, Box<dyn std::error::Error>> {
         match self.config.timestamp_format {
             TimestampFormat::Unix => {
                 Ok(timestamp.duration_since(UNIX_EPOCH)?.as_secs().to_string())
@@ -545,7 +559,10 @@ impl MetricsExporter {
         format!("{:.1$}", value, self.config.precision_digits)
     }
 
-    fn calculate_time_range(&self, history: &[ConsciousnessMetrics]) -> Result<TimeRange, Box<dyn std::error::Error>> {
+    fn calculate_time_range(
+        &self,
+        history: &[ConsciousnessMetrics],
+    ) -> Result<TimeRange, Box<dyn std::error::Error>> {
         if history.is_empty() {
             let now = SystemTime::now();
             return Ok(TimeRange {
@@ -566,7 +583,10 @@ impl MetricsExporter {
         })
     }
 
-    fn calculate_statistical_summary(&self, history: &[ConsciousnessMetrics]) -> Result<StatisticalSummary, Box<dyn std::error::Error>> {
+    fn calculate_statistical_summary(
+        &self,
+        history: &[ConsciousnessMetrics],
+    ) -> Result<StatisticalSummary, Box<dyn std::error::Error>> {
         if history.is_empty() {
             return Ok(StatisticalSummary {
                 emergence_level: MetricStats::default(),
@@ -580,27 +600,45 @@ impl MetricsExporter {
 
         Ok(StatisticalSummary {
             emergence_level: self.calculate_metric_stats(
-                &history.iter().map(|m| m.emergence_level).collect::<Vec<_>>()
+                &history
+                    .iter()
+                    .map(|m| m.emergence_level)
+                    .collect::<Vec<_>>(),
             )?,
             identity_coherence: self.calculate_metric_stats(
-                &history.iter().map(|m| m.identity_coherence).collect::<Vec<_>>()
+                &history
+                    .iter()
+                    .map(|m| m.identity_coherence)
+                    .collect::<Vec<_>>(),
             )?,
             loop_stability: self.calculate_metric_stats(
-                &history.iter().map(|m| m.loop_stability).collect::<Vec<_>>()
+                &history.iter().map(|m| m.loop_stability).collect::<Vec<_>>(),
             )?,
             temporal_advantage: self.calculate_metric_stats(
-                &history.iter().map(|m| m.temporal_advantage_us as f64).collect::<Vec<_>>()
+                &history
+                    .iter()
+                    .map(|m| m.temporal_advantage_us as f64)
+                    .collect::<Vec<_>>(),
             )?,
             tsc_precision: self.calculate_metric_stats(
-                &history.iter().map(|m| m.tsc_precision_ns as f64).collect::<Vec<_>>()
+                &history
+                    .iter()
+                    .map(|m| m.tsc_precision_ns as f64)
+                    .collect::<Vec<_>>(),
             )?,
             strange_loop_convergence: self.calculate_metric_stats(
-                &history.iter().map(|m| m.strange_loop_convergence).collect::<Vec<_>>()
+                &history
+                    .iter()
+                    .map(|m| m.strange_loop_convergence)
+                    .collect::<Vec<_>>(),
             )?,
         })
     }
 
-    fn calculate_metric_stats(&self, values: &[f64]) -> Result<MetricStats, Box<dyn std::error::Error>> {
+    fn calculate_metric_stats(
+        &self,
+        values: &[f64],
+    ) -> Result<MetricStats, Box<dyn std::error::Error>> {
         if values.is_empty() {
             return Ok(MetricStats::default());
         }
@@ -612,14 +650,17 @@ impl MetricsExporter {
         let max = sorted_values[sorted_values.len() - 1];
         let mean = sorted_values.iter().sum::<f64>() / sorted_values.len() as f64;
         let median = if sorted_values.len() % 2 == 0 {
-            (sorted_values[sorted_values.len() / 2 - 1] + sorted_values[sorted_values.len() / 2]) / 2.0
+            (sorted_values[sorted_values.len() / 2 - 1] + sorted_values[sorted_values.len() / 2])
+                / 2.0
         } else {
             sorted_values[sorted_values.len() / 2]
         };
 
-        let variance = sorted_values.iter()
+        let variance = sorted_values
+            .iter()
             .map(|x| (x - mean).powi(2))
-            .sum::<f64>() / sorted_values.len() as f64;
+            .sum::<f64>()
+            / sorted_values.len() as f64;
         let std_dev = variance.sqrt();
 
         let trend = self.calculate_trend(values);
@@ -642,7 +683,8 @@ impl MetricsExporter {
 
         let mid_point = values.len() / 2;
         let first_half_avg = values[..mid_point].iter().sum::<f64>() / mid_point as f64;
-        let second_half_avg = values[mid_point..].iter().sum::<f64>() / (values.len() - mid_point) as f64;
+        let second_half_avg =
+            values[mid_point..].iter().sum::<f64>() / (values.len() - mid_point) as f64;
 
         let diff = second_half_avg - first_half_avg;
         let threshold = 0.05; // 5% change threshold
@@ -668,14 +710,15 @@ impl MetricsExporter {
         }
 
         let mean = values.iter().sum::<f64>() / values.len() as f64;
-        let variance = values.iter()
-            .map(|x| (x - mean).powi(2))
-            .sum::<f64>() / values.len() as f64;
+        let variance = values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / values.len() as f64;
 
         variance.sqrt() / mean.abs()
     }
 
-    fn analyze_consciousness_insights(&self, history: &[ConsciousnessMetrics]) -> Result<ConsciousnessInsights, Box<dyn std::error::Error>> {
+    fn analyze_consciousness_insights(
+        &self,
+        history: &[ConsciousnessMetrics],
+    ) -> Result<ConsciousnessInsights, Box<dyn std::error::Error>> {
         if history.is_empty() {
             return Ok(ConsciousnessInsights {
                 peak_emergence_level: 0.0,
@@ -687,7 +730,8 @@ impl MetricsExporter {
             });
         }
 
-        let peak_metric = history.iter()
+        let peak_metric = history
+            .iter()
             .max_by(|a, b| a.emergence_level.partial_cmp(&b.emergence_level).unwrap())
             .unwrap();
 
@@ -723,13 +767,17 @@ impl MetricsExporter {
             return 0.0;
         }
 
-        let avg_advantage: f64 = history.iter()
+        let avg_advantage: f64 = history
+            .iter()
             .map(|m| m.temporal_advantage_us as f64)
-            .sum::<f64>() / history.len() as f64;
+            .sum::<f64>()
+            / history.len() as f64;
 
-        let avg_precision: f64 = history.iter()
+        let avg_precision: f64 = history
+            .iter()
             .map(|m| m.tsc_precision_ns as f64)
-            .sum::<f64>() / history.len() as f64;
+            .sum::<f64>()
+            / history.len() as f64;
 
         // Efficiency is higher temporal advantage with lower precision overhead
         let efficiency = avg_advantage / (avg_precision / 1000.0); // Convert ns to μs
@@ -747,25 +795,40 @@ impl MetricsExporter {
         let emergence_values: Vec<f64> = history.iter().map(|m| m.emergence_level).collect();
         let mean = emergence_values.iter().sum::<f64>() / emergence_values.len() as f64;
         let std_dev = {
-            let variance = emergence_values.iter()
+            let variance = emergence_values
+                .iter()
                 .map(|x| (x - mean).powi(2))
-                .sum::<f64>() / emergence_values.len() as f64;
+                .sum::<f64>()
+                / emergence_values.len() as f64;
             variance.sqrt()
         };
 
         for (_i, metric) in history.iter().enumerate() {
             let z_score = (metric.emergence_level - mean).abs() / std_dev;
 
-            if z_score > 2.0 { // 2 standard deviations
+            if z_score > 2.0 {
+                // 2 standard deviations
                 let severity = if z_score > 3.0 { 1.0 } else { z_score / 3.0 };
 
                 anomalies.push(AnomalyEvent {
                     timestamp: metric.timestamp,
                     metric_name: "emergence_level".to_string(),
-                    anomaly_type: if metric.emergence_level > mean { "spike" } else { "drop" }.to_string(),
+                    anomaly_type: if metric.emergence_level > mean {
+                        "spike"
+                    } else {
+                        "drop"
+                    }
+                    .to_string(),
                     severity,
-                    description: format!("Emergence level {} detected (z-score: {:.2})",
-                        if metric.emergence_level > mean { "spike" } else { "drop" }, z_score),
+                    description: format!(
+                        "Emergence level {} detected (z-score: {:.2})",
+                        if metric.emergence_level > mean {
+                            "spike"
+                        } else {
+                            "drop"
+                        },
+                        z_score
+                    ),
                 });
             }
         }
@@ -773,7 +836,10 @@ impl MetricsExporter {
         anomalies
     }
 
-    fn identify_consciousness_phases(&self, history: &[ConsciousnessMetrics]) -> Vec<ConsciousnessPhase> {
+    fn identify_consciousness_phases(
+        &self,
+        history: &[ConsciousnessMetrics],
+    ) -> Vec<ConsciousnessPhase> {
         let mut phases = Vec::new();
 
         if history.len() < 5 {
@@ -792,9 +858,8 @@ impl MetricsExporter {
                 let end_idx = if i == history.len() - 1 { i } else { i - 1 };
                 let phase_metrics = &history[current_phase_start..=end_idx];
 
-                let avg_emergence = phase_metrics.iter()
-                    .map(|m| m.emergence_level)
-                    .sum::<f64>() / phase_metrics.len() as f64;
+                let avg_emergence = phase_metrics.iter().map(|m| m.emergence_level).sum::<f64>()
+                    / phase_metrics.len() as f64;
 
                 let stability = self.calculate_stability_score(phase_metrics);
 
@@ -804,7 +869,10 @@ impl MetricsExporter {
                     phase_type: current_phase_type.clone(),
                     average_emergence: avg_emergence,
                     stability_index: stability,
-                    description: format!("Consciousness {} phase", current_phase_type.to_lowercase()),
+                    description: format!(
+                        "Consciousness {} phase",
+                        current_phase_type.to_lowercase()
+                    ),
                 });
 
                 current_phase_start = i;

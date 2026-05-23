@@ -3,13 +3,11 @@
 //! This module implements a sublinear-time solver based on the Neumann series
 //! expansion (I - M)^(-1) = Σ M^k, optimized for diagonally dominant matrices.
 
+use crate::error::{Result, SolverError};
 use crate::matrix::Matrix;
-use crate::types::{Precision, ErrorBounds, ErrorBoundMethod, MemoryInfo};
-use crate::error::{SolverError, Result};
-use crate::solver::{
-    SolverAlgorithm, SolverState, SolverOptions, StepResult, utils
-};
-use alloc::{vec::Vec, string::String};
+use crate::solver::{utils, SolverAlgorithm, SolverOptions, SolverState, StepResult};
+use crate::types::{ErrorBoundMethod, ErrorBounds, MemoryInfo, Precision};
+use alloc::vec::Vec;
 
 /// Neumann series solver implementation.
 ///
@@ -195,7 +193,8 @@ impl NeumannState {
         }
 
         // Compute scaled RHS: D^(-1)b
-        let rhs: Vec<Precision> = b.iter()
+        let rhs: Vec<Precision> = b
+            .iter()
             .zip(&diagonal_inv)
             .map(|(&b_val, &d_inv)| b_val * d_inv)
             .collect();
@@ -343,15 +342,14 @@ impl NeumannState {
         // Estimate ||M||_2 from the computed terms
         let mut matrix_norm_estimate = 0.0;
         if self.terms_computed > 1 {
-            let term_ratio = utils::l2_norm(&self.current_term) /
-                           utils::l2_norm(&self.rhs);
+            let term_ratio = utils::l2_norm(&self.current_term) / utils::l2_norm(&self.rhs);
             matrix_norm_estimate = term_ratio.powf(1.0 / (self.terms_computed - 1) as Precision);
         }
 
         if matrix_norm_estimate < 1.0 {
             // Error bound for geometric series truncation
-            let remaining_sum_bound = matrix_norm_estimate.powi(self.terms_computed as i32) /
-                                    (1.0 - matrix_norm_estimate);
+            let remaining_sum_bound = matrix_norm_estimate.powi(self.terms_computed as i32)
+                / (1.0 - matrix_norm_estimate);
             let error_bound = remaining_sum_bound * utils::l2_norm(&self.rhs);
 
             self.error_bounds = Some(ErrorBounds::upper_bound_only(
@@ -593,10 +591,7 @@ mod tests {
     #[test]
     fn test_neumann_solver_simple_system() {
         // Create a simple 2x2 diagonally dominant system
-        let triplets = vec![
-            (0, 0, 4.0), (0, 1, 1.0),
-            (1, 0, 1.0), (1, 1, 3.0),
-        ];
+        let triplets = vec![(0, 0, 4.0), (0, 1, 1.0), (1, 0, 1.0), (1, 1, 3.0)];
         let matrix = SparseMatrix::from_triplets(triplets, 2, 2).unwrap();
         let b = vec![5.0, 4.0];
 
@@ -615,7 +610,7 @@ mod tests {
                 let x = solution.solution;
                 assert!((x[0] - 1.0).abs() < 0.1);
                 assert!((x[1] - 1.0).abs() < 0.1);
-            },
+            }
             Err(e) => {
                 // Currently expected due to design limitation
                 println!("Expected error: {:?}", e);
@@ -626,10 +621,7 @@ mod tests {
     #[test]
     fn test_neumann_not_diagonally_dominant() {
         // Create a non-diagonally dominant matrix
-        let triplets = vec![
-            (0, 0, 1.0), (0, 1, 3.0),
-            (1, 0, 2.0), (1, 1, 1.0),
-        ];
+        let triplets = vec![(0, 0, 1.0), (0, 1, 3.0), (1, 0, 2.0), (1, 1, 1.0)];
         let matrix = SparseMatrix::from_triplets(triplets, 2, 2).unwrap();
         let b = vec![4.0, 3.0];
 
@@ -658,7 +650,7 @@ mod tests {
         let state = solver.initialize(&matrix, &b, &options).unwrap();
 
         assert_eq!(state.dimension, 2);
-        assert_eq!(state.diagonal_inv, vec![0.5, 1.0/3.0]);
+        assert_eq!(state.diagonal_inv, vec![0.5, 1.0 / 3.0]);
         assert_eq!(state.rhs, vec![2.0, 2.0]); // D^(-1)b
         assert_eq!(state.terms_computed, 0);
         assert!(!state.series_converged);

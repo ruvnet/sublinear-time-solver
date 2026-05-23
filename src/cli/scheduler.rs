@@ -4,11 +4,11 @@
 //! Created by rUv - https://github.com/ruvnet
 
 use clap::{Parser, Subcommand};
-use nanosecond_scheduler::{Config, Scheduler, Task};
-use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::{Duration, Instant};
 use colored::*;
+use nanosecond_scheduler::{Config, Scheduler, Task};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 #[derive(Parser)]
 #[clap(
@@ -66,24 +66,33 @@ pub enum SchedulerCommand {
 impl SchedulerCli {
     pub fn execute(&self) -> Result<(), Box<dyn std::error::Error>> {
         match &self.command {
-            SchedulerCommand::Benchmark { tasks, tick_rate, verbose } => {
-                run_benchmark(*tasks, *tick_rate, *verbose)
-            }
-            SchedulerCommand::Consciousness { lipschitz, iterations } => {
-                run_consciousness_demo(*lipschitz, *iterations)
-            }
-            SchedulerCommand::Realtime { frequency, duration } => {
-                run_realtime_demo(*frequency, *duration)
-            }
-            SchedulerCommand::Info => {
-                show_info()
-            }
+            SchedulerCommand::Benchmark {
+                tasks,
+                tick_rate,
+                verbose,
+            } => run_benchmark(*tasks, *tick_rate, *verbose),
+            SchedulerCommand::Consciousness {
+                lipschitz,
+                iterations,
+            } => run_consciousness_demo(*lipschitz, *iterations),
+            SchedulerCommand::Realtime {
+                frequency,
+                duration,
+            } => run_realtime_demo(*frequency, *duration),
+            SchedulerCommand::Info => show_info(),
         }
     }
 }
 
-fn run_benchmark(num_tasks: usize, tick_rate: u64, verbose: bool) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", "🚀 Nanosecond Scheduler Benchmark".bright_cyan().bold());
+fn run_benchmark(
+    num_tasks: usize,
+    tick_rate: u64,
+    verbose: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    println!(
+        "{}",
+        "🚀 Nanosecond Scheduler Benchmark".bright_cyan().bold()
+    );
     println!("{}", "==================================".bright_cyan());
 
     let config = Config {
@@ -124,7 +133,10 @@ fn run_benchmark(num_tasks: usize, tick_rate: u64, verbose: bool) -> Result<(), 
 
     println!("⏱️  Total time: {:?}", elapsed);
     println!("📈 Tasks executed: {}", counter.load(Ordering::Relaxed));
-    println!("⚡ Throughput: {:.0} tasks/sec", num_tasks as f64 / elapsed.as_secs_f64());
+    println!(
+        "⚡ Throughput: {:.0} tasks/sec",
+        num_tasks as f64 / elapsed.as_secs_f64()
+    );
 
     if verbose {
         println!("\n{}", "📊 Detailed Metrics:".bright_yellow());
@@ -148,9 +160,20 @@ fn run_benchmark(num_tasks: usize, tick_rate: u64, verbose: bool) -> Result<(), 
     Ok(())
 }
 
-fn run_consciousness_demo(lipschitz: f64, iterations: usize) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", "🧠 Temporal Consciousness Demonstration".bright_magenta().bold());
-    println!("{}", "======================================".bright_magenta());
+fn run_consciousness_demo(
+    lipschitz: f64,
+    iterations: usize,
+) -> Result<(), Box<dyn std::error::Error>> {
+    println!(
+        "{}",
+        "🧠 Temporal Consciousness Demonstration"
+            .bright_magenta()
+            .bold()
+    );
+    println!(
+        "{}",
+        "======================================".bright_magenta()
+    );
 
     let config = Config {
         lipschitz_constant: lipschitz,
@@ -160,7 +183,10 @@ fn run_consciousness_demo(lipschitz: f64, iterations: usize) -> Result<(), Box<d
 
     let scheduler = Scheduler::new(config);
 
-    println!("🌀 Running strange loop with Lipschitz constant: {}", lipschitz);
+    println!(
+        "🌀 Running strange loop with Lipschitz constant: {}",
+        lipschitz
+    );
     println!("📍 Target: Convergence to fixed point (0.5)");
     println!();
 
@@ -174,8 +200,12 @@ fn run_consciousness_demo(lipschitz: f64, iterations: usize) -> Result<(), Box<d
             let overlap = scheduler.temporal_overlap();
 
             let progress = (i as f64 / iterations as f64 * 100.0) as u32;
-            println!("  [{:3}%] State: {:.6}, Overlap: {:.2}%",
-                     progress, state, overlap * 100.0);
+            println!(
+                "  [{:3}%] State: {:.6}, Overlap: {:.2}%",
+                progress,
+                state,
+                overlap * 100.0
+            );
         }
     }
 
@@ -242,13 +272,15 @@ fn run_realtime_demo(frequency: u32, duration: u64) -> Result<(), Box<dyn std::e
     println!("\n{}", "📊 Results:".bright_green().bold());
     println!("  Tasks executed: {}", executed);
     println!("  Actual frequency: {:.1} Hz", actual_frequency);
-    println!("  Frequency accuracy: {:.2}%",
-             (actual_frequency / frequency as f64 * 100.0));
+    println!(
+        "  Frequency accuracy: {:.2}%",
+        (actual_frequency / frequency as f64 * 100.0)
+    );
 
     let metrics = scheduler.metrics();
     println!("  Average tick time: {}ns", metrics.avg_tick_time_ns);
 
-    if (actual_frequency - frequency as f64).abs() / frequency as f64 < 0.01 {
+    if (actual_frequency - frequency as f64).abs() / (frequency as f64) < 0.01 {
         println!("\n{}", "✅ Excellent real-time performance!".bright_green());
     }
 
@@ -256,7 +288,10 @@ fn run_realtime_demo(frequency: u32, duration: u64) -> Result<(), Box<dyn std::e
 }
 
 fn show_info() -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", "ℹ️  Nanosecond Scheduler Information".bright_cyan().bold());
+    println!(
+        "{}",
+        "ℹ️  Nanosecond Scheduler Information".bright_cyan().bold()
+    );
     println!("{}", "====================================".bright_cyan());
 
     println!("\n📦 {}", "Package:".bright_yellow());

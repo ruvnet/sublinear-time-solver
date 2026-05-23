@@ -39,7 +39,7 @@ impl MargolousLevitinValidator {
     pub fn new() -> Self {
         Self {
             planck_h: constants::PLANCK_H,
-            safety_margin: 1.5, // 50% safety margin
+            safety_margin: 1.5,           // 50% safety margin
             hardware_freq_limit_hz: 1e12, // 1 THz reasonable limit
         }
     }
@@ -77,30 +77,30 @@ impl MargolousLevitinValidator {
     ) -> QuantumResult<SpeedLimitResult> {
         let min_time_s = self.calculate_minimum_time(available_energy_j);
         let required_energy_j = self.calculate_required_energy(requested_time_s);
-        
+
         // Check Margolus-Levitin bound
         let ml_satisfied = requested_time_s >= min_time_s;
-        
+
         // Check hardware frequency limits
         let operation_freq_hz = 1.0 / requested_time_s;
         let hardware_feasible = operation_freq_hz <= self.hardware_freq_limit_hz;
-        
+
         let is_valid = ml_satisfied && hardware_feasible;
-        
+
         if !ml_satisfied {
             return Err(QuantumError::MargolousLevitinViolation {
                 min_time_s,
                 requested_time_s,
             });
         }
-        
+
         if !hardware_feasible {
             return Err(QuantumError::HardwareExceeded {
-                required: operation_freq_hz / 1e6, // MHz
+                required: operation_freq_hz / 1e6,            // MHz
                 available: self.hardware_freq_limit_hz / 1e6, // MHz
             });
         }
-        
+
         Ok(SpeedLimitResult {
             is_valid,
             requested_time_s,
@@ -118,10 +118,10 @@ impl MargolousLevitinValidator {
     pub fn validate_nanosecond_consciousness(&self) -> SpeedLimitResult {
         let nanosecond = 1e-9;
         let required_energy = self.calculate_required_energy(nanosecond);
-        
+
         // Assume reasonable energy budget (1 femtojoule)
         let available_energy = 1e-15;
-        
+
         self.validate_computation_time(nanosecond, available_energy)
             .unwrap_or_else(|_| SpeedLimitResult {
                 is_valid: false,
@@ -146,14 +146,14 @@ impl MargolousLevitinValidator {
             ("microsecond", 1e-6),
             ("millisecond", 1e-3),
         ];
-        
+
         let mut requirements = Vec::new();
-        
+
         for (name, time_s) in scales {
             let energy_j = self.calculate_required_energy(time_s);
             let energy_ev = energy_j / constants::EV_TO_JOULES;
             let min_time = self.calculate_minimum_time(energy_j);
-            
+
             requirements.push(TimeScaleRequirement {
                 scale_name: name.to_string(),
                 time_s,
@@ -163,11 +163,13 @@ impl MargolousLevitinValidator {
                 minimum_achievable_time_s: min_time,
             });
         }
-        
+
         TimeScaleAnalysis {
             validator_config: format!(
                 "Planck h: {:.2e}, Safety margin: {:.1}, Hardware limit: {:.1} THz",
-                self.planck_h, self.safety_margin, self.hardware_freq_limit_hz / 1e12
+                self.planck_h,
+                self.safety_margin,
+                self.hardware_freq_limit_hz / 1e12
             ),
             requirements,
             recommended_consciousness_scale: "nanosecond".to_string(),
@@ -247,11 +249,11 @@ mod tests {
     #[test]
     fn test_margolous_levitin_calculation() {
         let validator = MargolousLevitinValidator::new();
-        
+
         // Test with 1 femtojoule
         let energy = 1e-15; // 1 fJ
         let min_time = validator.calculate_minimum_time(energy);
-        
+
         // Should be on order of 10^-19 seconds
         assert!(min_time > 0.0);
         assert!(min_time < 1e-15);
@@ -261,7 +263,7 @@ mod tests {
     fn test_nanosecond_consciousness_validation() {
         let validator = MargolousLevitinValidator::new();
         let result = validator.validate_nanosecond_consciousness();
-        
+
         // Nanosecond should be achievable with reasonable energy
         assert!(result.requested_time_s == 1e-9);
     }
@@ -270,12 +272,14 @@ mod tests {
     fn test_time_scale_analysis() {
         let validator = MargolousLevitinValidator::new();
         let analysis = validator.analyze_time_scales();
-        
+
         assert_eq!(analysis.requirements.len(), 6);
         assert_eq!(analysis.recommended_consciousness_scale, "nanosecond");
-        
+
         // Check that nanosecond is feasible
-        let nanosecond_req = analysis.requirements.iter()
+        let nanosecond_req = analysis
+            .requirements
+            .iter()
             .find(|r| r.scale_name == "nanosecond")
             .unwrap();
         assert!(nanosecond_req.is_feasible);
@@ -284,11 +288,11 @@ mod tests {
     #[test]
     fn test_energy_calculation_consistency() {
         let validator = MargolousLevitinValidator::new();
-        
+
         let time = 1e-9; // 1 nanosecond
         let required_energy = validator.calculate_required_energy(time);
         let min_time = validator.calculate_minimum_time(required_energy);
-        
+
         // Should be consistent (within safety margin)
         assert_relative_eq!(time, min_time, epsilon = 0.1);
     }
@@ -296,11 +300,11 @@ mod tests {
     #[test]
     fn test_hardware_limits() {
         let validator = MargolousLevitinValidator::with_hardware_limits(1e9); // 1 GHz
-        
+
         // 1 nanosecond operation = 1 GHz, should be at limit
         let result = validator.validate_computation_time(1e-9, 1e-12).unwrap();
         assert!(result.operation_frequency_hz <= validator.hardware_freq_limit_hz);
-        
+
         // 1 picosecond operation = 1 THz, should exceed 1 GHz limit
         let result = validator.validate_computation_time(1e-12, 1e-12);
         assert!(result.is_err());
@@ -310,13 +314,13 @@ mod tests {
     fn test_safety_margin() {
         let mut validator = MargolousLevitinValidator::new();
         validator.set_safety_margin(2.0);
-        
+
         let energy = 1e-15;
         let min_time_2x = validator.calculate_minimum_time(energy);
-        
+
         validator.set_safety_margin(1.0);
         let min_time_1x = validator.calculate_minimum_time(energy);
-        
+
         assert_relative_eq!(min_time_2x, 2.0 * min_time_1x, epsilon = 0.01);
     }
 }

@@ -3,11 +3,11 @@
 //! Implements advanced sampling methods needed for true sublinear complexity,
 //! including importance sampling, reservoir sampling, and sketching techniques.
 
+use crate::error::{Result, SolverError};
 use crate::types::Precision;
-use crate::error::{SolverError, Result};
-use alloc::{vec::Vec, string::String};
-use rand::{Rng, SeedableRng};
+use alloc::vec::Vec;
 use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 
 /// Configuration for sampling algorithms
 #[derive(Debug, Clone)]
@@ -269,10 +269,7 @@ impl MatrixSketcher {
     }
 
     /// Sketch a matrix (reduce both dimensions)
-    pub fn sketch_matrix(
-        &self,
-        matrix_rows: &[Vec<Precision>],
-    ) -> Result<Vec<Vec<Precision>>> {
+    pub fn sketch_matrix(&self, matrix_rows: &[Vec<Precision>]) -> Result<Vec<Vec<Precision>>> {
         if matrix_rows.is_empty() {
             return Ok(Vec::new());
         }
@@ -326,10 +323,7 @@ pub struct AdaptiveSampler {
 
 impl AdaptiveSampler {
     /// Create new adaptive sampler
-    pub fn new(
-        config: SamplingConfig,
-        original_dimension: Option<usize>,
-    ) -> Result<Self> {
+    pub fn new(config: SamplingConfig, original_dimension: Option<usize>) -> Result<Self> {
         let importance_sampler = ImportanceSampler::new(config.clone());
         let reservoir_sampler = ReservoirSampler::new(config.reservoir_size, config.seed);
 
@@ -378,7 +372,8 @@ impl AdaptiveSampler {
             current_sampling_prob: self.importance_sampler.config.sampling_prob,
             reservoir_items_seen: self.reservoir_sampler.items_seen(),
             current_error: self.current_error,
-            compression_ratio: self.matrix_sketcher
+            compression_ratio: self
+                .matrix_sketcher
                 .as_ref()
                 .map(|s| s.compression_ratio())
                 .unwrap_or(1.0),
@@ -409,7 +404,7 @@ mod tests {
 
         let entries = vec![
             (0, 0, 1.0),
-            (0, 1, 10.0),  // High importance
+            (0, 1, 10.0), // High importance
             (1, 0, 0.1),
             (1, 1, 2.0),
         ];

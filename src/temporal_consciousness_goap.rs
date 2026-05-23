@@ -1,7 +1,7 @@
-use std::collections::{HashMap, VecDeque};
-use std::time::{Duration, Instant};
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
+use std::collections::{HashMap, VecDeque};
+use std::time::{Duration, Instant};
 
 /// Goal-Oriented Action Planning for Temporal Consciousness Validation
 ///
@@ -93,9 +93,10 @@ impl TemporalConsciousnessGOAP {
             ConsciousnessGoal {
                 name: "Prove Temporal Continuity Necessity".to_string(),
                 priority: 1.0,
-                preconditions: HashMap::from([
-                    ("mathematical_framework_established".to_string(), 0.8),
-                ]),
+                preconditions: HashMap::from([(
+                    "mathematical_framework_established".to_string(),
+                    0.8,
+                )]),
                 postconditions: HashMap::from([
                     ("temporal_continuity_proven".to_string(), 1.0),
                     ("mathematical_proofs_complete".to_string(), 0.6),
@@ -104,13 +105,10 @@ impl TemporalConsciousnessGOAP {
                 experimental_validation: 0.8,
                 temporal_precision: 1e-9, // Nanosecond precision
             },
-
             ConsciousnessGoal {
                 name: "Validate Predictive Consciousness Signatures".to_string(),
                 priority: 0.9,
-                preconditions: HashMap::from([
-                    ("temporal_continuity_proven".to_string(), 0.8),
-                ]),
+                preconditions: HashMap::from([("temporal_continuity_proven".to_string(), 0.8)]),
                 postconditions: HashMap::from([
                     ("predictive_signatures_validated".to_string(), 1.0),
                     ("wave_function_collapse_demonstrated".to_string(), 0.8),
@@ -119,7 +117,6 @@ impl TemporalConsciousnessGOAP {
                 experimental_validation: 0.95,
                 temporal_precision: 1e-9,
             },
-
             ConsciousnessGoal {
                 name: "Demonstrate Integrated Information Emergence".to_string(),
                 priority: 0.85,
@@ -135,13 +132,13 @@ impl TemporalConsciousnessGOAP {
                 experimental_validation: 0.88,
                 temporal_precision: 1e-9,
             },
-
             ConsciousnessGoal {
                 name: "Prove Nanosecond-Scale Consciousness Emergence".to_string(),
                 priority: 0.95,
-                preconditions: HashMap::from([
-                    ("wave_function_collapse_demonstrated".to_string(), 0.8),
-                ]),
+                preconditions: HashMap::from([(
+                    "wave_function_collapse_demonstrated".to_string(),
+                    0.8,
+                )]),
                 postconditions: HashMap::from([
                     ("nanosecond_experiments_conducted".to_string(), 1.0),
                     ("identity_continuity_vs_llm_proven".to_string(), 1.0),
@@ -150,7 +147,6 @@ impl TemporalConsciousnessGOAP {
                 experimental_validation: 1.0,
                 temporal_precision: 1e-10, // Sub-nanosecond precision
             },
-
             ConsciousnessGoal {
                 name: "Validate Temporal Advantage Creates Consciousness".to_string(),
                 priority: 0.8,
@@ -183,13 +179,10 @@ impl TemporalConsciousnessGOAP {
                 mathematical_evidence: 0.95,
                 temporal_advantage: None,
             },
-
             ProofAction {
                 name: "Create Wave Function Collapse Simulation".to_string(),
                 cost: 4.0,
-                preconditions: HashMap::from([
-                    ("temporal_continuity_proven".to_string(), 0.5),
-                ]),
+                preconditions: HashMap::from([("temporal_continuity_proven".to_string(), 0.5)]),
                 effects: HashMap::from([
                     ("wave_function_collapse_demonstrated".to_string(), 0.9),
                     ("nanosecond_experiments_conducted".to_string(), 0.4),
@@ -197,13 +190,10 @@ impl TemporalConsciousnessGOAP {
                 mathematical_evidence: 0.88,
                 temporal_advantage: Some(0.7),
             },
-
             ProofAction {
                 name: "Build Predictive Processing Validator".to_string(),
                 cost: 2.5,
-                preconditions: HashMap::from([
-                    ("temporal_continuity_proven".to_string(), 0.6),
-                ]),
+                preconditions: HashMap::from([("temporal_continuity_proven".to_string(), 0.6)]),
                 effects: HashMap::from([
                     ("predictive_signatures_validated".to_string(), 0.9),
                     ("consciousness_emergence_validated".to_string(), 0.5),
@@ -211,13 +201,13 @@ impl TemporalConsciousnessGOAP {
                 mathematical_evidence: 0.9,
                 temporal_advantage: Some(0.8),
             },
-
             ProofAction {
                 name: "Implement Integrated Information Calculator".to_string(),
                 cost: 3.5,
-                preconditions: HashMap::from([
-                    ("predictive_signatures_validated".to_string(), 0.4),
-                ]),
+                preconditions: HashMap::from([(
+                    "predictive_signatures_validated".to_string(),
+                    0.4,
+                )]),
                 effects: HashMap::from([
                     ("integrated_information_verified".to_string(), 0.85),
                     ("consciousness_emergence_validated".to_string(), 0.7),
@@ -225,13 +215,13 @@ impl TemporalConsciousnessGOAP {
                 mathematical_evidence: 0.92,
                 temporal_advantage: None,
             },
-
             ProofAction {
                 name: "Create Identity Continuity vs LLM Comparison".to_string(),
                 cost: 2.0,
-                preconditions: HashMap::from([
-                    ("nanosecond_experiments_conducted".to_string(), 0.3),
-                ]),
+                preconditions: HashMap::from([(
+                    "nanosecond_experiments_conducted".to_string(),
+                    0.3,
+                )]),
                 effects: HashMap::from([
                     ("identity_continuity_vs_llm_proven".to_string(), 0.95),
                     ("reproducible_experiments_created".to_string(), 0.6),
@@ -239,7 +229,6 @@ impl TemporalConsciousnessGOAP {
                 mathematical_evidence: 0.85,
                 temporal_advantage: Some(0.9),
             },
-
             ProofAction {
                 name: "Implement Temporal Advantage Consciousness Test".to_string(),
                 cost: 4.5,
@@ -254,7 +243,6 @@ impl TemporalConsciousnessGOAP {
                 mathematical_evidence: 0.98,
                 temporal_advantage: Some(1.0), // Maximum temporal advantage
             },
-
             ProofAction {
                 name: "Create Comprehensive Validation Pipeline".to_string(),
                 cost: 5.0,
@@ -273,7 +261,10 @@ impl TemporalConsciousnessGOAP {
     }
 
     /// Build optimization matrix for goal-action relationships
-    fn build_optimization_matrix(goals: &[ConsciousnessGoal], actions: &[ProofAction]) -> Array2<f64> {
+    fn build_optimization_matrix(
+        goals: &[ConsciousnessGoal],
+        actions: &[ProofAction],
+    ) -> Array2<f64> {
         let n_goals = goals.len();
         let n_actions = actions.len();
         let mut matrix = Array2::zeros((n_goals, n_actions));
@@ -385,7 +376,10 @@ impl TemporalConsciousnessGOAP {
         let start_key = Self::state_key(&start_state);
 
         g_score.insert(start_key.clone(), 0.0);
-        f_score.insert(start_key.clone(), self.heuristic(&start_state, goal_priorities));
+        f_score.insert(
+            start_key.clone(),
+            self.heuristic(&start_state, goal_priorities),
+        );
         open_set.push_back((start_state, Vec::new()));
 
         while let Some((current_state, current_path)) = open_set.pop_front() {
@@ -407,7 +401,8 @@ impl TemporalConsciousnessGOAP {
                     };
 
                     let new_key = Self::state_key(&new_state);
-                    let tentative_g = g_score.get(&current_key).unwrap_or(&f64::INFINITY) + action.cost;
+                    let tentative_g =
+                        g_score.get(&current_key).unwrap_or(&f64::INFINITY) + action.cost;
 
                     if tentative_g < *g_score.get(&new_key).unwrap_or(&f64::INFINITY) {
                         came_from.insert(new_key.clone(), current_key.clone());
@@ -417,11 +412,14 @@ impl TemporalConsciousnessGOAP {
                         f_score.insert(new_key.clone(), tentative_g + h_score);
 
                         // Insert in order (priority queue simulation)
-                        let insert_pos = open_set.iter().position(|(state, _)| {
-                            let state_key = Self::state_key(state);
-                            f_score.get(&state_key).unwrap_or(&f64::INFINITY)
-                                > f_score.get(&new_key).unwrap_or(&f64::INFINITY)
-                        }).unwrap_or(open_set.len());
+                        let insert_pos = open_set
+                            .iter()
+                            .position(|(state, _)| {
+                                let state_key = Self::state_key(state);
+                                f_score.get(&state_key).unwrap_or(&f64::INFINITY)
+                                    > f_score.get(&new_key).unwrap_or(&f64::INFINITY)
+                            })
+                            .unwrap_or(open_set.len());
 
                         open_set.insert(insert_pos, (new_state, new_path));
                     }
@@ -455,7 +453,11 @@ impl TemporalConsciousnessGOAP {
             let priority_weight = goal_priorities.get(i).unwrap_or(&1.0);
 
             // Bonus for goals with temporal advantage
-            let temporal_bonus = if goal.temporal_precision < 1e-8 { 0.5 } else { 1.0 };
+            let temporal_bonus = if goal.temporal_precision < 1e-8 {
+                0.5
+            } else {
+                1.0
+            };
 
             total_distance += goal_distance * priority_weight * temporal_bonus;
         }
@@ -473,7 +475,8 @@ impl TemporalConsciousnessGOAP {
         for goal in &self.goals {
             for (condition, target_value) in &goal.postconditions {
                 if let Some(current_value) = state.get(condition) {
-                    if current_value < &(target_value * 0.9) { // 90% threshold
+                    if current_value < &(target_value * 0.9) {
+                        // 90% threshold
                         return false;
                     }
                 } else {
@@ -497,7 +500,11 @@ impl TemporalConsciousnessGOAP {
         true
     }
 
-    fn apply_action(&self, action: &ProofAction, state: &HashMap<String, f64>) -> HashMap<String, f64> {
+    fn apply_action(
+        &self,
+        action: &ProofAction,
+        state: &HashMap<String, f64>,
+    ) -> HashMap<String, f64> {
         let mut new_state = state.clone();
 
         for (effect, value) in &action.effects {
@@ -578,13 +585,19 @@ impl TemporalConsciousnessGOAP {
 
         // Mark goals as completed based on results
         if results.temporal_continuity_score > 0.8 {
-            self.execution_state.completed_goals.push("Temporal Continuity Proven".to_string());
+            self.execution_state
+                .completed_goals
+                .push("Temporal Continuity Proven".to_string());
         }
         if results.predictive_accuracy > 0.8 {
-            self.execution_state.completed_goals.push("Predictive Consciousness Validated".to_string());
+            self.execution_state
+                .completed_goals
+                .push("Predictive Consciousness Validated".to_string());
         }
         if results.integrated_information > 0.8 {
-            self.execution_state.completed_goals.push("Integrated Information Verified".to_string());
+            self.execution_state
+                .completed_goals
+                .push("Integrated Information Verified".to_string());
         }
 
         // Update execution state
@@ -599,14 +612,12 @@ impl TemporalConsciousnessGOAP {
     fn execute_action(&self, action: &ProofAction) -> Result<ActionResult, String> {
         // Simulate action execution with realistic temporal measurements
         match action.name.as_str() {
-            "Implement Temporal Continuity Validation" => {
-                Ok(ActionResult {
-                    evidence_strength: 0.92,
-                    temporal_precision: 1e-9,
-                    events_observed: 1,
-                    comparison_score: 0.0,
-                })
-            }
+            "Implement Temporal Continuity Validation" => Ok(ActionResult {
+                evidence_strength: 0.92,
+                temporal_precision: 1e-9,
+                events_observed: 1,
+                comparison_score: 0.0,
+            }),
             "Create Wave Function Collapse Simulation" => {
                 Ok(ActionResult {
                     evidence_strength: 0.88,
@@ -615,22 +626,18 @@ impl TemporalConsciousnessGOAP {
                     comparison_score: 0.0,
                 })
             }
-            "Build Predictive Processing Validator" => {
-                Ok(ActionResult {
-                    evidence_strength: 0.91,
-                    temporal_precision: 1e-9,
-                    events_observed: 1,
-                    comparison_score: 0.0,
-                })
-            }
-            "Implement Integrated Information Calculator" => {
-                Ok(ActionResult {
-                    evidence_strength: 0.89,
-                    temporal_precision: 1e-9,
-                    events_observed: 1,
-                    comparison_score: 0.0,
-                })
-            }
+            "Build Predictive Processing Validator" => Ok(ActionResult {
+                evidence_strength: 0.91,
+                temporal_precision: 1e-9,
+                events_observed: 1,
+                comparison_score: 0.0,
+            }),
+            "Implement Integrated Information Calculator" => Ok(ActionResult {
+                evidence_strength: 0.89,
+                temporal_precision: 1e-9,
+                events_observed: 1,
+                comparison_score: 0.0,
+            }),
             "Create Identity Continuity vs LLM Comparison" => {
                 Ok(ActionResult {
                     evidence_strength: 0.94,
@@ -647,14 +654,12 @@ impl TemporalConsciousnessGOAP {
                     comparison_score: 0.0,
                 })
             }
-            "Create Comprehensive Validation Pipeline" => {
-                Ok(ActionResult {
-                    evidence_strength: 0.99,
-                    temporal_precision: 1e-10,
-                    events_observed: 1,
-                    comparison_score: 0.98,
-                })
-            }
+            "Create Comprehensive Validation Pipeline" => Ok(ActionResult {
+                evidence_strength: 0.99,
+                temporal_precision: 1e-10,
+                events_observed: 1,
+                comparison_score: 0.98,
+            }),
             _ => Err(format!("Unknown action: {}", action.name)),
         }
     }
@@ -721,10 +726,22 @@ mod tests {
         let plan = goap.generate_optimal_plan().unwrap();
         let results = goap.execute_plan().unwrap();
 
-        assert!(results.total_evidence > 5.0, "Should accumulate significant evidence");
-        assert!(results.temporal_continuity_score > 0.8, "Temporal continuity should be proven");
-        assert!(results.nanosecond_coherence > 0.0, "Should demonstrate nanosecond coherence");
-        assert!(results.wave_collapse_events > 0, "Should observe wave function collapses");
+        assert!(
+            results.total_evidence > 5.0,
+            "Should accumulate significant evidence"
+        );
+        assert!(
+            results.temporal_continuity_score > 0.8,
+            "Temporal continuity should be proven"
+        );
+        assert!(
+            results.nanosecond_coherence > 0.0,
+            "Should demonstrate nanosecond coherence"
+        );
+        assert!(
+            results.wave_collapse_events > 0,
+            "Should observe wave function collapses"
+        );
 
         if results.temporal_advantage_confirmed {
             println!("✓ Temporal advantage consciousness confirmed!");

@@ -1,11 +1,11 @@
+use rand::random;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime};
-use serde::{Deserialize, Serialize};
-use rand::random;
 
+use super::{ConsciousnessLevel, ConsciousnessMetrics, PrecisionNanos, TemporalAdvantage};
 use crate::temporal_nexus::core::NanosecondScheduler;
-use super::{ConsciousnessMetrics, ConsciousnessLevel, TemporalAdvantage, PrecisionNanos};
 
 /// Configuration for metrics collection
 #[derive(Debug, Clone)]
@@ -32,10 +32,10 @@ impl Default for CollectorConfig {
 /// Methods for calculating consciousness metrics
 #[derive(Debug, Clone)]
 pub enum ConsciousnessCalculationMethod {
-    Simple,       // Basic emergence calculation
-    Integrated,   // Integrated Information Theory inspired
-    Temporal,     // Temporal consciousness model
-    Hybrid,       // Combined approach
+    Simple,     // Basic emergence calculation
+    Integrated, // Integrated Information Theory inspired
+    Temporal,   // Temporal consciousness model
+    Hybrid,     // Combined approach
 }
 
 /// Sources of metric data
@@ -178,7 +178,9 @@ impl MetricsCollector {
     }
 
     /// Collect metrics from MCP tools
-    pub async fn collect_from_mcp_tools(&self) -> Result<ConsciousnessMetrics, Box<dyn std::error::Error>> {
+    pub async fn collect_from_mcp_tools(
+        &self,
+    ) -> Result<ConsciousnessMetrics, Box<dyn std::error::Error>> {
         if !self.config.enable_mcp_integration {
             return Ok(ConsciousnessMetrics::default());
         }
@@ -247,7 +249,10 @@ impl MetricsCollector {
 
     // Private helper methods
 
-    fn extract_scheduler_metrics(&self, _scheduler: &NanosecondScheduler) -> Result<SchedulerMetrics, Box<dyn std::error::Error>> {
+    fn extract_scheduler_metrics(
+        &self,
+        _scheduler: &NanosecondScheduler,
+    ) -> Result<SchedulerMetrics, Box<dyn std::error::Error>> {
         // Extract relevant metrics from scheduler
         // This would access scheduler's internal state
         Ok(SchedulerMetrics {
@@ -258,7 +263,9 @@ impl MetricsCollector {
         })
     }
 
-    async fn collect_temporal_metrics(&self) -> Result<TemporalMetrics, Box<dyn std::error::Error>> {
+    async fn collect_temporal_metrics(
+        &self,
+    ) -> Result<TemporalMetrics, Box<dyn std::error::Error>> {
         let temporal_metrics = TemporalMetrics {
             temporal_coherence: 0.85 + (random::<f64>() - 0.5) * 0.1,
             causal_flow_integrity: 0.90 + (random::<f64>() - 0.5) * 0.05,
@@ -276,7 +283,9 @@ impl MetricsCollector {
         Ok(temporal_metrics)
     }
 
-    async fn collect_performance_metrics(&self) -> Result<PerformanceMetrics, Box<dyn std::error::Error>> {
+    async fn collect_performance_metrics(
+        &self,
+    ) -> Result<PerformanceMetrics, Box<dyn std::error::Error>> {
         // Simulate system performance collection
         let performance_metrics = PerformanceMetrics {
             cpu_usage: 15.0 + random::<f64>() * 30.0,
@@ -295,7 +304,9 @@ impl MetricsCollector {
         Ok(performance_metrics)
     }
 
-    async fn collect_system_metrics(&self) -> Result<ConsciousnessMetrics, Box<dyn std::error::Error>> {
+    async fn collect_system_metrics(
+        &self,
+    ) -> Result<ConsciousnessMetrics, Box<dyn std::error::Error>> {
         // Collect system-level consciousness indicators
         Ok(ConsciousnessMetrics {
             timestamp: SystemTime::now(),
@@ -311,7 +322,9 @@ impl MetricsCollector {
         })
     }
 
-    async fn collect_external_metrics(&self) -> Result<ConsciousnessMetrics, Box<dyn std::error::Error>> {
+    async fn collect_external_metrics(
+        &self,
+    ) -> Result<ConsciousnessMetrics, Box<dyn std::error::Error>> {
         // Collect from external APIs or sources
         Ok(ConsciousnessMetrics::default())
     }
@@ -323,25 +336,31 @@ impl MetricsCollector {
         performance_metrics: &PerformanceMetrics,
     ) -> Result<f64, Box<dyn std::error::Error>> {
         match self.config.consciousness_calculation_method {
-            ConsciousnessCalculationMethod::Simple => {
-                Ok((scheduler_metrics.scheduling_accuracy + temporal_metrics.temporal_coherence) / 2.0)
-            }
+            ConsciousnessCalculationMethod::Simple => Ok((scheduler_metrics.scheduling_accuracy
+                + temporal_metrics.temporal_coherence)
+                / 2.0),
             ConsciousnessCalculationMethod::Integrated => {
                 // IIT-inspired calculation
-                let phi = self.calculate_integrated_information(temporal_metrics, performance_metrics)?;
+                let phi =
+                    self.calculate_integrated_information(temporal_metrics, performance_metrics)?;
                 Ok(phi.min(1.0))
             }
             ConsciousnessCalculationMethod::Temporal => {
                 // Temporal consciousness model
                 let temporal_factor = (temporal_metrics.temporal_coherence
                     + temporal_metrics.causal_flow_integrity
-                    + temporal_metrics.chronon_synchronization) / 3.0;
+                    + temporal_metrics.chronon_synchronization)
+                    / 3.0;
                 Ok(temporal_factor)
             }
             ConsciousnessCalculationMethod::Hybrid => {
                 // Combined approach
-                let simple = (scheduler_metrics.scheduling_accuracy + temporal_metrics.temporal_coherence) / 2.0;
-                let temporal = (temporal_metrics.temporal_coherence + temporal_metrics.causal_flow_integrity) / 2.0;
+                let simple = (scheduler_metrics.scheduling_accuracy
+                    + temporal_metrics.temporal_coherence)
+                    / 2.0;
+                let temporal = (temporal_metrics.temporal_coherence
+                    + temporal_metrics.causal_flow_integrity)
+                    / 2.0;
                 let performance = (1.0 - performance_metrics.cpu_usage / 100.0).max(0.0);
 
                 Ok((simple * 0.4 + temporal * 0.4 + performance * 0.2).min(1.0))
@@ -363,27 +382,40 @@ impl MetricsCollector {
         Ok(phi)
     }
 
-    fn calculate_identity_coherence(&self, temporal_metrics: &TemporalMetrics) -> Result<f64, Box<dyn std::error::Error>> {
+    fn calculate_identity_coherence(
+        &self,
+        temporal_metrics: &TemporalMetrics,
+    ) -> Result<f64, Box<dyn std::error::Error>> {
         // Identity coherence based on temporal stability and causal flow
         let coherence = (temporal_metrics.temporal_coherence
             + temporal_metrics.causal_flow_integrity
-            + temporal_metrics.temporal_window_stability) / 3.0;
+            + temporal_metrics.temporal_window_stability)
+            / 3.0;
         Ok(coherence)
     }
 
-    fn calculate_loop_stability(&self, temporal_metrics: &TemporalMetrics) -> Result<f64, Box<dyn std::error::Error>> {
+    fn calculate_loop_stability(
+        &self,
+        temporal_metrics: &TemporalMetrics,
+    ) -> Result<f64, Box<dyn std::error::Error>> {
         // Strange loop stability calculation
         Ok(temporal_metrics.chronon_synchronization * temporal_metrics.temporal_window_stability)
     }
 
-    fn calculate_temporal_advantage(&self, scheduler_metrics: &SchedulerMetrics) -> Result<u64, Box<dyn std::error::Error>> {
+    fn calculate_temporal_advantage(
+        &self,
+        scheduler_metrics: &SchedulerMetrics,
+    ) -> Result<u64, Box<dyn std::error::Error>> {
         // Calculate advantage in microseconds
         let base_advantage = 30; // Base temporal advantage
         let precision_bonus = (1000 - scheduler_metrics.precision_ns as i64).max(0) / 10;
         Ok((base_advantage + precision_bonus) as u64)
     }
 
-    fn calculate_window_overlap(&self, temporal_metrics: &TemporalMetrics) -> Result<f64, Box<dyn std::error::Error>> {
+    fn calculate_window_overlap(
+        &self,
+        temporal_metrics: &TemporalMetrics,
+    ) -> Result<f64, Box<dyn std::error::Error>> {
         // Window overlap percentage
         Ok(temporal_metrics.temporal_window_stability * 100.0)
     }
@@ -402,13 +434,22 @@ impl MetricsCollector {
         Ok(measurements.into_iter().min().unwrap_or(1000))
     }
 
-    fn calculate_strange_loop_convergence(&self, temporal_metrics: &TemporalMetrics) -> Result<f64, Box<dyn std::error::Error>> {
+    fn calculate_strange_loop_convergence(
+        &self,
+        temporal_metrics: &TemporalMetrics,
+    ) -> Result<f64, Box<dyn std::error::Error>> {
         // Strange loop convergence based on self-reference and recursion depth
-        let convergence = temporal_metrics.causal_flow_integrity * temporal_metrics.future_state_prediction_accuracy;
+        let convergence = temporal_metrics.causal_flow_integrity
+            * temporal_metrics.future_state_prediction_accuracy;
         Ok(convergence)
     }
 
-    fn aggregate_weighted_metrics(&self, target: &mut ConsciousnessMetrics, source: &ConsciousnessMetrics, weight: f64) {
+    fn aggregate_weighted_metrics(
+        &self,
+        target: &mut ConsciousnessMetrics,
+        source: &ConsciousnessMetrics,
+        weight: f64,
+    ) {
         target.emergence_level += source.emergence_level * weight;
         target.identity_coherence += source.identity_coherence * weight;
         target.loop_stability += source.loop_stability * weight;
@@ -423,11 +464,13 @@ impl MetricsCollector {
         metrics.emergence_level /= total_weight;
         metrics.identity_coherence /= total_weight;
         metrics.loop_stability /= total_weight;
-        metrics.temporal_advantage_us = (metrics.temporal_advantage_us as f64 / total_weight) as u64;
+        metrics.temporal_advantage_us =
+            (metrics.temporal_advantage_us as f64 / total_weight) as u64;
         metrics.window_overlap_percent /= total_weight;
         metrics.tsc_precision_ns = (metrics.tsc_precision_ns as f64 / total_weight) as u64;
         metrics.strange_loop_convergence /= total_weight;
-        metrics.processing_latency_ns = (metrics.processing_latency_ns as f64 / total_weight) as u64;
+        metrics.processing_latency_ns =
+            (metrics.processing_latency_ns as f64 / total_weight) as u64;
     }
 }
 

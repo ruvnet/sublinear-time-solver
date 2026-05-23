@@ -1,5 +1,4 @@
 use std::fmt;
-use rand::Rng;
 
 #[derive(Debug, Clone)]
 pub struct Matrix {
@@ -18,7 +17,11 @@ impl Matrix {
     }
 
     pub fn from_slice(data: &[f64], rows: usize, cols: usize) -> Self {
-        assert_eq!(data.len(), rows * cols, "Data length must match matrix dimensions");
+        assert_eq!(
+            data.len(),
+            rows * cols,
+            "Data length must match matrix dimensions"
+        );
         Self {
             data: data.to_vec(),
             rows,
@@ -255,9 +258,14 @@ impl Vector {
     }
 
     pub fn dot(&self, other: &Vector) -> f64 {
-        assert_eq!(self.len(), other.len(), "Vector lengths must match for dot product");
+        assert_eq!(
+            self.len(),
+            other.len(),
+            "Vector lengths must match for dot product"
+        );
 
-        self.data.iter()
+        self.data
+            .iter()
             .zip(other.data.iter())
             .map(|(a, b)| a * b)
             .sum()
@@ -277,7 +285,11 @@ impl Vector {
     }
 
     pub fn add(&self, other: &Vector) -> Vector {
-        assert_eq!(self.len(), other.len(), "Vector lengths must match for addition");
+        assert_eq!(
+            self.len(),
+            other.len(),
+            "Vector lengths must match for addition"
+        );
 
         let mut result = Vector::new(self.len());
         for i in 0..self.len() {
@@ -287,7 +299,11 @@ impl Vector {
     }
 
     pub fn subtract(&self, other: &Vector) -> Vector {
-        assert_eq!(self.len(), other.len(), "Vector lengths must match for subtraction");
+        assert_eq!(
+            self.len(),
+            other.len(),
+            "Vector lengths must match for subtraction"
+        );
 
         let mut result = Vector::new(self.len());
         for i in 0..self.len() {

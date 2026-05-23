@@ -26,9 +26,10 @@ use sublinear_solver::{
 fn arb_strict_dd_matrix(n: usize) -> impl Strategy<Value = SparseMatrix> {
     // For each row, generate 0-4 off-diagonal entries.
     let row_strategy = prop::collection::vec(
-        (0usize..n, prop::num::f64::ANY.prop_filter("finite small", |x| {
-            x.is_finite() && x.abs() < 0.5
-        })),
+        (
+            0usize..n,
+            prop::num::f64::ANY.prop_filter("finite small", |x| x.is_finite() && x.abs() < 0.5),
+        ),
         0..=4,
     );
     prop::collection::vec(row_strategy, n).prop_map(move |rows| {
@@ -41,8 +42,7 @@ fn arb_strict_dd_matrix(n: usize) -> impl Strategy<Value = SparseMatrix> {
                 }
             }
         }
-        SparseMatrix::from_triplets(triplets, n, n)
-            .expect("strict-DD matrix from random triplets")
+        SparseMatrix::from_triplets(triplets, n, n).expect("strict-DD matrix from random triplets")
     })
 }
 
