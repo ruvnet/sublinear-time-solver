@@ -136,7 +136,7 @@ impl ForwardPushSolver {
             let (max_idx, &max_residual) = residual
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                 .unwrap();
 
             if max_residual < self.epsilon as f32 {

@@ -85,7 +85,7 @@ impl EcosystemPatternDatabase {
         }
 
         // Remove duplicates and sort by confidence
-        matches.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap());
+        matches.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap_or(std::cmp::Ordering::Equal));
         matches.dedup_by(|a, b| a.pattern_id == b.pattern_id);
 
         Ok(matches)

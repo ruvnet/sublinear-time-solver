@@ -51,13 +51,12 @@
     "pagerank": "npm run build && node dist/cli/index.js pagerank"
   },
   "devDependencies": {
-    "wasm-pack": "^0.12.1"
+    "wasm-pack": "^0.15.0"
   },
   "dependencies": {
-    "@ruvnet/strange-loop": "^0.3.0",
-    "strange-loops": "^0.5.1",
     "@modelcontextprotocol/sdk": "^1.18.1",
     "@ruvnet/bmssp": "^1.0.0",
+    "@ruvnet/strange-loop": "^0.3.0",
     "@types/node": "^24.5.2",
     "chalk": "^4.1.2",
     "commander": "^9.4.1",
@@ -67,10 +66,11 @@
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
     "ora": "^5.4.1",
+    "strange-loops": "^0.5.1",
     "temporal-lead-solver": "^0.1.0",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
-    "uuid": "^9.0.1",
+    "uuid": "^11.1.1",
     "ws": "^8.14.2"
   },
   "engines": {

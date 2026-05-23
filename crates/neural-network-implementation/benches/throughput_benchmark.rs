@@ -290,12 +290,12 @@ impl ThroughputBenchmarkContext {
 
         let peak_a = system_a_measurements
             .iter()
-            .max_by(|a, b| a.throughput_pred_per_sec.partial_cmp(&b.throughput_pred_per_sec).unwrap())
+            .max_by(|a, b| a.throughput_pred_per_sec.partial_cmp(&b.throughput_pred_per_sec).unwrap_or(std::cmp::Ordering::Equal))
             .unwrap();
 
         let peak_b = system_b_measurements
             .iter()
-            .max_by(|a, b| a.throughput_pred_per_sec.partial_cmp(&b.throughput_pred_per_sec).unwrap())
+            .max_by(|a, b| a.throughput_pred_per_sec.partial_cmp(&b.throughput_pred_per_sec).unwrap_or(std::cmp::Ordering::Equal))
             .unwrap();
 
         report.push_str(&format!("**System A Peak Performance:**\n"));

@@ -477,7 +477,7 @@ impl Predictor {
             return;
         }
 
-        latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        latencies.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         let len = latencies.len();
 
         self.stats.p50_latency_us = latencies[len / 2];

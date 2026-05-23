@@ -364,7 +364,7 @@ impl LotteryTicketNetwork {
             .map(|v| v.abs())
             .collect();
 
-        magnitudes.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        magnitudes.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let cutoff_idx = (magnitudes.len() as f32 * prune_rate) as usize;
         let threshold = if cutoff_idx < magnitudes.len() {
