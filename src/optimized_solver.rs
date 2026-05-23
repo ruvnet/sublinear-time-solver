@@ -3,6 +3,8 @@
 //! This module provides optimized versions of linear system solvers with
 //! SIMD acceleration, buffer pooling, and parallel execution capabilities.
 
+#![allow(dead_code)] // Some methods are API stubs for future use
+
 use crate::matrix::sparse::{COOStorage, CSRStorage};
 #[cfg(feature = "simd")]
 use crate::simd_ops::{axpy_simd, dot_product_simd, matrix_vector_multiply_simd};
@@ -23,7 +25,9 @@ pub struct OptimizedSparseMatrix {
 /// Performance statistics for matrix operations.
 #[derive(Debug, Default)]
 pub struct PerformanceStats {
+    /// Number of matrix-vector multiplications performed.
     pub matvec_count: AtomicUsize,
+    /// Total bytes read/written across all operations.
     pub bytes_processed: AtomicUsize,
 }
 

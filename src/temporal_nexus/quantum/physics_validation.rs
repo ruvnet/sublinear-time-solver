@@ -5,6 +5,9 @@
 //! It ensures that all constants are within accepted ranges and that
 //! computational algorithms are numerically stable.
 
+#![allow(dead_code)] // Report fields reserved for future validation UI surface
+#![allow(missing_docs)] // Physics validation module — docs TBD
+
 use super::constants;
 use std::f64::consts::PI;
 
@@ -175,7 +178,7 @@ impl PhysicsValidator {
         let thermal_energy = constants::BOLTZMANN_K * constants::ROOM_TEMPERATURE_K;
         let thermal_energy_ev = thermal_energy / constants::EV_TO_JOULES;
 
-        if thermal_energy_ev < 0.020 || thermal_energy_ev > 0.030 {
+        if !(0.020..=0.030).contains(&thermal_energy_ev) {
             report.warnings.push(format!(
                 "Room temperature thermal energy unusual: {:.3} eV (expected ~0.025 eV)",
                 thermal_energy_ev

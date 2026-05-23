@@ -28,6 +28,8 @@
 //! }
 //! ```
 
+#![allow(missing_docs)] // Complexity module — full docs TBD
+
 use core::cmp::Ordering;
 
 /// The twelve-tier complexity taxonomy from the directive in

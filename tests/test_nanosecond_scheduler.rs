@@ -10,23 +10,23 @@ use std::time::{Duration, Instant};
 /// Test configuration
 #[derive(Debug, Clone)]
 struct TestConfig {
-    test_duration_ms: u64,
-    precision_tolerance_ns: u64,
+    _test_duration_ms: u64,
+    _precision_tolerance_ns: u64,
     performance_iterations: usize,
-    enable_hardware_tests: bool,
-    stress_test_duration_ms: u64,
-    tsc_frequency_hz: u64,
+    _enable_hardware_tests: bool,
+    _stress_test_duration_ms: u64,
+    _tsc_frequency_hz: u64,
 }
 
 impl Default for TestConfig {
     fn default() -> Self {
         Self {
-            test_duration_ms: 1000,
-            precision_tolerance_ns: 100,
+            _test_duration_ms: 1000,
+            _precision_tolerance_ns: 100,
             performance_iterations: 10000,
-            enable_hardware_tests: true,
-            stress_test_duration_ms: 5000,
-            tsc_frequency_hz: 3_000_000_000, // 3 GHz default
+            _enable_hardware_tests: true,
+            _stress_test_duration_ms: 5000,
+            _tsc_frequency_hz: 3_000_000_000, // 3 GHz default
         }
     }
 }
@@ -49,11 +49,7 @@ impl TestUtils {
 
     /// Verify timing precision within tolerance
     fn verify_precision(expected_ns: u64, actual_ns: u64, tolerance_ns: u64) -> bool {
-        let diff = if actual_ns > expected_ns {
-            actual_ns - expected_ns
-        } else {
-            expected_ns - actual_ns
-        };
+        let diff = actual_ns.abs_diff(expected_ns);
         diff <= tolerance_ns
     }
 
@@ -236,7 +232,7 @@ impl TestSuiteRunner {
         });
 
         assertions += 1;
-        if duration < 500_000 || duration > 2_000_000 {
+        if !(500_000..=2_000_000).contains(&duration) {
             // 0.5-2ms range
             passed = false;
             failures.push("Basic timing measurement out of expected range".to_string());
@@ -313,7 +309,7 @@ impl TestSuiteRunner {
         // Test 2: Convergence validation
         let convergent_sequence: Vec<f64> = (0..200)
             .map(|i| {
-                let x = i as f64 / 100.0;
+                let _x = i as f64 / 100.0;
                 0.9_f64.powf(i as f64) + 0.5 // Exponentially converging to 0.5
             })
             .collect();
@@ -421,8 +417,8 @@ impl TestSuiteRunner {
         println!("🆔 Testing identity continuity tracking...");
 
         // Test 1: Feature extraction consistency
-        let identity_features_1 = vec![0.8, 0.6, 0.9, 0.7];
-        let identity_features_2 = vec![0.82, 0.58, 0.91, 0.69]; // Slight variation
+        let identity_features_1 = [0.8, 0.6, 0.9, 0.7];
+        let identity_features_2 = [0.82, 0.58, 0.91, 0.69]; // Slight variation
 
         // Cosine similarity calculation
         let dot_product: f64 = identity_features_1
@@ -452,7 +448,7 @@ impl TestSuiteRunner {
         }
 
         // Test 2: Continuity break detection
-        let identity_features_3 = vec![0.1, 0.2, 0.1, 0.2]; // Dramatically different
+        let identity_features_3 = [0.1, 0.2, 0.1, 0.2]; // Dramatically different
 
         let dot_product_break: f64 = identity_features_1
             .iter()
@@ -586,8 +582,8 @@ impl TestSuiteRunner {
     ) -> Result<(), Box<dyn std::error::Error>> {
         let start_time = Instant::now();
         let mut assertions = 0;
-        let mut passed = true;
-        let mut failures: Vec<String> = Vec::new();
+        let passed = true;
+        let failures: Vec<String> = Vec::new();
 
         println!("⚡ Running performance benchmarks...");
 
@@ -635,7 +631,7 @@ impl TestSuiteRunner {
         }
 
         // Test 4: Memory efficiency
-        let initial_memory = std::process::id(); // Proxy for memory usage
+        let _initial_memory = std::process::id(); // Proxy for memory usage
         let mut large_data = Vec::new();
         for i in 0..10000 {
             large_data.push(i * i);
@@ -754,13 +750,12 @@ impl TestSuiteRunner {
             // Simulate temporal window processing
             let window_start = tick * 100;
             let window_end = (tick + 1) * 100;
-            let window_size = window_end - window_start;
+            let _window_size = window_end - window_start;
 
             // Simulate strange loop operation with Lipschitz constraint
             let previous_state = consciousness_state.clone();
-            for i in 0..consciousness_state.len() {
-                consciousness_state[i] =
-                    lipschitz_constant * consciousness_state[i] + 0.1 * (tick as f64 / 100.0).sin();
+            for val in consciousness_state.iter_mut() {
+                *val = lipschitz_constant * *val + 0.1 * (tick as f64 / 100.0).sin();
             }
 
             // Verify Lipschitz constraint maintained
@@ -782,7 +777,7 @@ impl TestSuiteRunner {
 
         // Test 2: Identity continuity throughout the workflow
         let final_state = &consciousness_state;
-        let initial_state = vec![0.5, 0.5, 0.5];
+        let initial_state = [0.5, 0.5, 0.5];
 
         let continuity_measure: f64 = final_state
             .iter()
@@ -1103,19 +1098,19 @@ fn save_detailed_report(
         report
             .test_results
             .get("timing_precision")
-            .map_or(false, |r| r.success),
+            .is_some_and(|r| r.success),
         report
             .test_results
             .get("strange_loop")
-            .map_or(false, |r| r.success),
+            .is_some_and(|r| r.success),
         report
             .test_results
             .get("quantum_validation")
-            .map_or(false, |r| r.success),
+            .is_some_and(|r| r.success),
         report
             .test_results
             .get("performance_benchmarks")
-            .map_or(false, |r| r.success)
+            .is_some_and(|r| r.success)
     );
 
     let mut file = File::create(&filename)?;

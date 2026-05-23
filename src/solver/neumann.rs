@@ -53,7 +53,7 @@ impl NeumannSolver {
     }
 
     /// Create a solver with default parameters.
-    pub fn default() -> Self {
+    pub fn create_default() -> Self {
         Self::new(50, 1e-8)
     }
 
@@ -87,6 +87,12 @@ impl NeumannSolver {
     pub fn with_power_caching(mut self, enable: bool) -> Self {
         self.cache_powers = enable;
         self
+    }
+}
+
+impl Default for NeumannSolver {
+    fn default() -> Self {
+        Self::new(50, 1e-8)
     }
 }
 
@@ -175,6 +181,7 @@ impl NeumannState {
 
         // Extract diagonal and compute D^(-1)
         let mut diagonal_inv = vec![0.0; dimension];
+        #[allow(clippy::needless_range_loop)] // i used as both row and col index
         for i in 0..dimension {
             if let Some(diag_val) = matrix.get(i, i) {
                 if diag_val.abs() < 1e-14 {
@@ -413,11 +420,11 @@ impl SolverAlgorithm for NeumannSolver {
         // We need access to the original matrix, but we don't have it in state
         // This is a design issue - we need to store matrix reference or pass it
         // For now, return an error indicating we need matrix access
-        return Err(SolverError::AlgorithmError {
+        Err(SolverError::AlgorithmError {
             algorithm: "neumann".to_string(),
             message: "Matrix reference needed for iteration - design limitation".to_string(),
             context: vec![],
-        });
+        })
 
         // TODO: Fix this by either storing matrix ref in state or changing interface
         // state.compute_next_term(matrix)?;

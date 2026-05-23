@@ -11,13 +11,13 @@
 //!   2. Compute the "baseline" solution `x_prev = A⁻¹ · b_prev` once.
 //!   3. Stream 5 single-sensor events (sparse RHS deltas).
 //!   4. For each event:
-//!        a. Compute the bounded-depth closure of the delta's support.
-//!        b. Solve only the closure entries via the sublinear path
-//!           (`solve_on_change_sublinear`).
-//!        c. Run contrastive top-k anomaly detection scoped to the
-//!           closure (`contrastive_solve_on_change_sublinear`).
-//!        d. Log closure size, per-event latency, and the top-3
-//!           anomalies. Nothing outside the closure is ever touched.
+//!      - Compute the bounded-depth closure of the delta's support.
+//!      - Solve only the closure entries via the sublinear path
+//!        (`solve_on_change_sublinear`).
+//!      - Run contrastive top-k anomaly detection scoped to the
+//!        closure (`contrastive_solve_on_change_sublinear`).
+//!      - Log closure size, per-event latency, and the top-3
+//!        anomalies. Nothing outside the closure is ever touched.
 //!
 //! Real applications would forward each event's top-k to an agent's
 //! attention queue; the wake-on-event discipline is exactly what

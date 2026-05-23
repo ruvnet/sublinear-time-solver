@@ -6,6 +6,9 @@
 //! 2. Spectral sparsification
 //! 3. Adaptive sampling with concentration bounds
 
+#![allow(clippy::needless_range_loop)] // Matrix[i][j] loops need both indices
+#![allow(missing_docs)] // Sublinear Neumann module — docs TBD
+
 use crate::error::{Result, SolverError};
 use crate::matrix::Matrix;
 use crate::sublinear::johnson_lindenstrauss::JLEmbedding;
@@ -23,7 +26,8 @@ pub struct SublinearNeumannSolver {
     max_terms: usize,
     /// Series convergence tolerance
     series_tolerance: Precision,
-    /// Complexity bound verification
+    /// Complexity bound verification (reserved for future use)
+    #[allow(dead_code)]
     verify_bounds: bool,
 }
 
@@ -139,6 +143,7 @@ impl SublinearNeumannSolver {
 
         // Extract diagonal for Neumann iteration: x = (I - M)^{-1} D^{-1} b
         let mut diagonal_inv = vec![0.0; k];
+        #[allow(clippy::needless_range_loop)] // i used for 2-D matrix[i][i] indexing
         for i in 0..k {
             if matrix[i][i].abs() < 1e-14 {
                 return Err(SolverError::InvalidInput {
@@ -164,30 +169,30 @@ impl SublinearNeumannSolver {
         // Adaptive series truncation with O(log k) terms
         let max_terms = cmp::min(self.max_terms, (k as f64).log2().ceil() as usize + 3);
 
-        for term_idx in 1..max_terms {
+        for _term_idx in 1..max_terms {
             // Compute M * current_term = current_term - D^{-1} * A * current_term
             let mut temp = vec![0.0; k];
 
             // Matrix-vector multiplication: A * current_term
-            for i in 0..k {
-                for j in 0..k {
-                    temp[i] += matrix[i][j] * current_term[j];
+            for (t_i, row) in temp.iter_mut().zip(matrix.iter()) {
+                for (&m_ij, &ct_j) in row.iter().zip(current_term.iter()) {
+                    *t_i += m_ij * ct_j;
                 }
             }
 
-            // Apply diagonal scaling: D^{-1} * temp
-            for i in 0..k {
-                temp[i] *= diagonal_inv[i];
-            }
-
-            // Update current_term = current_term - temp (this is M * current_term)
-            for i in 0..k {
-                current_term[i] -= temp[i];
+            // Apply diagonal scaling: D^{-1} * temp and update current_term
+            for ((ct, t), &d_inv) in current_term
+                .iter_mut()
+                .zip(temp.iter_mut())
+                .zip(diagonal_inv.iter())
+            {
+                *t *= d_inv;
+                *ct -= *t;
             }
 
             // Add term to solution
-            for i in 0..k {
-                solution[i] += current_term[i];
+            for (s, &ct) in solution.iter_mut().zip(current_term.iter()) {
+                *s += ct;
             }
 
             series_terms_used += 1;
@@ -375,7 +380,7 @@ impl SublinearSolver for SublinearNeumannSolver {
         &self,
         matrix: &dyn Matrix,
         b: &[Precision],
-        config: &SublinearConfig,
+        _config: &SublinearConfig,
     ) -> Result<Vec<Precision>> {
         let result = self.solve_sublinear_guaranteed(matrix, b)?;
         Ok(result.solution)

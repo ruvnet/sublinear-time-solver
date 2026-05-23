@@ -219,12 +219,12 @@ pub fn delta_below_solve_threshold(
 ///
 /// ## Complexity
 ///
-///   * `build`:  `O(nnz(A))` — same as `coherence_score`.
-///   * `update`: `O(|dirty| · avg_row_nnz)` typical case.
-///                The rare unavoidable global recompute is `O(n)`
-///                vec scan (no matrix touches) — still cheaper than
-///                a full `coherence_score` on a sparse matrix.
-///   * `score`:  `O(1)`.
+/// - `build`:  `O(nnz(A))` — same as `coherence_score`.
+/// - `update`: `O(|dirty| · avg_row_nnz)` typical case.
+///   The rare unavoidable global recompute is `O(n)`
+///   vec scan (no matrix touches) — still cheaper than
+///   a full `coherence_score` on a sparse matrix.
+/// - `score`:  `O(1)`.
 ///
 /// The "amortised SubLinear-per-event" guarantee: as long as the
 /// previous-min row stays among the dirty set or the new minimum
@@ -802,7 +802,7 @@ mod tests {
         // rho = 0.5, log(2) ≈ 0.693, log(2e8) ≈ 19.11
         // k ≥ 19.11 / 0.693 ≈ 27.6 → 28
         let k = optimal_neumann_terms(0.5, 10.0, 5.0, 1e-8).unwrap();
-        assert!(k >= 27 && k <= 29, "expected ~28, got {k}");
+        assert!((27..=29).contains(&k), "expected ~28, got {k}");
     }
 
     #[test]

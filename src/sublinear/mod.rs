@@ -52,7 +52,12 @@ pub enum ComplexityBound {
     /// O(sqrt(n)) for well-conditioned matrices
     SquareRoot(usize),
     /// O(n^eps) for general sparse matrices
-    Sublinear { n: usize, eps: Precision },
+    Sublinear {
+        /// Problem dimension.
+        n: usize,
+        /// Sublinearity exponent (0 < eps < 1).
+        eps: Precision,
+    },
 }
 
 /// Trait for algorithms that achieve true sublinear complexity

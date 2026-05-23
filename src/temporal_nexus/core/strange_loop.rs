@@ -4,6 +4,9 @@
 //! patterns necessary for consciousness emergence. The operator uses contraction
 //! mapping with Lipschitz constant < 1 to ensure convergence.
 
+#![allow(dead_code)] // Several struct fields maintained for introspection and future telemetry
+#![allow(missing_docs)] // Strange loop module — docs TBD
+
 use super::TemporalResult;
 use std::collections::VecDeque;
 
@@ -500,7 +503,7 @@ mod tests {
 
     #[test]
     fn test_contraction_mapping() {
-        let mut operator = StrangeLoopOperator::new(0.8, 100);
+        let operator = StrangeLoopOperator::new(0.8, 100);
         let state = vec![1.0, 2.0, 3.0];
 
         let contracted = operator.apply_contraction_mapping(&state).unwrap();

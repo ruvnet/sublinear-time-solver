@@ -131,6 +131,7 @@ pub struct SparseMatrix {
 }
 
 /// Internal storage implementation for different sparse formats.
+#[allow(clippy::upper_case_acronyms)] // CSR, CSC, COO are established sparse-matrix acronyms
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 enum SparseStorage {
@@ -541,7 +542,7 @@ impl Matrix for SparseMatrix {
         // Check for banded structure (simple heuristic)
         let mut max_bandwidth = 0;
         for (r, c, _) in self.to_triplets().unwrap_or_default() {
-            let bandwidth = if r > c { r - c } else { c - r };
+            let bandwidth = r.abs_diff(c);
             max_bandwidth = max_bandwidth.max(bandwidth);
         }
         info.bandwidth = Some(max_bandwidth);

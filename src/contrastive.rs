@@ -404,7 +404,7 @@ where
 /// 2. `candidates = closure::closure_indices(matrix, &delta.indices, depth)`
 ///    — same bounded-depth closure as the phase-2A orchestrator.
 /// 3. For each `i ∈ candidates`:
-///        `current[i] = entry::solve_single_entry_neumann(matrix, b_new, i, max_terms, tolerance)`
+///    `current[i] = entry::solve_single_entry_neumann(matrix, b_new, i, max_terms, tolerance)`
 ///    Never materialises the full new-solution vector.
 /// 4. `top_k = find_anomalous_rows_in_subset(prev, current_dense, candidates, k)`
 ///    where `current_dense` carries the per-entry estimates at the
@@ -412,10 +412,9 @@ where
 ///
 /// ## Complexity
 ///
-///   * closure:       O(depth · branch · |closure|)              SubLinear
-///   * per-entry:     O(|closure| · max_terms · |closure_max| · branch)
-///                                                                SubLinear
-///   * top-k subset:  O(|candidates| · log k)                     SubLinear
+/// - closure:       O(depth · branch · |closure|)              SubLinear
+/// - per-entry:     O(|closure| · max_terms · |closure_max| · branch) SubLinear
+/// - top-k subset:  O(|candidates| · log k)                     SubLinear
 ///
 /// Net: **SubLinear in `n`** when the closure is bounded.
 ///
@@ -426,6 +425,7 @@ where
 ///   closure shrinks to `≪ n` and the SubLinear advantage materialises.
 /// - **Use phase-2A** when the matrix is harder to bound and a
 ///   warm-started full solve is cheaper than tuning the Neumann depth.
+#[allow(clippy::too_many_arguments)] // 8 args: each parameter is distinct and semantically necessary
 pub fn contrastive_solve_on_change_sublinear(
     matrix: &dyn crate::matrix::Matrix,
     prev_solution: &[Precision],

@@ -47,11 +47,10 @@ impl JLEmbedding {
         let mut projection_matrix = vec![vec![0.0; original_dim]; target_dim];
         let scale_factor = (1.0 / target_dim as Precision).sqrt();
 
-        for i in 0..target_dim {
-            for j in 0..original_dim {
+        for row in projection_matrix.iter_mut().take(target_dim) {
+            for cell in row.iter_mut().take(original_dim) {
                 // Generate from N(0, 1/k) distribution
-                projection_matrix[i][j] = rng.gen::<f64>() * 2.0 - 1.0; // Simplified Gaussian
-                projection_matrix[i][j] *= scale_factor;
+                *cell = (rng.gen::<f64>() * 2.0 - 1.0) * scale_factor; // Simplified Gaussian
             }
         }
 
@@ -94,9 +93,9 @@ impl JLEmbedding {
 
         let mut result = vec![0.0; self.target_dim];
 
-        for i in 0..self.target_dim {
-            for j in 0..self.original_dim {
-                result[i] += self.projection_matrix[i][j] * x[j];
+        for (i, row) in self.projection_matrix.iter().enumerate() {
+            for (j, &p_ij) in row.iter().enumerate() {
+                result[i] += p_ij * x[j];
             }
         }
 
@@ -128,9 +127,9 @@ impl JLEmbedding {
         // Simple reconstruction: P^T * y (transpose of projection)
         let mut result = vec![0.0; self.original_dim];
 
-        for j in 0..self.original_dim {
-            for i in 0..self.target_dim {
-                result[j] += self.projection_matrix[i][j] * y[i];
+        for (i, row) in self.projection_matrix.iter().enumerate() {
+            for (j, &p_ij) in row.iter().enumerate() {
+                result[j] += p_ij * y[i];
             }
         }
 

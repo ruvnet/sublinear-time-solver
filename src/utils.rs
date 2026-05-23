@@ -3,6 +3,8 @@
 //! This module provides common mathematical operations, memory management
 //! utilities, and performance optimization helpers.
 
+#![allow(dead_code)] // Utility functions are API surface, not all used internally
+
 use crate::types::Precision;
 use alloc::vec::Vec;
 

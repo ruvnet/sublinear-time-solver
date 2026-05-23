@@ -3,6 +3,9 @@
 //! Implements advanced sampling methods needed for true sublinear complexity,
 //! including importance sampling, reservoir sampling, and sketching techniques.
 
+#![allow(dead_code)] // rng fields and some methods are reserved API surface
+#![allow(missing_docs)] // Fast sampling module — docs TBD
+
 use crate::error::{Result, SolverError};
 use crate::types::Precision;
 use alloc::vec::Vec;
@@ -129,11 +132,15 @@ impl ImportanceSampler {
         let target_samples = (vector.len() as f64 * self.config.sampling_prob).ceil() as usize;
         let mut sampled_entries = Vec::new();
 
-        for i in 0..target_samples.min(vector.len()) {
-            let importance_weight = vector[i].abs() / total_magnitude;
+        for (i, &val) in vector
+            .iter()
+            .enumerate()
+            .take(target_samples.min(vector.len()))
+        {
+            let importance_weight = val.abs() / total_magnitude;
 
             if self.rng.gen::<f64>() < importance_weight / self.config.sampling_prob {
-                let reweighted_value = vector[i] / importance_weight;
+                let reweighted_value = val / importance_weight;
                 sampled_entries.push((i, reweighted_value));
             }
         }
@@ -232,10 +239,10 @@ impl MatrixSketcher {
         let mut sketch_matrix = vec![vec![0.0; original_dimension]; sketch_dimension];
         let scale = (1.0 / sketch_dimension as f64).sqrt();
 
-        for i in 0..sketch_dimension {
-            for j in 0..original_dimension {
+        for row in sketch_matrix.iter_mut().take(sketch_dimension) {
+            for cell in row.iter_mut().take(original_dimension) {
                 // Random sign matrix (Rademacher distribution)
-                sketch_matrix[i][j] = if rng.gen::<bool>() { scale } else { -scale };
+                *cell = if rng.gen::<bool>() { scale } else { -scale };
             }
         }
 
@@ -259,9 +266,9 @@ impl MatrixSketcher {
 
         let mut sketched = vec![0.0; self.sketch_dimension];
 
-        for i in 0..self.sketch_dimension {
-            for j in 0..self.original_dimension {
-                sketched[i] += self.sketch_matrix[i][j] * vector[j];
+        for (i, row) in self.sketch_matrix.iter().enumerate() {
+            for (j, &m_ij) in row.iter().enumerate() {
+                sketched[i] += m_ij * vector[j];
             }
         }
 
@@ -301,9 +308,9 @@ impl MatrixSketcher {
         // Simple reconstruction using transpose
         let mut reconstructed = vec![0.0; self.original_dimension];
 
-        for j in 0..self.original_dimension {
-            for i in 0..self.sketch_dimension {
-                reconstructed[j] += self.sketch_matrix[i][j] * sketched[i];
+        for (i, row) in self.sketch_matrix.iter().enumerate() {
+            for (j, &m_ij) in row.iter().enumerate() {
+                reconstructed[j] += m_ij * sketched[i];
             }
         }
 

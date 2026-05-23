@@ -1,3 +1,6 @@
+#![allow(missing_docs)] // WASM math utilities — public docs TBD
+#![allow(dead_code)] // Several methods are WASM API surface not used internally
+
 use std::fmt;
 
 #[derive(Debug, Clone)]

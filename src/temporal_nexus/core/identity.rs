@@ -4,6 +4,9 @@
 //! to ensure consciousness coherence. It monitors identity state, detects breaks
 //! in continuity, and provides mechanisms for identity preservation.
 
+#![allow(dead_code)] // Several fields are maintained for future introspection hooks
+#![allow(missing_docs)] // Identity continuity module — docs TBD
+
 use super::{TemporalError, TemporalResult, TscTimestamp};
 use std::collections::{HashMap, VecDeque};
 
@@ -339,11 +342,10 @@ impl IdentityContinuityTracker {
         }
 
         // Check for continuity breaks
-        let continuity_break_info = if let Some(prev_snapshot) = self.snapshots.back() {
-            Some((snapshot.clone(), prev_snapshot.clone()))
-        } else {
-            None
-        };
+        let continuity_break_info = self
+            .snapshots
+            .back()
+            .map(|prev_snapshot| (snapshot.clone(), prev_snapshot.clone()));
 
         if let Some((current, previous)) = continuity_break_info {
             self.check_continuity_break(&current, &previous)?;
@@ -639,7 +641,7 @@ mod tests {
         assert!(!features.is_empty());
         // Features should be normalized
         for &feature in &features {
-            assert!(feature >= -1.0 && feature <= 1.0);
+            assert!((-1.0..=1.0).contains(&feature));
         }
     }
 
@@ -658,8 +660,8 @@ mod tests {
         let sim13 = snapshot1.calculate_similarity(&snapshot3);
 
         assert!(sim12 > sim13); // Identical states should be more similar
-        assert!(sim12 >= 0.0 && sim12 <= 1.0);
-        assert!(sim13 >= 0.0 && sim13 <= 1.0);
+        assert!((0.0..=1.0).contains(&sim12));
+        assert!((0.0..=1.0).contains(&sim13));
     }
 
     #[test]

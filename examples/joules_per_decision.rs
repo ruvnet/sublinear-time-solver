@@ -51,8 +51,8 @@ use std::time::Instant;
 
 use sublinear_solver::optimized_solver::OptimizedSolverConfig;
 use sublinear_solver::{
-    Matrix, NeumannSolver, OptimizedConjugateGradientSolver, OptimizedSparseMatrix,
-    SolverAlgorithm, SolverOptions,
+    NeumannSolver, OptimizedConjugateGradientSolver, OptimizedSparseMatrix, SolverAlgorithm,
+    SolverOptions,
 };
 
 // ─────────────────────────────────────────────────────────────────────────

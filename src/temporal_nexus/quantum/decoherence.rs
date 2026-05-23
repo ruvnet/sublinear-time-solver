@@ -19,6 +19,9 @@
 //! - Cryogenic (mK): 10^-6 to 10^-3 seconds
 //! - Ultra-high vacuum: 10^-9 to 10^-6 seconds
 
+#![allow(dead_code)] // Several fields reserved for future physics-simulation telemetry
+#![allow(missing_docs)] // Quantum decoherence module — docs TBD
+
 use crate::temporal_nexus::quantum::{constants, QuantumError, QuantumResult};
 use std::collections::HashMap;
 

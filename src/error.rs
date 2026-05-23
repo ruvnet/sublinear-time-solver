@@ -42,7 +42,7 @@ pub enum SolverError {
     Incoherent {
         /// Computed coherence score in [-∞, 1]: 1.0 = perfectly diagonal,
         /// > 0 = strictly diagonally dominant, ≤ 0 = at or past the
-        /// diagonal-dominance boundary.
+        /// > diagonal-dominance boundary.
         coherence: f64,
         /// Threshold the caller configured via
         /// `SolverOptions::coherence_threshold`.
@@ -205,7 +205,7 @@ impl SolverError {
             } => Some(RecoveryStrategy::ConvertMatrixFormat(
                 required_format.clone(),
             )),
-            SolverError::AlgorithmError { algorithm, .. } => {
+            SolverError::AlgorithmError { algorithm: _, .. } => {
                 Some(RecoveryStrategy::SwitchAlgorithm("neumann".to_string()))
             }
             _ => None,

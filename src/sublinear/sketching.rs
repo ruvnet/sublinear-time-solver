@@ -1,5 +1,7 @@
 //! Matrix sketching algorithms for sublinear solvers
 
+#![allow(dead_code)] // rng field is reserved for future seeded re-sampling
+
 use crate::error::{Result, SolverError};
 use crate::types::Precision;
 use alloc::vec::Vec;
@@ -120,17 +122,17 @@ impl MatrixSketch {
         let mut sketch = vec![0.0; self.sketch_size];
         let scale = (self.original_size as f64 / self.sketch_size as f64).sqrt();
 
-        for i in 0..self.sketch_size {
+        for (i, sk) in sketch.iter_mut().enumerate().take(self.sketch_size) {
             let start_idx = (i * self.original_size) / self.sketch_size;
             let end_idx = ((i + 1) * self.original_size) / self.sketch_size;
 
             let mut sum = 0.0;
-            for j in start_idx..end_idx {
+            for (j, &v_j) in vector.iter().enumerate().take(end_idx).skip(start_idx) {
                 let sign = self.sign_functions[j % self.sign_functions.len()] as f64;
-                sum += sign * vector[j];
+                sum += sign * v_j;
             }
 
-            sketch[i] = sum / scale;
+            *sk = sum / scale;
         }
 
         Ok(sketch)
@@ -172,10 +174,14 @@ impl MatrixSketch {
         let mut reconstructed = vec![0.0; self.original_size];
 
         // Simple reconstruction: use sketch values at hash positions
-        for i in 0..self.original_size {
+        for (i, rec) in reconstructed
+            .iter_mut()
+            .enumerate()
+            .take(self.original_size)
+        {
             let hash_idx = self.hash_functions[i];
             let sign = self.sign_functions[i] as Precision;
-            reconstructed[i] = sign * sketch[hash_idx];
+            *rec = sign * sketch[hash_idx];
         }
 
         Ok(reconstructed)

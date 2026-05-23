@@ -19,6 +19,9 @@
 //! This principle fundamentally limits the precision with which we can
 //! simultaneously know the energy and timing of quantum processes.
 
+#![allow(dead_code)] // Several fields reserved for future quantum-state introspection
+#![allow(missing_docs)] // Quantum validators module — docs TBD
+
 use crate::temporal_nexus::quantum::{constants, QuantumError, QuantumResult};
 
 /// Energy-time uncertainty principle validator

@@ -48,6 +48,8 @@
 //! assert!(result.is_valid);
 //! ```
 
+#![allow(missing_docs)] // Quantum consciousness submodule — docs TBD
+
 pub mod decoherence;
 pub mod entanglement;
 pub mod physics_validation;
@@ -277,9 +279,9 @@ mod quantum_integration_tests {
 
     #[test]
     fn test_quantum_constants() {
-        assert!(constants::PLANCK_H > 0.0);
-        assert!(constants::PLANCK_HBAR > 0.0);
-        assert!(constants::PLANCK_HBAR < constants::PLANCK_H);
+        const { assert!(constants::PLANCK_H > 0.0) };
+        const { assert!(constants::PLANCK_HBAR > 0.0) };
+        const { assert!(constants::PLANCK_HBAR < constants::PLANCK_H) };
         assert_eq!(constants::CONSCIOUSNESS_SCALE_NS, 1e-9);
     }
 }

@@ -3,6 +3,8 @@
 //! This module provides efficient storage formats for sparse matrices,
 //! including CSR, CSC, COO, and graph adjacency representations.
 
+#![allow(dead_code)] // Some fields and methods are reserved API surface
+
 use crate::error::Result;
 use crate::types::{DimensionType, IndexType, NodeId, Precision};
 use alloc::vec::Vec;
@@ -76,7 +78,7 @@ pub struct GraphEdge {
 // CSR Implementation
 impl CSRStorage {
     /// Create CSR storage from COO format.
-    pub fn from_coo(coo: &COOStorage, rows: DimensionType, cols: DimensionType) -> Result<Self> {
+    pub fn from_coo(coo: &COOStorage, rows: DimensionType, _cols: DimensionType) -> Result<Self> {
         if coo.is_empty() {
             return Ok(Self {
                 values: Vec::new(),
@@ -192,7 +194,7 @@ impl CSRStorage {
 
     /// Matrix-vector multiplication with accumulation: result += A * x
     pub fn multiply_vector_add(&self, x: &[Precision], result: &mut [Precision]) {
-        for (row, mut row_sum) in result.iter_mut().enumerate() {
+        for (row, row_sum) in result.iter_mut().enumerate() {
             let start = self.row_ptr[row] as usize;
             let end = self.row_ptr[row + 1] as usize;
 
@@ -301,7 +303,7 @@ impl<'a> Iterator for CSRColIter<'a> {
 // CSC Implementation
 impl CSCStorage {
     /// Create CSC storage from COO format.
-    pub fn from_coo(coo: &COOStorage, rows: DimensionType, cols: DimensionType) -> Result<Self> {
+    pub fn from_coo(coo: &COOStorage, _rows: DimensionType, cols: DimensionType) -> Result<Self> {
         if coo.is_empty() {
             return Ok(Self {
                 values: Vec::new(),
@@ -417,6 +419,7 @@ impl CSCStorage {
 
     /// Matrix-vector multiplication with accumulation: result += A * x
     pub fn multiply_vector_add(&self, x: &[Precision], result: &mut [Precision]) {
+        #[allow(clippy::needless_range_loop)] // col indexes both col_ptr and x
         for col in 0..self.col_ptr.len() - 1 {
             let x_col = x[col];
             if x_col == 0.0 {
@@ -621,7 +624,7 @@ impl COOStorage {
     }
 
     /// Add a value to the diagonal.
-    pub fn add_diagonal(&mut self, alpha: Precision, rows: DimensionType) {
+    pub fn add_diagonal(&mut self, alpha: Precision, _rows: DimensionType) {
         // For COO, we'd need to add new diagonal entries if they don't exist
         // This is a simplified implementation that only modifies existing diagonal entries
         for i in 0..self.values.len() {

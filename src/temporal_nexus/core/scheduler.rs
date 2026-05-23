@@ -3,6 +3,9 @@
 //! This module provides the core scheduling functionality that manages temporal consciousness
 //! operations at nanosecond precision while maintaining identity continuity and temporal coherence.
 
+#![allow(dead_code)] // Several fields maintained for future telemetry/introspection
+#![allow(missing_docs)] // NanosecondScheduler module — docs TBD
+
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, VecDeque};
 use std::sync::{Arc, Mutex};
@@ -362,18 +365,16 @@ impl NanosecondScheduler {
     }
 
     fn get_current_state_vector(&self) -> TemporalResult<Vec<f64>> {
-        let mut state = Vec::with_capacity(8);
-
-        state.push(self.current_tick as f64);
-        state.push(self.metrics.window_overlap_percentage);
-        state.push(self.metrics.identity_continuity_score);
-        state.push(self.task_queue.len() as f64);
-        state.push(self.metrics.avg_scheduling_overhead_ns);
-        state.push(self.get_temporal_advantage() as f64);
-        state.push(self.strange_loop.get_metrics().convergence_rate);
-        state.push(self.identity_tracker.get_metrics()?.continuity_score);
-
-        Ok(state)
+        Ok(vec![
+            self.current_tick as f64,
+            self.metrics.window_overlap_percentage,
+            self.metrics.identity_continuity_score,
+            self.task_queue.len() as f64,
+            self.metrics.avg_scheduling_overhead_ns,
+            self.get_temporal_advantage() as f64,
+            self.strange_loop.get_metrics().convergence_rate,
+            self.identity_tracker.get_metrics()?.continuity_score,
+        ])
     }
 
     fn get_identity_state(&self) -> TemporalResult<Vec<u8>> {
@@ -699,8 +700,8 @@ mod tests {
     #[test]
     fn test_temporal_advantage() {
         let scheduler = NanosecondScheduler::new();
-        let advantage = scheduler.get_temporal_advantage();
-        assert!(advantage >= 0);
+        // get_temporal_advantage returns u64; verify it is computable (implicitly ≥ 0)
+        let _advantage = scheduler.get_temporal_advantage();
     }
 
     #[test]
