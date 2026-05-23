@@ -3,11 +3,11 @@
 //! Implements the Johnson-Lindenstrauss lemma for embedding high-dimensional
 //! vectors into lower dimensions while preserving distances.
 
+use crate::error::{Result, SolverError};
 use crate::types::Precision;
-use crate::error::{SolverError, Result};
-use alloc::{vec::Vec, string::String};
-use rand::{Rng, SeedableRng};
+use alloc::vec::Vec;
 use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 
 /// Johnson-Lindenstrauss embedding matrix
 #[derive(Debug, Clone)]
@@ -168,9 +168,11 @@ impl JLEmbedding {
         for i in 0..test_vectors.len() {
             for j in i + 1..test_vectors.len() {
                 let original_dist = self.euclidean_distance(&test_vectors[i], &test_vectors[j]);
-                let projected_dist = self.euclidean_distance(&projected_vectors[i], &projected_vectors[j]);
+                let projected_dist =
+                    self.euclidean_distance(&projected_vectors[i], &projected_vectors[j]);
 
-                if original_dist > 1e-10 { // Avoid division by very small numbers
+                if original_dist > 1e-10 {
+                    // Avoid division by very small numbers
                     let distortion = (projected_dist / original_dist - 1.0).abs();
                     if distortion > self.eps {
                         return Ok(false);
@@ -219,7 +221,11 @@ impl AdaptiveJLEmbedding {
     }
 
     /// Adapt the embedding dimension based on observed error
-    pub fn adapt_dimension(&mut self, observed_error: Precision, target_error: Precision) -> Result<()> {
+    pub fn adapt_dimension(
+        &mut self,
+        observed_error: Precision,
+        target_error: Precision,
+    ) -> Result<()> {
         if observed_error > target_error * 2.0 {
             // Increase dimension
             let new_target_dim = (self.current_embedding.target_dim as f64 * 1.5).ceil() as usize;
@@ -227,11 +233,8 @@ impl AdaptiveJLEmbedding {
 
             if new_target_dim > self.current_embedding.target_dim {
                 let new_eps = self.current_embedding.eps * 0.8; // Reduce distortion
-                self.current_embedding = JLEmbedding::new(
-                    self.current_embedding.original_dim,
-                    new_eps,
-                    None,
-                )?;
+                self.current_embedding =
+                    JLEmbedding::new(self.current_embedding.original_dim, new_eps, None)?;
             }
         } else if observed_error < target_error * 0.5 {
             // Decrease dimension if possible
@@ -241,11 +244,8 @@ impl AdaptiveJLEmbedding {
             if new_target_dim < self.current_embedding.target_dim {
                 let new_eps = self.current_embedding.eps * 1.2; // Increase distortion tolerance
                 if new_eps < 0.9 {
-                    self.current_embedding = JLEmbedding::new(
-                        self.current_embedding.original_dim,
-                        new_eps,
-                        None,
-                    )?;
+                    self.current_embedding =
+                        JLEmbedding::new(self.current_embedding.original_dim, new_eps, None)?;
                 }
             }
         }

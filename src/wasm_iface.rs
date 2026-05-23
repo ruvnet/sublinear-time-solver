@@ -1,9 +1,9 @@
-use wasm_bindgen::prelude::*;
-use serde::{Deserialize, Serialize};
-use crate::solver_core::{ConjugateGradientSolver, SolverConfig};
-use crate::optimized_solver::OptimizedConjugateGradientSolver;
 use crate::math_wasm::{Matrix, Vector};
+use crate::optimized_solver::OptimizedConjugateGradientSolver;
+use crate::solver_core::{ConjugateGradientSolver, SolverConfig};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use wasm_bindgen::prelude::*;
 
 // Configuration structure for the solver
 #[derive(Serialize, Deserialize, Clone)]
@@ -143,22 +143,24 @@ impl WasmSublinearSolver {
         let mut solution = None;
         let chunk_size = self.config.stream_chunk_size;
 
-        let result = self.solver.solve_with_callback(&matrix, &vector, chunk_size, |step_data| {
-            let timestamp = js_sys::Date::now();
-            let step = SolutionStep {
-                iteration: step_data.iteration,
-                residual: step_data.residual,
-                timestamp,
-                convergence: step_data.converged,
-            };
+        let result = self
+            .solver
+            .solve_with_callback(&matrix, &vector, chunk_size, |step_data| {
+                let timestamp = js_sys::Date::now();
+                let step = SolutionStep {
+                    iteration: step_data.iteration,
+                    residual: step_data.residual,
+                    timestamp,
+                    convergence: step_data.converged,
+                };
 
-            let step_js = serde_wasm_bindgen::to_value(&step).unwrap();
-            let _ = progress_callback.call1(&JsValue::NULL, &step_js);
+                let step_js = serde_wasm_bindgen::to_value(&step).unwrap();
+                let _ = progress_callback.call1(&JsValue::NULL, &step_js);
 
-            if step_data.converged {
-                solution = Some(step_data.solution.clone());
-            }
-        });
+                if step_data.converged {
+                    solution = Some(step_data.solution.clone());
+                }
+            });
 
         match result {
             Ok(final_solution) => Ok(final_solution.data().to_vec()),
@@ -167,10 +169,7 @@ impl WasmSublinearSolver {
     }
 
     #[wasm_bindgen]
-    pub fn solve_batch(
-        &mut self,
-        batch_data: JsValue,
-    ) -> Result<JsValue, JsValue> {
+    pub fn solve_batch(&mut self, batch_data: JsValue) -> Result<JsValue, JsValue> {
         #[derive(Deserialize)]
         struct BatchRequest {
             id: String,
@@ -318,15 +317,41 @@ impl MatrixView {
 // Memory management utilities
 #[wasm_bindgen]
 pub fn allocate_matrix(rows: usize, cols: usize) -> *mut f64 {
-    let size = rows * cols;
-    let layout = std::alloc::Layout::array::<f64>(size).unwrap();
+    // Guard against integer overflow before calling Layout::array.
+    // `rows * cols` on a 32-bit WASM target wraps silently, so use
+    // checked_mul and return a null pointer on overflow rather than
+    // allocating the wrong-sized buffer or panicking.
+    let size = match rows.checked_mul(cols) {
+        Some(s) => s,
+        None => return core::ptr::null_mut(),
+    };
+    let layout = match std::alloc::Layout::array::<f64>(size) {
+        Ok(l) => l,
+        Err(_) => return core::ptr::null_mut(),
+    };
+    // SAFETY: `layout` has non-zero size (rows * cols > 0 after the
+    // overflow check above) and correct alignment for f64.  The caller
+    // is responsible for freeing this pointer via `deallocate_matrix`
+    // with the same `rows` and `cols` values.
     unsafe { std::alloc::alloc(layout) as *mut f64 }
 }
 
 #[wasm_bindgen]
 pub fn deallocate_matrix(ptr: *mut f64, rows: usize, cols: usize) {
-    let size = rows * cols;
-    let layout = std::alloc::Layout::array::<f64>(size).unwrap();
+    if ptr.is_null() {
+        return;
+    }
+    let size = match rows.checked_mul(cols) {
+        Some(s) => s,
+        None => return,
+    };
+    let layout = match std::alloc::Layout::array::<f64>(size) {
+        Ok(l) => l,
+        Err(_) => return,
+    };
+    // SAFETY: `ptr` was obtained from `allocate_matrix` with the same
+    // `rows` and `cols`, so the layout matches and the memory is still
+    // valid.  The null-pointer guard above makes the deref safe.
     unsafe { std::alloc::dealloc(ptr as *mut u8, layout) }
 }
 

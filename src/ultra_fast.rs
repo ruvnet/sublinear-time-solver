@@ -56,6 +56,9 @@ impl UltraFastCSR {
 
             if start >= end { continue; }
 
+            // SAFETY: `start` and `end` come from the CSR row-pointer array
+            // which is always built to satisfy `end <= values.len()` and
+            // `start <= end` (see `from_triplets`).
             let values = unsafe { self.values.get_unchecked(start..end) };
             let indices = unsafe { self.col_indices.get_unchecked(start..end) };
             let nnz = end - start;
@@ -65,7 +68,11 @@ impl UltraFastCSR {
             let chunks = nnz / 8;
             let remainder = nnz % 8;
 
-            // Process 8 elements at once
+            // Process 8 elements at once.
+            // SAFETY: `base + 7 < chunks * 8 <= nnz = values.len()` so all
+            // `values`/`indices` accesses are in-bounds.  Each `indices[k]`
+            // value is a column index written by `from_triplets` which ensures
+            // `col < cols`; callers must guarantee `x.len() == self.cols`.
             for chunk in 0..chunks {
                 let base = chunk * 8;
                 sum += unsafe {
@@ -80,13 +87,15 @@ impl UltraFastCSR {
                 };
             }
 
-            // Handle remainder
+            // Handle remainder.
+            // SAFETY: same invariants as the 8-wide loop above.
             for i in (chunks * 8)..(chunks * 8 + remainder) {
                 sum += unsafe {
                     values.get_unchecked(i) * x.get_unchecked(*indices.get_unchecked(i) as usize)
                 };
             }
 
+            // SAFETY: `row < self.rows == y.len()` per the loop bound.
             unsafe { *y.get_unchecked_mut(row) = sum; }
         }
     }
@@ -147,6 +156,7 @@ impl UltraFastCG {
             let beta = rsnew / rsold;
 
             // p = r + beta * p
+            // SAFETY: `i < n == r.len() == p.len()` for the entire loop.
             for i in 0..n {
                 unsafe { *p.get_unchecked_mut(i) = *r.get_unchecked(i) + beta * *p.get_unchecked(i); }
             }
@@ -165,7 +175,7 @@ impl UltraFastCG {
         let remainder = n % 8;
         let mut sum = 0.0;
 
-        // Process 8 elements at once
+        // SAFETY: `base + 7 < chunks * 8 <= n == x.len() == y.len()`.
         for chunk in 0..chunks {
             let base = chunk * 8;
             sum += unsafe {
@@ -180,7 +190,7 @@ impl UltraFastCG {
             };
         }
 
-        // Handle remainder
+        // SAFETY: `i < n == x.len() == y.len()`.
         for i in (chunks * 8)..(chunks * 8 + remainder) {
             sum += unsafe { x.get_unchecked(i) * y.get_unchecked(i) };
         }
@@ -195,7 +205,7 @@ impl UltraFastCG {
         let chunks = n / 8;
         let remainder = n % 8;
 
-        // Process 8 elements at once
+        // SAFETY: `base + 7 < chunks * 8 <= n == x.len() == y.len()`.
         for chunk in 0..chunks {
             let base = chunk * 8;
             unsafe {
@@ -210,7 +220,7 @@ impl UltraFastCG {
             }
         }
 
-        // Handle remainder
+        // SAFETY: `i < n == x.len() == y.len()`.
         for i in (chunks * 8)..(chunks * 8 + remainder) {
             unsafe { *y.get_unchecked_mut(i) += alpha * x.get_unchecked(i); }
         }

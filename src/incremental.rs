@@ -459,10 +459,8 @@ pub fn solve_on_change_sublinear_auto(
         .fold(0.0_f64, |a, b| if a > b { a } else { b });
 
     // optimal_neumann_terms guarantees ≥1 result on strict-DD input.
-    let auto_terms = crate::coherence::optimal_neumann_terms(
-        coherence, b_inf, min_diag, tolerance,
-    )
-    .unwrap_or(32);
+    let auto_terms = crate::coherence::optimal_neumann_terms(coherence, b_inf, min_diag, tolerance)
+        .unwrap_or(32);
 
     solve_on_change_sublinear(
         matrix,
@@ -531,10 +529,9 @@ pub fn solve_on_change_sublinear_auto_with_rho(
         .map(|x| x.abs())
         .fold(0.0_f64, |a, b| if a > b { a } else { b });
 
-    let auto_terms = crate::coherence::optimal_neumann_terms_with_rho(
-        rho, b_inf, min_diag, tolerance,
-    )
-    .unwrap_or(32);
+    let auto_terms =
+        crate::coherence::optimal_neumann_terms_with_rho(rho, b_inf, min_diag, tolerance)
+            .unwrap_or(32);
 
     solve_on_change_sublinear(
         matrix,
@@ -556,11 +553,19 @@ mod tests {
     /// Build a moderately diagonally-dominant 5×5 system.
     fn build_test_system() -> (SparseMatrix, Vec<Precision>) {
         let triplets = alloc::vec![
-            (0usize, 0, 5.0), (0, 1, 1.0),
-            (1, 0, 1.0), (1, 1, 5.0), (1, 2, 1.0),
-            (2, 1, 1.0), (2, 2, 5.0), (2, 3, 1.0),
-            (3, 2, 1.0), (3, 3, 5.0), (3, 4, 1.0),
-            (4, 3, 1.0), (4, 4, 5.0),
+            (0usize, 0, 5.0),
+            (0, 1, 1.0),
+            (1, 0, 1.0),
+            (1, 1, 5.0),
+            (1, 2, 1.0),
+            (2, 1, 1.0),
+            (2, 2, 5.0),
+            (2, 3, 1.0),
+            (3, 2, 1.0),
+            (3, 3, 5.0),
+            (3, 4, 1.0),
+            (4, 3, 1.0),
+            (4, 4, 5.0),
         ];
         let m = SparseMatrix::from_triplets(triplets, 5, 5).unwrap();
         let b = alloc::vec![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -674,7 +679,8 @@ mod tests {
         assert!(
             warm.iterations <= cold.iterations,
             "warm-start iterations ({}) should be <= cold-start ({}) on a small delta",
-            warm.iterations, cold.iterations,
+            warm.iterations,
+            cold.iterations,
         );
     }
 
@@ -693,8 +699,7 @@ mod tests {
         let (m, b) = build_test_system();
         let prev = alloc::vec![0.0; m.rows()];
         let delta = SparseDelta::empty();
-        let entries =
-            solve_on_change_sublinear(&m, &prev, &b, &delta, 3, 32, 1e-10).unwrap();
+        let entries = solve_on_change_sublinear(&m, &prev, &b, &delta, 3, 32, 1e-10).unwrap();
         assert!(entries.is_empty());
     }
 
@@ -717,8 +722,7 @@ mod tests {
         let opts = SolverOptions::default();
         let prev = solver.solve(&m, &b_prev, &opts).unwrap();
 
-        let delta =
-            SparseDelta::new(alloc::vec![3usize], alloc::vec![0.5 as Precision]).unwrap();
+        let delta = SparseDelta::new(alloc::vec![3usize], alloc::vec![0.5 as Precision]).unwrap();
         let mut b_new = b_prev.clone();
         delta.apply_to(&mut b_new).unwrap();
 
@@ -732,8 +736,8 @@ mod tests {
             &b_new,
             &delta,
             /*closure_depth=*/ 4,
-            /*max_terms=*/    32,
-            /*tolerance=*/    1e-10,
+            /*max_terms=*/ 32,
+            /*tolerance=*/ 1e-10,
         )
         .unwrap();
         assert!(
@@ -791,8 +795,7 @@ mod tests {
         let opts = SolverOptions::default();
         let prev = solver.solve(&m, &b_prev, &opts).unwrap();
 
-        let delta =
-            SparseDelta::new(alloc::vec![3usize], alloc::vec![0.5 as Precision]).unwrap();
+        let delta = SparseDelta::new(alloc::vec![3usize], alloc::vec![0.5 as Precision]).unwrap();
         let mut b_new = b_prev.clone();
         delta.apply_to(&mut b_new).unwrap();
 
@@ -809,12 +812,7 @@ mod tests {
     #[test]
     fn auto_rejects_non_dd_matrix_with_incoherent() {
         // Off-diagonals dominate the diagonal → coherence ≤ 0.
-        let triplets = alloc::vec![
-            (0usize, 0, 1.0),
-            (0, 1, 2.0),
-            (1, 0, 2.0),
-            (1, 1, 1.0),
-        ];
+        let triplets = alloc::vec![(0usize, 0, 1.0), (0, 1, 2.0), (1, 0, 2.0), (1, 1, 1.0),];
         let m = SparseMatrix::from_triplets(triplets, 2, 2).unwrap();
         let prev = alloc::vec![0.0; 2];
         let b = alloc::vec![1.0; 2];
@@ -830,9 +828,13 @@ mod tests {
         let delta = SparseDelta::new(alloc::vec![1], alloc::vec![0.1]).unwrap();
         // rho outside (0, 1) is rejected.
         for bad_rho in &[0.0, 1.0, -0.1, 1.5, f64::NAN, f64::INFINITY] {
-            let err = solve_on_change_sublinear_auto_with_rho(&m, &prev, &b, &delta, 1e-8, *bad_rho)
-                .unwrap_err();
-            assert!(matches!(err, SolverError::InvalidInput { .. }), "bad rho {bad_rho} should be rejected");
+            let err =
+                solve_on_change_sublinear_auto_with_rho(&m, &prev, &b, &delta, 1e-8, *bad_rho)
+                    .unwrap_err();
+            assert!(
+                matches!(err, SolverError::InvalidInput { .. }),
+                "bad rho {bad_rho} should be rejected"
+            );
         }
     }
 
@@ -841,8 +843,8 @@ mod tests {
         let (m, b) = build_test_system();
         let prev = alloc::vec![0.0; m.rows()];
         let delta = SparseDelta::empty();
-        let entries = solve_on_change_sublinear_auto_with_rho(&m, &prev, &b, &delta, 1e-8, 0.5)
-            .unwrap();
+        let entries =
+            solve_on_change_sublinear_auto_with_rho(&m, &prev, &b, &delta, 1e-8, 0.5).unwrap();
         assert!(entries.is_empty());
     }
 
@@ -870,23 +872,13 @@ mod tests {
         let rho = crate::coherence::approximate_spectral_radius(&m, 30)
             .expect("strict-DD chain should give a valid rho");
 
-        let delta = SparseDelta::new(
-            alloc::vec![3usize],
-            alloc::vec![0.5 as Precision],
-        )
-        .unwrap();
+        let delta = SparseDelta::new(alloc::vec![3usize], alloc::vec![0.5 as Precision]).unwrap();
         let mut b_new = b_prev.clone();
         delta.apply_to(&mut b_new).unwrap();
 
-        let auto = solve_on_change_sublinear_auto_with_rho(
-            &m,
-            &prev.solution,
-            &b_new,
-            &delta,
-            1e-8,
-            rho,
-        )
-        .unwrap();
+        let auto =
+            solve_on_change_sublinear_auto_with_rho(&m, &prev.solution, &b_new, &delta, 1e-8, rho)
+                .unwrap();
         assert!(!auto.is_empty());
 
         let full = solver.solve(&m, &b_new, &opts).unwrap();

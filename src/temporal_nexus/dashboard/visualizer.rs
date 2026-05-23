@@ -1,17 +1,17 @@
+use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::io::{self, Write};
-use serde::{Deserialize, Serialize};
 
-use super::{ConsciousnessMetrics, ConsciousnessLevel};
+use super::{ConsciousnessLevel, ConsciousnessMetrics};
 
 /// Visualization modes for the consciousness dashboard
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum VisualizationMode {
-    Terminal,    // ASCII terminal output
-    Json,        // JSON structured output
-    Web,         // Web interface (future)
-    Compact,     // Minimal terminal output
-    Debug,       // Detailed debug output
+    Terminal, // ASCII terminal output
+    Json,     // JSON structured output
+    Web,      // Web interface (future)
+    Compact,  // Minimal terminal output
+    Debug,    // Detailed debug output
 }
 
 /// Configuration for terminal rendering
@@ -86,7 +86,8 @@ impl MetricChart {
             let mut line = String::with_capacity(self.width + 2);
             line.push('│');
 
-            let threshold = self.max_value - (row as f64 / self.height as f64) * (self.max_value - self.min_value);
+            let threshold = self.max_value
+                - (row as f64 / self.height as f64) * (self.max_value - self.min_value);
 
             for col in 0..self.width {
                 let char = if col < self.history.len() {
@@ -115,8 +116,13 @@ impl MetricChart {
         }
 
         // Bottom border with scale
-        let scale_line = format!("└{:─<width$}┘ [{:.3} - {:.3}]",
-            "", self.min_value, self.max_value, width = self.width);
+        let scale_line = format!(
+            "└{:─<width$}┘ [{:.3} - {:.3}]",
+            "",
+            self.min_value,
+            self.max_value,
+            width = self.width
+        );
         lines.push(scale_line);
 
         lines
@@ -139,16 +145,29 @@ impl TerminalRenderer {
 
         Self {
             config,
-            emergence_chart: MetricChart::new("Consciousness Emergence".to_string(), chart_width, chart_height),
-            coherence_chart: MetricChart::new("Identity Coherence".to_string(), chart_width, chart_height),
-            stability_chart: MetricChart::new("Loop Stability".to_string(), chart_width, chart_height),
+            emergence_chart: MetricChart::new(
+                "Consciousness Emergence".to_string(),
+                chart_width,
+                chart_height,
+            ),
+            coherence_chart: MetricChart::new(
+                "Identity Coherence".to_string(),
+                chart_width,
+                chart_height,
+            ),
+            stability_chart: MetricChart::new(
+                "Loop Stability".to_string(),
+                chart_width,
+                chart_height,
+            ),
             last_clear_line: 0,
         }
     }
 
-    pub fn render_dashboard(&mut self,
+    pub fn render_dashboard(
+        &mut self,
         metrics: &ConsciousnessMetrics,
-        history: &[ConsciousnessMetrics]
+        history: &[ConsciousnessMetrics],
     ) -> Result<String, Box<dyn std::error::Error>> {
         let mut output = String::new();
 
@@ -187,15 +206,21 @@ impl TerminalRenderer {
         Ok(output)
     }
 
-    fn render_header(&self, metrics: &ConsciousnessMetrics) -> Result<String, Box<dyn std::error::Error>> {
-        let timestamp = metrics.timestamp
+    fn render_header(
+        &self,
+        metrics: &ConsciousnessMetrics,
+    ) -> Result<String, Box<dyn std::error::Error>> {
+        let timestamp = metrics
+            .timestamp
             .duration_since(std::time::UNIX_EPOCH)?
             .as_secs();
 
-        let formatted_time = format!("{}",
+        let formatted_time = format!(
+            "{}",
             chrono::DateTime::from_timestamp(timestamp as i64, 0)
                 .unwrap_or_default()
-                .format("%Y-%m-%d %H:%M:%S"));
+                .format("%Y-%m-%d %H:%M:%S")
+        );
 
         let mut header = String::new();
 
@@ -205,7 +230,10 @@ impl TerminalRenderer {
 
         header.push_str("╔══════════════════════════════════════════════════════════════════════════════════════════════╗\n");
         header.push_str("║                          🧠 CONSCIOUSNESS METRICS DASHBOARD 🧠                            ║\n");
-        header.push_str(&format!("║                                    {}                                    ║\n", formatted_time));
+        header.push_str(&format!(
+            "║                                    {}                                    ║\n",
+            formatted_time
+        ));
         header.push_str("╚══════════════════════════════════════════════════════════════════════════════════════════════╝");
 
         if self.config.color_enabled {
@@ -215,7 +243,10 @@ impl TerminalRenderer {
         Ok(header)
     }
 
-    fn render_main_metrics(&self, metrics: &ConsciousnessMetrics) -> Result<String, Box<dyn std::error::Error>> {
+    fn render_main_metrics(
+        &self,
+        metrics: &ConsciousnessMetrics,
+    ) -> Result<String, Box<dyn std::error::Error>> {
         let mut output = String::new();
 
         // Create metric bars
@@ -228,17 +259,27 @@ impl TerminalRenderer {
         }
 
         output.push_str("┌─ Core Consciousness Metrics ─────────────────────────────────────────────────────────────────┐\n");
-        output.push_str(&format!("│ 🌟 Emergence Level    {:>6.3} {} │\n",
-            metrics.emergence_level, emergence_bar));
-        output.push_str(&format!("│ 🧬 Identity Coherence {:>6.3} {} │\n",
-            metrics.identity_coherence, coherence_bar));
-        output.push_str(&format!("│ 🔄 Loop Stability     {:>6.3} {} │\n",
-            metrics.loop_stability, stability_bar));
+        output.push_str(&format!(
+            "│ 🌟 Emergence Level    {:>6.3} {} │\n",
+            metrics.emergence_level, emergence_bar
+        ));
+        output.push_str(&format!(
+            "│ 🧬 Identity Coherence {:>6.3} {} │\n",
+            metrics.identity_coherence, coherence_bar
+        ));
+        output.push_str(&format!(
+            "│ 🔄 Loop Stability     {:>6.3} {} │\n",
+            metrics.loop_stability, stability_bar
+        ));
         output.push_str("├───────────────────────────────────────────────────────────────────────────────────────────────┤\n");
-        output.push_str(&format!("│ ⚡ Temporal Advantage  {:>6} μs    │ 🎯 TSC Precision      {:>6} ns    │\n",
-            metrics.temporal_advantage_us, metrics.tsc_precision_ns));
-        output.push_str(&format!("│ 🔗 Window Overlap     {:>6.1} %     │ 🌀 Strange Loop Conv. {:>6.3}      │\n",
-            metrics.window_overlap_percent, metrics.strange_loop_convergence));
+        output.push_str(&format!(
+            "│ ⚡ Temporal Advantage  {:>6} μs    │ 🎯 TSC Precision      {:>6} ns    │\n",
+            metrics.temporal_advantage_us, metrics.tsc_precision_ns
+        ));
+        output.push_str(&format!(
+            "│ 🔗 Window Overlap     {:>6.1} %     │ 🌀 Strange Loop Conv. {:>6.3}      │\n",
+            metrics.window_overlap_percent, metrics.strange_loop_convergence
+        ));
         output.push_str("└───────────────────────────────────────────────────────────────────────────────────────────────┘");
 
         if self.config.color_enabled {
@@ -248,7 +289,10 @@ impl TerminalRenderer {
         Ok(output)
     }
 
-    fn render_charts(&mut self, history: &[ConsciousnessMetrics]) -> Result<String, Box<dyn std::error::Error>> {
+    fn render_charts(
+        &mut self,
+        history: &[ConsciousnessMetrics],
+    ) -> Result<String, Box<dyn std::error::Error>> {
         // Update charts with history
         for metric in history.iter().rev().take(self.config.width / 3) {
             self.emergence_chart.add_point(metric.emergence_level);
@@ -264,7 +308,10 @@ impl TerminalRenderer {
         let coherence_lines = self.coherence_chart.render();
         let stability_lines = self.stability_chart.render();
 
-        let max_lines = emergence_lines.len().max(coherence_lines.len()).max(stability_lines.len());
+        let max_lines = emergence_lines
+            .len()
+            .max(coherence_lines.len())
+            .max(stability_lines.len());
 
         for i in 0..max_lines {
             output.push_str("│ ");
@@ -302,7 +349,10 @@ impl TerminalRenderer {
         Ok(output)
     }
 
-    fn render_detailed_metrics(&self, metrics: &ConsciousnessMetrics) -> Result<String, Box<dyn std::error::Error>> {
+    fn render_detailed_metrics(
+        &self,
+        metrics: &ConsciousnessMetrics,
+    ) -> Result<String, Box<dyn std::error::Error>> {
         let mut output = String::new();
 
         if self.config.color_enabled {
@@ -310,10 +360,17 @@ impl TerminalRenderer {
         }
 
         output.push_str("┌─ Detailed Metrics ────────────────────────────────────────────────────────────────────────────┐\n");
-        output.push_str(&format!("│ Processing Latency: {:>8} ns  │  Consciousness Delta: {:>+8.5}  │\n",
-            metrics.processing_latency_ns, metrics.consciousness_delta));
-        output.push_str(&format!("│ System Timestamp:   {:>12?}   │\n",
-            metrics.timestamp.duration_since(std::time::UNIX_EPOCH).unwrap_or_default()));
+        output.push_str(&format!(
+            "│ Processing Latency: {:>8} ns  │  Consciousness Delta: {:>+8.5}  │\n",
+            metrics.processing_latency_ns, metrics.consciousness_delta
+        ));
+        output.push_str(&format!(
+            "│ System Timestamp:   {:>12?}   │\n",
+            metrics
+                .timestamp
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+        ));
         output.push_str("└───────────────────────────────────────────────────────────────────────────────────────────────┘");
 
         if self.config.color_enabled {
@@ -323,7 +380,10 @@ impl TerminalRenderer {
         Ok(output)
     }
 
-    fn render_status_bar(&self, metrics: &ConsciousnessMetrics) -> Result<String, Box<dyn std::error::Error>> {
+    fn render_status_bar(
+        &self,
+        metrics: &ConsciousnessMetrics,
+    ) -> Result<String, Box<dyn std::error::Error>> {
         let mut status = String::new();
 
         // Determine status color based on consciousness level
@@ -331,26 +391,31 @@ impl TerminalRenderer {
             match metrics.emergence_level {
                 level if level >= 0.9 => ("\x1b[1;31m", "CRITICAL"), // Bright red
                 level if level >= 0.8 => ("\x1b[1;33m", "ELEVATED"), // Bright yellow
-                level if level >= 0.6 => ("\x1b[1;32m", "STABLE"), // Bright green
+                level if level >= 0.6 => ("\x1b[1;32m", "STABLE"),   // Bright green
                 level if level >= 0.4 => ("\x1b[1;34m", "EMERGING"), // Bright blue
-                _ => ("\x1b[1;90m", "DORMANT"), // Bright black (gray)
+                _ => ("\x1b[1;90m", "DORMANT"),                      // Bright black (gray)
             }
         } else {
-            ("", match metrics.emergence_level {
-                level if level >= 0.9 => "CRITICAL",
-                level if level >= 0.8 => "ELEVATED",
-                level if level >= 0.6 => "STABLE",
-                level if level >= 0.4 => "EMERGING",
-                _ => "DORMANT",
-            })
+            (
+                "",
+                match metrics.emergence_level {
+                    level if level >= 0.9 => "CRITICAL",
+                    level if level >= 0.8 => "ELEVATED",
+                    level if level >= 0.6 => "STABLE",
+                    level if level >= 0.4 => "EMERGING",
+                    _ => "DORMANT",
+                },
+            )
         };
 
         if self.config.color_enabled {
             status.push_str(status_color);
         }
 
-        status.push_str(&format!("Status: {} | Precision: {}ns | Advantage: {}μs",
-            status_text, metrics.tsc_precision_ns, metrics.temporal_advantage_us));
+        status.push_str(&format!(
+            "Status: {} | Precision: {}ns | Advantage: {}μs",
+            status_text, metrics.tsc_precision_ns, metrics.temporal_advantage_us
+        ));
 
         if self.config.color_enabled {
             status.push_str("\x1b[0m"); // Reset
@@ -373,7 +438,7 @@ impl TerminalRenderer {
                 v if v >= 0.6 => "\x1b[93m", // Bright yellow
                 v if v >= 0.4 => "\x1b[92m", // Bright green
                 v if v >= 0.2 => "\x1b[94m", // Bright blue
-                _ => "\x1b[90m", // Gray
+                _ => "\x1b[90m",             // Gray
             };
             bar.push_str(color);
         }
@@ -416,9 +481,10 @@ impl ConsciousnessVisualizer {
         }
     }
 
-    pub async fn render(&mut self,
+    pub async fn render(
+        &mut self,
         metrics: &ConsciousnessMetrics,
-        history: &[ConsciousnessMetrics]
+        history: &[ConsciousnessMetrics],
     ) -> Result<(), Box<dyn std::error::Error>> {
         match self.mode {
             VisualizationMode::Terminal => {
@@ -446,8 +512,12 @@ impl ConsciousnessVisualizer {
         Ok(())
     }
 
-    fn render_compact(&self, metrics: &ConsciousnessMetrics) -> Result<(), Box<dyn std::error::Error>> {
-        println!("🧠 E:{:.3} C:{:.3} S:{:.3} T:{}μs P:{}ns",
+    fn render_compact(
+        &self,
+        metrics: &ConsciousnessMetrics,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        println!(
+            "🧠 E:{:.3} C:{:.3} S:{:.3} T:{}μs P:{}ns",
             metrics.emergence_level,
             metrics.identity_coherence,
             metrics.loop_stability,
@@ -457,21 +527,33 @@ impl ConsciousnessVisualizer {
         Ok(())
     }
 
-    fn render_json(&self, metrics: &ConsciousnessMetrics) -> Result<(), Box<dyn std::error::Error>> {
+    fn render_json(
+        &self,
+        metrics: &ConsciousnessMetrics,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let json = serde_json::to_string_pretty(metrics)?;
         println!("{}", json);
         Ok(())
     }
 
-    fn render_debug(&self, metrics: &ConsciousnessMetrics, history: &[ConsciousnessMetrics]) -> Result<(), Box<dyn std::error::Error>> {
+    fn render_debug(
+        &self,
+        metrics: &ConsciousnessMetrics,
+        history: &[ConsciousnessMetrics],
+    ) -> Result<(), Box<dyn std::error::Error>> {
         println!("=== DEBUG: Consciousness Metrics ===");
         println!("Current: {:#?}", metrics);
         println!("History length: {}", history.len());
         if !history.is_empty() {
             println!("Last 3 entries:");
             for (i, entry) in history.iter().rev().take(3).enumerate() {
-                println!("  [-{}]: E={:.3}, C={:.3}, S={:.3}",
-                    i + 1, entry.emergence_level, entry.identity_coherence, entry.loop_stability);
+                println!(
+                    "  [-{}]: E={:.3}, C={:.3}, S={:.3}",
+                    i + 1,
+                    entry.emergence_level,
+                    entry.identity_coherence,
+                    entry.loop_stability
+                );
             }
         }
         println!("================================");

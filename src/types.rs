@@ -13,7 +13,7 @@ pub type NodeId = u32;
 pub type EdgeId = u32;
 
 /// Floating-point precision type.
-/// 
+///
 /// Currently fixed to f64 for numerical stability, but may be
 /// parameterized in future versions for memory optimization.
 pub type Precision = f64;
@@ -260,7 +260,7 @@ impl ErrorBounds {
             method,
         }
     }
-    
+
     /// Create deterministic error bounds.
     pub fn deterministic(lower: Precision, upper: Precision) -> Self {
         Self {
@@ -270,7 +270,7 @@ impl ErrorBounds {
             method: ErrorBoundMethod::Deterministic,
         }
     }
-    
+
     /// Create probabilistic error bounds with confidence level.
     pub fn probabilistic(lower: Precision, upper: Precision, confidence: Precision) -> Self {
         Self {
@@ -280,19 +280,17 @@ impl ErrorBounds {
             method: ErrorBoundMethod::Probabilistic,
         }
     }
-    
+
     /// Check if the bounds are valid (lower <= upper).
     pub fn is_valid(&self) -> bool {
-        self.lower_bound <= self.upper_bound && 
-        self.lower_bound >= 0.0 && 
-        self.upper_bound >= 0.0
+        self.lower_bound <= self.upper_bound && self.lower_bound >= 0.0 && self.upper_bound >= 0.0
     }
-    
+
     /// Get the width of the error bounds.
     pub fn width(&self) -> Precision {
         self.upper_bound - self.lower_bound
     }
-    
+
     /// Get the midpoint of the error bounds.
     pub fn midpoint(&self) -> Precision {
         (self.lower_bound + self.upper_bound) / 2.0
@@ -315,7 +313,7 @@ impl SolverStats {
             thread_count: 1,
         }
     }
-    
+
     /// Calculate matrix operations percentage of total time.
     pub fn matrix_ops_percentage(&self) -> f64 {
         if self.total_time_ms > 0.0 {
@@ -324,7 +322,7 @@ impl SolverStats {
             0.0
         }
     }
-    
+
     /// Calculate convergence checking percentage of total time.
     pub fn convergence_percentage(&self) -> f64 {
         if self.total_time_ms > 0.0 {
@@ -350,13 +348,13 @@ impl SparsityInfo {
         } else {
             0.0
         };
-        
+
         let avg_nnz_per_row = if rows > 0 {
             nnz as Precision / rows as Precision
         } else {
             0.0
         };
-        
+
         Self {
             nnz,
             dimensions: (rows, cols),
@@ -367,12 +365,12 @@ impl SparsityInfo {
             is_banded: false,
         }
     }
-    
+
     /// Check if the matrix is considered sparse (< 10% non-zero).
     pub fn is_sparse(&self) -> bool {
         self.sparsity_ratio < 0.1
     }
-    
+
     /// Check if the matrix is very sparse (< 1% non-zero).
     pub fn is_very_sparse(&self) -> bool {
         self.sparsity_ratio < 0.01
@@ -405,14 +403,14 @@ impl fmt::Display for NormType {
 #[cfg(all(test, feature = "std"))]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_error_bounds_validity() {
         let valid_bounds = ErrorBounds::deterministic(1.0, 2.0);
         assert!(valid_bounds.is_valid());
         assert_eq!(valid_bounds.width(), 1.0);
         assert_eq!(valid_bounds.midpoint(), 1.5);
-        
+
         let invalid_bounds = ErrorBounds {
             lower_bound: 2.0,
             upper_bound: 1.0,
@@ -421,7 +419,7 @@ mod tests {
         };
         assert!(!invalid_bounds.is_valid());
     }
-    
+
     #[test]
     fn test_sparsity_info() {
         let info = SparsityInfo::new(100, 1000, 1000);
@@ -430,14 +428,14 @@ mod tests {
         assert!(info.is_sparse());
         assert_eq!(info.avg_nnz_per_row, 0.1);
     }
-    
+
     #[test]
     fn test_solver_stats_percentages() {
         let mut stats = SolverStats::new();
         stats.total_time_ms = 100.0;
         stats.matrix_ops_time_ms = 60.0;
         stats.convergence_check_time_ms = 10.0;
-        
+
         assert_eq!(stats.matrix_ops_percentage(), 60.0);
         assert_eq!(stats.convergence_percentage(), 10.0);
     }

@@ -1,10 +1,10 @@
 //! Matrix sketching algorithms for sublinear solvers
 
+use crate::error::{Result, SolverError};
 use crate::types::Precision;
-use crate::error::{SolverError, Result};
-use alloc::{vec::Vec, string::String};
-use rand::{Rng, SeedableRng};
+use alloc::vec::Vec;
 use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 
 /// Sketching method
 #[derive(Debug, Clone, PartialEq)]
@@ -193,12 +193,7 @@ mod tests {
 
     #[test]
     fn test_matrix_sketch_creation() {
-        let sketch = MatrixSketch::new(
-            SketchingMethod::CountSketch,
-            100,
-            50,
-            Some(42),
-        ).unwrap();
+        let sketch = MatrixSketch::new(SketchingMethod::CountSketch, 100, 50, Some(42)).unwrap();
 
         assert_eq!(sketch.original_size, 100);
         assert_eq!(sketch.sketch_size, 50);
@@ -207,12 +202,7 @@ mod tests {
 
     #[test]
     fn test_count_sketch() {
-        let sketch = MatrixSketch::new(
-            SketchingMethod::CountSketch,
-            10,
-            5,
-            Some(123),
-        ).unwrap();
+        let sketch = MatrixSketch::new(SketchingMethod::CountSketch, 10, 5, Some(123)).unwrap();
 
         let vector = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
         let sketched = sketch.sketch_vector(&vector).unwrap();
@@ -225,12 +215,8 @@ mod tests {
 
     #[test]
     fn test_sparse_embedding() {
-        let sketch = MatrixSketch::new(
-            SketchingMethod::SparseEmbedding,
-            20,
-            10,
-            Some(456),
-        ).unwrap();
+        let sketch =
+            MatrixSketch::new(SketchingMethod::SparseEmbedding, 20, 10, Some(456)).unwrap();
 
         let vector = vec![1.0; 20];
         let sketched = sketch.sketch_vector(&vector).unwrap();
@@ -240,12 +226,7 @@ mod tests {
 
     #[test]
     fn test_fast_jl() {
-        let sketch = MatrixSketch::new(
-            SketchingMethod::FastJL,
-            16,
-            8,
-            Some(789),
-        ).unwrap();
+        let sketch = MatrixSketch::new(SketchingMethod::FastJL, 16, 8, Some(789)).unwrap();
 
         let vector = (1..=16).map(|x| x as f64).collect::<Vec<_>>();
         let sketched = sketch.sketch_vector(&vector).unwrap();

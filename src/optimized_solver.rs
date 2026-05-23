@@ -3,10 +3,10 @@
 //! This module provides optimized versions of linear system solvers with
 //! SIMD acceleration, buffer pooling, and parallel execution capabilities.
 
-use crate::types::Precision;
-use crate::matrix::sparse::{CSRStorage, COOStorage};
+use crate::matrix::sparse::{COOStorage, CSRStorage};
 #[cfg(feature = "simd")]
-use crate::simd_ops::{matrix_vector_multiply_simd, dot_product_simd, axpy_simd};
+use crate::simd_ops::{axpy_simd, dot_product_simd, matrix_vector_multiply_simd};
+use crate::types::Precision;
 use alloc::vec::Vec;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
@@ -70,11 +70,15 @@ impl OptimizedSparseMatrix {
         assert_eq!(x.len(), self.dimensions.1);
         assert_eq!(y.len(), self.dimensions.0);
 
-        self.performance_stats.matvec_count.fetch_add(1, Ordering::Relaxed);
+        self.performance_stats
+            .matvec_count
+            .fetch_add(1, Ordering::Relaxed);
         let bytes = (self.storage.values.len() * 8) + (x.len() * 8) + (y.len() * 8);
-        self.performance_stats.bytes_processed.fetch_add(bytes, Ordering::Relaxed);
+        self.performance_stats
+            .bytes_processed
+            .fetch_add(bytes, Ordering::Relaxed);
 
-#[cfg(feature = "simd")]
+        #[cfg(feature = "simd")]
         {
             matrix_vector_multiply_simd(
                 &self.storage.values,
@@ -94,14 +98,20 @@ impl OptimizedSparseMatrix {
     pub fn get_performance_stats(&self) -> (usize, usize) {
         (
             self.performance_stats.matvec_count.load(Ordering::Relaxed),
-            self.performance_stats.bytes_processed.load(Ordering::Relaxed),
+            self.performance_stats
+                .bytes_processed
+                .load(Ordering::Relaxed),
         )
     }
 
     /// Reset performance counters.
     pub fn reset_stats(&self) {
-        self.performance_stats.matvec_count.store(0, Ordering::Relaxed);
-        self.performance_stats.bytes_processed.store(0, Ordering::Relaxed);
+        self.performance_stats
+            .matvec_count
+            .store(0, Ordering::Relaxed);
+        self.performance_stats
+            .bytes_processed
+            .store(0, Ordering::Relaxed);
     }
 }
 
@@ -263,13 +273,13 @@ impl OptimizedConjugateGradientSolver {
         let final_residual_norm = rsold.sqrt();
 
         // Update performance statistics
-        self.stats.total_flops = self.stats.matvec_count * matrix.nnz() * 2 +
-                                 iteration * rows * 6; // vector operations per iteration
+        self.stats.total_flops = self.stats.matvec_count * matrix.nnz() * 2 + iteration * rows * 6; // vector operations per iteration
 
         if computation_time_ms > 0.0 {
             let total_gb = (self.stats.total_flops * 8) as f64 / 1e9;
             self.stats.average_bandwidth_gbs = total_gb / (computation_time_ms / 1000.0);
-            self.stats.average_gflops = (self.stats.total_flops as f64) / (computation_time_ms * 1e6);
+            self.stats.average_gflops =
+                (self.stats.total_flops as f64) / (computation_time_ms * 1e6);
         }
 
         Ok(OptimizedSolverResult {
@@ -359,10 +369,7 @@ mod tests {
 
     fn create_test_matrix() -> OptimizedSparseMatrix {
         // Create a simple 2x2 symmetric positive definite matrix
-        let triplets = vec![
-            (0, 0, 4.0), (0, 1, 1.0),
-            (1, 0, 1.0), (1, 1, 3.0),
-        ];
+        let triplets = vec![(0, 0, 4.0), (0, 1, 1.0), (1, 0, 1.0), (1, 1, 3.0)];
         OptimizedSparseMatrix::from_triplets(triplets, 2, 2).unwrap()
     }
 

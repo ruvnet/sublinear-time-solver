@@ -98,7 +98,6 @@ pub mod memory {
 
 /// Performance optimization utilities.
 pub mod perf {
-    use super::*;
 
     /// Check if SIMD operations are available.
     pub fn has_simd() -> bool {
@@ -146,7 +145,11 @@ pub mod numerical {
     }
 
     /// Compute condition number estimate using power iteration.
-    pub fn condition_number_estimate(matrix_op: impl Fn(&[Precision], &mut [Precision]), n: usize, max_iter: usize) -> Precision {
+    pub fn condition_number_estimate(
+        matrix_op: impl Fn(&[Precision], &mut [Precision]),
+        n: usize,
+        max_iter: usize,
+    ) -> Precision {
         let mut x = vec![1.0 / (n as Precision).sqrt(); n];
         let mut y = vec![0.0; n];
 

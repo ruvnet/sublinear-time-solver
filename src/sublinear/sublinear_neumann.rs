@@ -6,13 +6,12 @@
 //! 2. Spectral sparsification
 //! 3. Adaptive sampling with concentration bounds
 
+use crate::error::{Result, SolverError};
 use crate::matrix::Matrix;
-use crate::types::{Precision, ErrorBounds, ErrorBoundMethod};
-use crate::error::{SolverError, Result};
-use crate::solver::{SolverAlgorithm, SolverOptions, SolverResult, SolverState, StepResult};
-use crate::sublinear::{SublinearConfig, SublinearSolver, ComplexityBound};
 use crate::sublinear::johnson_lindenstrauss::JLEmbedding;
-use alloc::{vec::Vec, string::String};
+use crate::sublinear::{ComplexityBound, SublinearConfig, SublinearSolver};
+use crate::types::Precision;
+use alloc::vec::Vec;
 use core::cmp;
 
 /// Sublinear Neumann series solver
@@ -89,11 +88,7 @@ impl SublinearNeumannSolver {
         let reconstructed = jl_embedding.reconstruct_vector(&reduced_solution.solution)?;
 
         // Step 7: Apply error correction if needed
-        let final_solution = self.apply_error_correction(
-            matrix,
-            b,
-            &reconstructed,
-        )?;
+        let final_solution = self.apply_error_correction(matrix, b, &reconstructed)?;
 
         Ok(SublinearNeumannResult {
             solution: final_solution,
@@ -155,7 +150,8 @@ impl SublinearNeumannSolver {
         }
 
         // Scaled RHS: D^{-1}b
-        let scaled_b: Vec<Precision> = b.iter()
+        let scaled_b: Vec<Precision> = b
+            .iter()
             .zip(&diagonal_inv)
             .map(|(&b_val, &d_inv)| b_val * d_inv)
             .collect();
@@ -197,10 +193,7 @@ impl SublinearNeumannSolver {
             series_terms_used += 1;
 
             // Check series convergence
-            let term_norm = current_term.iter()
-                .map(|x| x * x)
-                .sum::<Precision>()
-                .sqrt();
+            let term_norm = current_term.iter().map(|x| x * x).sum::<Precision>().sqrt();
 
             if term_norm < self.series_tolerance {
                 break;
@@ -216,10 +209,7 @@ impl SublinearNeumannSolver {
             residual[i] -= b[i];
         }
 
-        let residual_norm = residual.iter()
-            .map(|x| x * x)
-            .sum::<Precision>()
-            .sqrt();
+        let residual_norm = residual.iter().map(|x| x * x).sum::<Precision>().sqrt();
 
         Ok(ReducedSolutionResult {
             solution,
@@ -272,7 +262,8 @@ impl SublinearNeumannSolver {
             }
 
             // Check convergence on step size.
-            let diff: Precision = solution.iter()
+            let diff: Precision = solution
+                .iter()
                 .zip(&new_solution)
                 .map(|(old, new)| (old - new).powi(2))
                 .sum::<Precision>()
@@ -417,10 +408,7 @@ mod tests {
         let solver = SublinearNeumannSolver::new(config);
 
         // Create small diagonally dominant system
-        let triplets = vec![
-            (0, 0, 3.0), (0, 1, 1.0),
-            (1, 0, 1.0), (1, 1, 3.0),
-        ];
+        let triplets = vec![(0, 0, 3.0), (0, 1, 1.0), (1, 0, 1.0), (1, 1, 3.0)];
         let matrix = SparseMatrix::from_triplets(triplets, 2, 2).unwrap();
         let b = vec![4.0, 4.0];
 

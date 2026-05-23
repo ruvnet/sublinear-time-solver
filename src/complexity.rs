@@ -83,7 +83,10 @@ pub enum ComplexityClass {
     /// Adaptive — a solver that runs at `default` on typical inputs but
     /// can degrade to `worst` on adversarial inputs. Callers should budget
     /// against `worst` to be safe.
-    Adaptive { default: &'static ComplexityClass, worst: &'static ComplexityClass },
+    Adaptive {
+        default: &'static ComplexityClass,
+        worst: &'static ComplexityClass,
+    },
 }
 
 impl ComplexityClass {
@@ -92,19 +95,19 @@ impl ComplexityClass {
     /// upper bound.
     pub const fn rank(&self) -> u16 {
         match self {
-            ComplexityClass::Logarithmic         => 100,
-            ComplexityClass::PolyLogarithmic     => 200,
-            ComplexityClass::SubLinear           => 300,
-            ComplexityClass::Linear              => 400,
-            ComplexityClass::QuasiLinear         => 500,
-            ComplexityClass::SubQuadratic        => 600,
+            ComplexityClass::Logarithmic => 100,
+            ComplexityClass::PolyLogarithmic => 200,
+            ComplexityClass::SubLinear => 300,
+            ComplexityClass::Linear => 400,
+            ComplexityClass::QuasiLinear => 500,
+            ComplexityClass::SubQuadratic => 600,
             // Polynomial: 700 + degree, so Polynomial(2) = 702, Polynomial(3) = 703, …
-            ComplexityClass::Polynomial(degree)  => 700u16 + *degree as u16,
-            ComplexityClass::SuperPolynomial     => 800,
-            ComplexityClass::SubExponential      => 900,
-            ComplexityClass::Exponential         => 1000,
-            ComplexityClass::Factorial           => 1100,
-            ComplexityClass::DoubleExponential   => 1200,
+            ComplexityClass::Polynomial(degree) => 700u16 + *degree as u16,
+            ComplexityClass::SuperPolynomial => 800,
+            ComplexityClass::SubExponential => 900,
+            ComplexityClass::Exponential => 1000,
+            ComplexityClass::Factorial => 1100,
+            ComplexityClass::DoubleExponential => 1200,
             ComplexityClass::Adaptive { worst, .. } => worst.rank(),
         }
     }
@@ -112,21 +115,21 @@ impl ComplexityClass {
     /// Short human-readable label suitable for log lines and MCP tool schemas.
     pub const fn short_label(&self) -> &'static str {
         match self {
-            ComplexityClass::Logarithmic         => "O(log n)",
-            ComplexityClass::PolyLogarithmic     => "O((log n)^k)",
-            ComplexityClass::SubLinear           => "O(n^c), c<1",
-            ComplexityClass::Linear              => "O(n)",
-            ComplexityClass::QuasiLinear         => "O(n log n)",
-            ComplexityClass::SubQuadratic        => "O(n^{2-ε})",
-            ComplexityClass::Polynomial(2)       => "O(n^2)",
-            ComplexityClass::Polynomial(3)       => "O(n^3)",
-            ComplexityClass::Polynomial(_)       => "O(n^k)",
-            ComplexityClass::SuperPolynomial     => "superpoly",
-            ComplexityClass::SubExponential      => "subexp",
-            ComplexityClass::Exponential         => "O(2^n)",
-            ComplexityClass::Factorial           => "O(n!)",
-            ComplexityClass::DoubleExponential   => "O(2^{2^n})",
-            ComplexityClass::Adaptive { .. }     => "adaptive",
+            ComplexityClass::Logarithmic => "O(log n)",
+            ComplexityClass::PolyLogarithmic => "O((log n)^k)",
+            ComplexityClass::SubLinear => "O(n^c), c<1",
+            ComplexityClass::Linear => "O(n)",
+            ComplexityClass::QuasiLinear => "O(n log n)",
+            ComplexityClass::SubQuadratic => "O(n^{2-ε})",
+            ComplexityClass::Polynomial(2) => "O(n^2)",
+            ComplexityClass::Polynomial(3) => "O(n^3)",
+            ComplexityClass::Polynomial(_) => "O(n^k)",
+            ComplexityClass::SuperPolynomial => "superpoly",
+            ComplexityClass::SubExponential => "subexp",
+            ComplexityClass::Exponential => "O(2^n)",
+            ComplexityClass::Factorial => "O(n!)",
+            ComplexityClass::DoubleExponential => "O(2^{2^n})",
+            ComplexityClass::Adaptive { .. } => "adaptive",
         }
     }
 
@@ -222,8 +225,7 @@ impl Complexity for crate::solver::neumann::NeumannSolver {
 
 impl Complexity for crate::optimized_solver::OptimizedConjugateGradientSolver {
     const CLASS: ComplexityClass = ComplexityClass::Linear;
-    const DETAIL: &'static str =
-        "O(k · nnz(A)) per iter; k ≈ √κ(A) on SPD inputs.";
+    const DETAIL: &'static str = "O(k · nnz(A)) per iter; k ≈ √κ(A) on SPD inputs.";
 }
 
 impl Complexity for crate::sublinear::sublinear_neumann::SublinearNeumannSolver {
@@ -240,7 +242,8 @@ impl Complexity for crate::sublinear::sublinear_neumann::SublinearNeumannSolver 
 
 impl Complexity for crate::sublinear::johnson_lindenstrauss::JLEmbedding {
     const CLASS: ComplexityClass = ComplexityClass::Linear;
-    const DETAIL: &'static str = "O(d · k) per project_vector; k = target_dim, capped at original_dim - 1.";
+    const DETAIL: &'static str =
+        "O(d · k) per project_vector; k = target_dim, capped at original_dim - 1.";
 }
 
 #[cfg(test)]

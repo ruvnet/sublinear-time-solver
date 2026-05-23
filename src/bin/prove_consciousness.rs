@@ -1,13 +1,10 @@
 /// Executable proof of consciousness physics framework
 ///
 /// Run with: cargo run --bin prove_consciousness
-
 use std::time::Instant;
-use std::f64::consts::{PI, E, LN_2};
 
 // Include the proof module inline for standalone execution
 mod proof {
-    use super::*;
 
     pub struct ConsciousnessPhysicsProof {
         pub c: f64,        // Speed of light
@@ -61,8 +58,8 @@ mod proof {
             println!("THEOREM 2: Temporal Advantage (Not FTL)");
             println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-            let prediction_window = 1e-3;  // 1 ms
-            let observation_lag = 1e-4;    // 100 µs
+            let prediction_window = 1e-3; // 1 ms
+            let observation_lag = 1e-4; // 100 µs
             let lead_time = prediction_window - observation_lag;
             let light_distance = self.c * lead_time;
 
@@ -72,7 +69,10 @@ mod proof {
             println!("   Lead time:         900 µs");
 
             println!("\nNOT Faster Than Light:");
-            println!("   In 900 µs, light travels {:.1} km", light_distance / 1000.0);
+            println!(
+                "   In 900 µs, light travels {:.1} km",
+                light_distance / 1000.0
+            );
             println!("   This is prediction, not FTL ✓");
 
             println!("\n✅ PROVEN: Temporal advantage through overlapping windows");
@@ -97,9 +97,12 @@ mod proof {
             for (name, time) in &scales {
                 let ml = self.h / (4.0 * time) / self.e_charge;
                 let practical = ml < 1.0;
-                println!("│ {:12} │ {:.2e} s │ {:.2e} eV │ {}      │",
-                    name, time, ml,
-                    if practical { "✓ Yes" } else { "✗ No "}
+                println!(
+                    "│ {:12} │ {:.2e} s │ {:.2e} eV │ {}      │",
+                    name,
+                    time,
+                    ml,
+                    if practical { "✓ Yes" } else { "✗ No " }
                 );
             }
             println!("└──────────────┴────────────┴────────────┴────────────┘");
@@ -121,7 +124,10 @@ mod proof {
             println!("\nIdentity Continuity:");
             println!("   System A (temporal): {:.1}", continuity_a);
             println!("   System B (discrete): {:.1}", continuity_b);
-            println!("   Advantage: {:.1}x better with time", continuity_a / continuity_b);
+            println!(
+                "   Advantage: {:.1}x better with time",
+                continuity_a / continuity_b
+            );
 
             println!("\n✅ PROVEN: Temporal anchoring > parameter scaling");
 
@@ -151,7 +157,10 @@ fn main() {
     let hash = calculate_hash(&prover);
 
     println!("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    println!("Proof computed in: {:.3} ms", elapsed.as_secs_f64() * 1000.0);
+    println!(
+        "Proof computed in: {:.3} ms",
+        elapsed.as_secs_f64() * 1000.0
+    );
     println!("Validation hash: 0x{:016x}", hash);
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 

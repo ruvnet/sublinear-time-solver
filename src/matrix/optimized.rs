@@ -4,10 +4,10 @@
 //! sublinear-time algorithms with focus on minimizing memory allocation overhead
 //! and maximizing cache efficiency.
 
-use crate::types::{Precision, DimensionType, IndexType};
-use crate::error::{SolverError, Result};
-use crate::matrix::sparse::{CSRStorage, CSCStorage, COOStorage};
-use alloc::{vec::Vec, collections::VecDeque, boxed::Box};
+use crate::error::Result;
+use crate::matrix::sparse::{COOStorage, CSRStorage};
+use crate::types::{DimensionType, Precision};
+use alloc::{collections::VecDeque, vec::Vec};
 use core::sync::atomic::{AtomicUsize, Ordering};
 
 #[cfg(feature = "std")]
@@ -35,7 +35,7 @@ pub struct BufferPool {
 }
 
 /// Buffer size categories
-const SMALL_BUFFER_THRESHOLD: usize = 128;  // 1KB for f64
+const SMALL_BUFFER_THRESHOLD: usize = 128; // 1KB for f64
 const MEDIUM_BUFFER_THRESHOLD: usize = 8192; // 64KB for f64
 
 impl BufferPool {
@@ -290,7 +290,7 @@ impl OptimizedCSRStorage {
         &self,
         x: &[Precision],
         mut callback: F,
-        chunk_size: usize
+        chunk_size: usize,
     ) -> Result<()>
     where
         F: FnMut(usize, &[Precision]),
@@ -426,7 +426,8 @@ impl ParallelCSRStorage {
         let rows = result.len();
         let chunk_size = (rows + self.num_threads - 1) / self.num_threads;
 
-        result.par_chunks_mut(chunk_size)
+        result
+            .par_chunks_mut(chunk_size)
             .enumerate()
             .for_each(|(chunk_idx, result_chunk)| {
                 let start_row = chunk_idx * chunk_size;
@@ -527,11 +528,7 @@ impl StreamingMatrix {
     }
 
     /// Streaming matrix-vector multiplication.
-    pub fn multiply_vector_streaming<F>(
-        &self,
-        x: &[Precision],
-        mut callback: F,
-    ) -> Result<()>
+    pub fn multiply_vector_streaming<F>(&self, x: &[Precision], mut callback: F) -> Result<()>
     where
         F: FnMut(usize, &[Precision]),
     {
@@ -551,7 +548,8 @@ impl StreamingMatrix {
 
     /// Get memory usage statistics.
     pub fn memory_usage(&self) -> usize {
-        self.chunks.iter()
+        self.chunks
+            .iter()
             .map(|chunk| {
                 let stats = chunk.performance_stats();
                 stats.matrix_nnz * 12 + stats.matrix_rows * 4 // Rough estimate
@@ -585,10 +583,7 @@ mod tests {
     #[test]
     fn test_optimized_csr_performance() {
         // Create a simple test matrix
-        let triplets = vec![
-            (0, 0, 2.0), (0, 1, 1.0),
-            (1, 0, 1.0), (1, 1, 3.0),
-        ];
+        let triplets = vec![(0, 0, 2.0), (0, 1, 1.0), (1, 0, 1.0), (1, 1, 3.0)];
         let coo = COOStorage::from_triplets(triplets).unwrap();
         let optimized = OptimizedCSRStorage::from_coo(&coo, 2, 2).unwrap();
 
@@ -605,18 +600,23 @@ mod tests {
     #[test]
     fn test_streaming_matrix() {
         let triplets = vec![
-            (0, 0, 1.0), (0, 1, 2.0),
-            (1, 0, 3.0), (1, 1, 4.0),
-            (2, 0, 5.0), (2, 1, 6.0),
+            (0, 0, 1.0),
+            (0, 1, 2.0),
+            (1, 0, 3.0),
+            (1, 1, 4.0),
+            (2, 0, 5.0),
+            (2, 1, 6.0),
         ];
 
         let streaming = StreamingMatrix::from_triplets(triplets, 3, 2, 1).unwrap();
         let x = vec![1.0, 1.0];
 
         let mut results = Vec::new();
-        streaming.multiply_vector_streaming(&x, |start_row, chunk_result| {
-            results.extend_from_slice(chunk_result);
-        }).unwrap();
+        streaming
+            .multiply_vector_streaming(&x, |start_row, chunk_result| {
+                results.extend_from_slice(chunk_result);
+            })
+            .unwrap();
 
         // Each chunk should produce correct results
         assert!(results.len() >= 3);

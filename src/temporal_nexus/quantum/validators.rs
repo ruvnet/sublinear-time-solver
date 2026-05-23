@@ -237,12 +237,12 @@ impl UncertaintyResult {
 /// Energy scale classification for consciousness operations
 #[derive(Debug, Clone, PartialEq)]
 pub enum EnergyScale {
-    SubAttoElectronVolt,  // < 1 aeV
-    AttoElectronVolt,     // 1 aeV - 1 feV
-    MilliElectronVolt,    // 1 feV - 1 eV
-    ElectronVolt,         // 1 eV - 1 keV
-    KiloElectronVolt,     // 1 keV - 1 MeV
-    MegaElectronVolt,     // > 1 MeV
+    SubAttoElectronVolt, // < 1 aeV
+    AttoElectronVolt,    // 1 aeV - 1 feV
+    MilliElectronVolt,   // 1 feV - 1 eV
+    ElectronVolt,        // 1 eV - 1 keV
+    KiloElectronVolt,    // 1 keV - 1 MeV
+    MegaElectronVolt,    // > 1 MeV
 }
 
 impl EnergyScale {

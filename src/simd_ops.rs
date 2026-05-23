@@ -4,7 +4,6 @@
 //! operations using SIMD intrinsics for maximum performance on modern CPUs.
 
 use crate::types::Precision;
-use alloc::vec::Vec;
 
 #[cfg(feature = "simd")]
 use wide::f64x4;
@@ -124,12 +123,8 @@ pub fn dot_product_simd(x: &[Precision], y: &[Precision]) -> Precision {
     for chunk in 0..simd_chunks {
         let idx = chunk * 4;
 
-        let x_vals = f64x4::new([
-            x[idx], x[idx + 1], x[idx + 2], x[idx + 3]
-        ]);
-        let y_vals = f64x4::new([
-            y[idx], y[idx + 1], y[idx + 2], y[idx + 3]
-        ]);
+        let x_vals = f64x4::new([x[idx], x[idx + 1], x[idx + 2], x[idx + 3]]);
+        let y_vals = f64x4::new([y[idx], y[idx + 1], y[idx + 2], y[idx + 3]]);
 
         sum = sum + (x_vals * y_vals);
     }
@@ -166,12 +161,8 @@ pub fn axpy_simd(alpha: Precision, x: &[Precision], y: &mut [Precision]) {
     for chunk in 0..simd_chunks {
         let idx = chunk * 4;
 
-        let x_vals = f64x4::new([
-            x[idx], x[idx + 1], x[idx + 2], x[idx + 3]
-        ]);
-        let y_vals = f64x4::new([
-            y[idx], y[idx + 1], y[idx + 2], y[idx + 3]
-        ]);
+        let x_vals = f64x4::new([x[idx], x[idx + 1], x[idx + 2], x[idx + 3]]);
+        let y_vals = f64x4::new([y[idx], y[idx + 1], y[idx + 2], y[idx + 3]]);
 
         let result = (alpha_vec * x_vals) + y_vals;
         let result_array = result.to_array();

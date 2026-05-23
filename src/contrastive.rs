@@ -193,8 +193,7 @@ pub fn find_anomalous_rows_in_subset(
         return Vec::new();
     }
 
-    let mut heap: BinaryHeap<MinHeapEntry> =
-        BinaryHeap::with_capacity(k.min(candidates.len()) + 1);
+    let mut heap: BinaryHeap<MinHeapEntry> = BinaryHeap::with_capacity(k.min(candidates.len()) + 1);
 
     for &row in candidates {
         // Skip out-of-bounds indices silently — caller may supply a
@@ -446,8 +445,13 @@ pub fn contrastive_solve_on_change_sublinear(
     // (2) Per-entry sublinear Neumann at each candidate index. We never
     //     touch the full `n`-sized solution vector — only `|candidates|`
     //     scalars are computed.
-    let entries =
-        crate::entry::solve_single_entries_neumann(matrix, b_new, &candidates, max_terms, tolerance)?;
+    let entries = crate::entry::solve_single_entries_neumann(
+        matrix,
+        b_new,
+        &candidates,
+        max_terms,
+        tolerance,
+    )?;
 
     // (3) Materialise a dense `current` vector with stale values
     //     everywhere except the candidate indices. `find_anomalous_rows_in_subset`
@@ -513,10 +517,8 @@ pub fn contrastive_solve_on_change_sublinear_auto(
         .map(|x| x.abs())
         .fold(0.0_f64, |a, b| if a > b { a } else { b });
 
-    let auto_terms = crate::coherence::optimal_neumann_terms(
-        coherence, b_inf, min_diag, tolerance,
-    )
-    .unwrap_or(32);
+    let auto_terms = crate::coherence::optimal_neumann_terms(coherence, b_inf, min_diag, tolerance)
+        .unwrap_or(32);
 
     contrastive_solve_on_change_sublinear(
         matrix,
@@ -710,7 +712,10 @@ mod tests {
         let b = alloc::vec![0.0; 5];
         let c = alloc::vec![0.01, 0.02, 0.03, 0.04, 0.05];
         let above = find_rows_above_threshold(&b, &c, 1.0);
-        assert!(above.is_empty(), "no entry above threshold should return empty");
+        assert!(
+            above.is_empty(),
+            "no entry above threshold should return empty"
+        );
     }
 
     // ─────────────────────────────────────────────────────────────────
@@ -822,8 +827,7 @@ mod tests {
         use crate::solver::SolverOptions;
 
         let n = 4;
-        let triplets: Vec<(usize, usize, Precision)> =
-            (0..n).map(|i| (i, i, 2.0)).collect();
+        let triplets: Vec<(usize, usize, Precision)> = (0..n).map(|i| (i, i, 2.0)).collect();
         let a = SparseMatrix::from_triplets(triplets, n, n).unwrap();
         let prev = alloc::vec![0.0; n];
         let delta = SparseDelta::empty();
@@ -846,8 +850,7 @@ mod tests {
         use crate::solver::SolverOptions;
 
         let n = 4;
-        let triplets: Vec<(usize, usize, Precision)> =
-            (0..n).map(|i| (i, i, 2.0)).collect();
+        let triplets: Vec<(usize, usize, Precision)> = (0..n).map(|i| (i, i, 2.0)).collect();
         let a = SparseMatrix::from_triplets(triplets, n, n).unwrap();
         let prev = alloc::vec![0.0; n];
         let delta = SparseDelta::new(alloc::vec![1], alloc::vec![1.0]).unwrap();
@@ -869,8 +872,7 @@ mod tests {
             <ContrastiveSolveOnChangeSublinearOp as Complexity>::CLASS,
             ComplexityClass::SubLinear
         ));
-        assert!(<ContrastiveSolveOnChangeSublinearOp as Complexity>::DETAIL
-            .contains("Phase-2B"));
+        assert!(<ContrastiveSolveOnChangeSublinearOp as Complexity>::DETAIL.contains("Phase-2B"));
     }
 
     #[test]
@@ -884,9 +886,8 @@ mod tests {
         let prev = alloc::vec![0.0; n];
         let b_new = alloc::vec![1.0; n];
         let delta = SparseDelta::empty();
-        let top =
-            contrastive_solve_on_change_sublinear(&a, &prev, &b_new, &delta, 3, 16, 1e-10, 5)
-                .unwrap();
+        let top = contrastive_solve_on_change_sublinear(&a, &prev, &b_new, &delta, 3, 16, 1e-10, 5)
+            .unwrap();
         assert!(top.is_empty());
     }
 
@@ -938,7 +939,11 @@ mod tests {
         assert_eq!(top.len(), 3, "expected k=3 results");
         // Sanity: row 2 must be in the top-3 (it's where the delta landed).
         let contains_row_2 = top.iter().any(|r| r.row == 2);
-        assert!(contains_row_2, "top-3 should include the perturbed row 2; got: {:?}", top);
+        assert!(
+            contains_row_2,
+            "top-3 should include the perturbed row 2; got: {:?}",
+            top
+        );
         // Sanity: anomaly scores are ordered descending.
         for w in top.windows(2) {
             assert!(w[0].anomaly >= w[1].anomaly);

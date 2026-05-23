@@ -48,20 +48,20 @@
 //! assert!(result.is_valid);
 //! ```
 
-pub mod validators;
-pub mod speed_limits;
 pub mod decoherence;
 pub mod entanglement;
 pub mod physics_validation;
+pub mod speed_limits;
+pub mod validators;
 
 #[cfg(test)]
 pub mod tests;
 
-pub use validators::*;
-pub use speed_limits::*;
 pub use decoherence::*;
 pub use entanglement::*;
 pub use physics_validation::*;
+pub use speed_limits::*;
+pub use validators::*;
 
 /// Physical constants for quantum calculations
 pub mod constants {
@@ -100,10 +100,7 @@ pub enum QuantumError {
     },
 
     #[error("Energy-time uncertainty violated: ΔE·Δt = {product:.2e} < ℏ/2 = {hbar_half:.2e}")]
-    UncertaintyViolation {
-        product: f64,
-        hbar_half: f64,
-    },
+    UncertaintyViolation { product: f64, hbar_half: f64 },
 
     #[error("Decoherence time exceeded: {decoherence_time_s:.2e}s < operation time {operation_time_s:.2e}s")]
     DecoherenceExceeded {
@@ -111,23 +108,20 @@ pub enum QuantumError {
         operation_time_s: f64,
     },
 
-    #[error("Entanglement correlation lost: correlation = {correlation:.3} < threshold {threshold:.3}")]
-    EntanglementLost {
-        correlation: f64,
-        threshold: f64,
-    },
+    #[error(
+        "Entanglement correlation lost: correlation = {correlation:.3} < threshold {threshold:.3}"
+    )]
+    EntanglementLost { correlation: f64, threshold: f64 },
 
-    #[error("Hardware capability exceeded: required {required:.1} MHz > available {available:.1} MHz")]
-    HardwareExceeded {
-        required: f64,
-        available: f64,
-    },
+    #[error(
+        "Hardware capability exceeded: required {required:.1} MHz > available {available:.1} MHz"
+    )]
+    HardwareExceeded { required: f64, available: f64 },
 
-    #[error("Energy requirement infeasible: {required_ev:.1} eV > practical limit {limit_ev:.1} eV")]
-    EnergyInfeasible {
-        required_ev: f64,
-        limit_ev: f64,
-    },
+    #[error(
+        "Energy requirement infeasible: {required_ev:.1} eV > practical limit {limit_ev:.1} eV"
+    )]
+    EnergyInfeasible { required_ev: f64, limit_ev: f64 },
 }
 
 pub type QuantumResult<T> = Result<T, QuantumError>;
@@ -163,16 +157,22 @@ impl QuantumValidator {
         energy_j: f64,
     ) -> QuantumResult<ValidationResult> {
         // Check Margolus-Levitin speed limits
-        let speed_result = self.speed_limits.validate_computation_time(operation_time_s, energy_j)?;
+        let speed_result = self
+            .speed_limits
+            .validate_computation_time(operation_time_s, energy_j)?;
 
         // Check uncertainty principle
-        let uncertainty_result = self.uncertainty.validate_energy_time_product(energy_j, operation_time_s)?;
+        let uncertainty_result = self
+            .uncertainty
+            .validate_energy_time_product(energy_j, operation_time_s)?;
 
         // Check decoherence constraints
         let decoherence_result = self.decoherence.validate_operation_time(operation_time_s)?;
 
         // Check entanglement preservation
-        let entanglement_result = self.entanglement.validate_temporal_correlation(operation_time_s)?;
+        let entanglement_result = self
+            .entanglement
+            .validate_temporal_correlation(operation_time_s)?;
 
         Ok(ValidationResult {
             is_valid: speed_result.is_valid
@@ -209,7 +209,8 @@ impl QuantumValidator {
             // in the test suite match. (Was "Nanosecond scale ..." which
             // silently failed `report.recommended_scale_description
             // .contains("nanosecond")`.)
-            recommended_scale_description: "nanosecond scale for practical consciousness".to_string(),
+            recommended_scale_description: "nanosecond scale for practical consciousness"
+                .to_string(),
         }
     }
 }
@@ -252,7 +253,10 @@ mod quantum_integration_tests {
     #[test]
     fn test_quantum_validator_creation() {
         let validator = QuantumValidator::new();
-        assert_eq!(validator.speed_limits.get_planck_constant(), constants::PLANCK_H);
+        assert_eq!(
+            validator.speed_limits.get_planck_constant(),
+            constants::PLANCK_H
+        );
     }
 
     #[test]

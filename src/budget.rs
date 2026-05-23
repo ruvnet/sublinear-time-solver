@@ -129,9 +129,7 @@ pub enum BudgetExhausted {
     },
     /// The remaining op-count dropped to zero. `worst_seen` reports
     /// the highest class consumed before the budget ran out.
-    OpsExhausted {
-        worst_seen: Option<ComplexityClass>,
-    },
+    OpsExhausted { worst_seen: Option<ComplexityClass> },
 }
 
 impl fmt::Display for BudgetExhausted {
@@ -245,7 +243,10 @@ mod tests {
         let mut b = PlanBudget::new(ComplexityClass::Linear, 0);
         assert!(!b.has_capacity());
         let err = b.try_consume(ComplexityClass::Logarithmic).unwrap_err();
-        assert!(matches!(err, BudgetExhausted::OpsExhausted { worst_seen: None }));
+        assert!(matches!(
+            err,
+            BudgetExhausted::OpsExhausted { worst_seen: None }
+        ));
     }
 
     #[test]

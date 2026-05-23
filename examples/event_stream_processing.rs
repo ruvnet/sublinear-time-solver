@@ -61,22 +61,20 @@ fn main() {
         .filter(|x| *x > 0.0)
         .fold(f64::INFINITY, |a, b| if a < b { a } else { b });
 
-    println!(
-        "matrix=64x64 strong-DD ring | coherence={coh:.3}, min_diag={min_diag:.3}"
-    );
+    println!("matrix=64x64 strong-DD ring | coherence={coh:.3}, min_diag={min_diag:.3}");
 
     // ── Build an iterator of 10 events (mix of real + noise). ──
     let events: Vec<(SparseDelta, Vec<f64>)> = [
-        ( 7, 0.50),    // real
-        (13, 1e-12),   // noise → gate skips
-        (22, -0.75),   // real
-        (31, 1e-13),   // noise → gate skips
-        (40, 1.20),    // real
-        (51, -0.30),   // real
-        (58, 1e-14),   // noise → gate skips
-        ( 3, 0.65),    // real (budget limit hits here at max=4)
-        (19, -1.10),   // would be budget-refused
-        (44, 0.95),    // would be budget-refused
+        (7, 0.50),   // real
+        (13, 1e-12), // noise → gate skips
+        (22, -0.75), // real
+        (31, 1e-13), // noise → gate skips
+        (40, 1.20),  // real
+        (51, -0.30), // real
+        (58, 1e-14), // noise → gate skips
+        (3, 0.65),   // real (budget limit hits here at max=4)
+        (19, -1.10), // would be budget-refused
+        (44, 0.95),  // would be budget-refused
     ]
     .iter()
     .map(|(idx, dv)| {
@@ -98,9 +96,7 @@ fn main() {
     };
 
     // ── Iterator pipeline. ──
-    println!(
-        "\n  iterator chain: event_stream_iter().take_while(!budget_refused)\n"
-    );
+    println!("\n  iterator chain: event_stream_iter().take_while(!budget_refused)\n");
     println!(
         "{:<8} {:<10} {:>12} {:<15}",
         "event #", "status", "latency_us", "top-anomaly"

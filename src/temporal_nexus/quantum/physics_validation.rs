@@ -57,7 +57,8 @@ impl PhysicsValidator {
         if (constants::PLANCK_H - expected_h).abs() > 1e-42 {
             report.issues.push(format!(
                 "Planck constant deviation: expected {:.10e}, got {:.10e}",
-                expected_h, constants::PLANCK_H
+                expected_h,
+                constants::PLANCK_H
             ));
             report.constants_valid = false;
         }
@@ -66,7 +67,8 @@ impl PhysicsValidator {
         if (constants::PLANCK_HBAR - expected_hbar).abs() > 1e-42 {
             report.issues.push(format!(
                 "Reduced Planck constant deviation: expected {:.10e}, got {:.10e}",
-                expected_hbar, constants::PLANCK_HBAR
+                expected_hbar,
+                constants::PLANCK_HBAR
             ));
             report.constants_valid = false;
         }
@@ -89,7 +91,9 @@ impl PhysicsValidator {
 
         // Validate positivity
         if constants::PLANCK_H <= 0.0 || constants::PLANCK_HBAR <= 0.0 {
-            report.issues.push("Planck constants must be positive".to_string());
+            report
+                .issues
+                .push("Planck constants must be positive".to_string());
             report.constants_valid = false;
         }
     }
@@ -101,13 +105,16 @@ impl PhysicsValidator {
         if (constants::BOLTZMANN_K - expected_kb).abs() > 1e-31 {
             report.issues.push(format!(
                 "Boltzmann constant deviation: expected {:.10e}, got {:.10e}",
-                expected_kb, constants::BOLTZMANN_K
+                expected_kb,
+                constants::BOLTZMANN_K
             ));
             report.constants_valid = false;
         }
 
         if constants::BOLTZMANN_K <= 0.0 {
-            report.issues.push("Boltzmann constant must be positive".to_string());
+            report
+                .issues
+                .push("Boltzmann constant must be positive".to_string());
             report.constants_valid = false;
         }
     }
@@ -119,13 +126,16 @@ impl PhysicsValidator {
         if (constants::SPEED_OF_LIGHT - expected_c).abs() > 1e-6 {
             report.issues.push(format!(
                 "Speed of light deviation: expected {:.1}, got {:.1}",
-                expected_c, constants::SPEED_OF_LIGHT
+                expected_c,
+                constants::SPEED_OF_LIGHT
             ));
             report.constants_valid = false;
         }
 
         if constants::SPEED_OF_LIGHT <= 0.0 {
-            report.issues.push("Speed of light must be positive".to_string());
+            report
+                .issues
+                .push("Speed of light must be positive".to_string());
             report.constants_valid = false;
         }
     }
@@ -137,13 +147,16 @@ impl PhysicsValidator {
         if (constants::EV_TO_JOULES - expected_ev_to_j).abs() > 1e-27 {
             report.issues.push(format!(
                 "eV to Joules conversion deviation: expected {:.10e}, got {:.10e}",
-                expected_ev_to_j, constants::EV_TO_JOULES
+                expected_ev_to_j,
+                constants::EV_TO_JOULES
             ));
             report.constants_valid = false;
         }
 
         if constants::EV_TO_JOULES <= 0.0 {
-            report.issues.push("eV to Joules conversion must be positive".to_string());
+            report
+                .issues
+                .push("eV to Joules conversion must be positive".to_string());
             report.constants_valid = false;
         }
     }
@@ -172,7 +185,9 @@ impl PhysicsValidator {
         // Validate minimum uncertainty product
         let min_uncertainty = constants::PLANCK_HBAR / 2.0;
         if min_uncertainty <= 0.0 {
-            report.issues.push("Minimum uncertainty product must be positive".to_string());
+            report
+                .issues
+                .push("Minimum uncertainty product must be positive".to_string());
             report.constants_valid = false;
         }
     }
@@ -181,7 +196,9 @@ impl PhysicsValidator {
     fn validate_consciousness_constants(report: &mut PhysicsValidationReport) {
         // Validate attosecond energy requirement
         if constants::ATTOSECOND_ENERGY_KEV <= 0.0 {
-            report.issues.push("Attosecond energy requirement must be positive".to_string());
+            report
+                .issues
+                .push("Attosecond energy requirement must be positive".to_string());
             report.constants_valid = false;
         }
 
@@ -202,7 +219,8 @@ impl PhysicsValidator {
         }
 
         // Validate that attosecond operation requires substantial energy
-        let attosecond_energy_j = constants::ATTOSECOND_ENERGY_KEV * 1000.0 * constants::EV_TO_JOULES;
+        let attosecond_energy_j =
+            constants::ATTOSECOND_ENERGY_KEV * 1000.0 * constants::EV_TO_JOULES;
         let thermal_energy_j = constants::BOLTZMANN_K * constants::ROOM_TEMPERATURE_K;
         let energy_ratio = attosecond_energy_j / thermal_energy_j;
 
@@ -221,7 +239,9 @@ impl PhysicsValidator {
         let min_time = constants::PLANCK_H / (4.0 * test_energy);
 
         if min_time <= 0.0 || !min_time.is_finite() {
-            report.issues.push("Margolus-Levitin calculation produces invalid result".to_string());
+            report
+                .issues
+                .push("Margolus-Levitin calculation produces invalid result".to_string());
             report.computational_bounds_valid = false;
         }
 
@@ -249,11 +269,15 @@ impl PhysicsValidator {
         let min_reasonable_energy = 1e-21; // 1 zJ
 
         if constants::PLANCK_H / (4.0 * max_reasonable_energy) > 1e-18 {
-            report.warnings.push("Maximum energy bound may be too restrictive".to_string());
+            report
+                .warnings
+                .push("Maximum energy bound may be too restrictive".to_string());
         }
 
         if constants::PLANCK_H / (4.0 * min_reasonable_energy) < 1e-15 {
-            report.warnings.push("Minimum energy bound may be too permissive".to_string());
+            report
+                .warnings
+                .push("Minimum energy bound may be too permissive".to_string());
         }
     }
 
@@ -266,14 +290,18 @@ impl PhysicsValidator {
         // Test that calculations don't overflow/underflow
         let product: f64 = very_small * very_large;
         if !product.is_finite() || product == 0.0 {
-            report.issues.push("Numerical instability in extreme scale calculations".to_string());
+            report
+                .issues
+                .push("Numerical instability in extreme scale calculations".to_string());
             report.numerical_stability_valid = false;
         }
 
         // Test floating point precision near physical constants
         let h_plus_epsilon = constants::PLANCK_H + 1e-50;
         if h_plus_epsilon == constants::PLANCK_H {
-            report.warnings.push("Limited floating point precision near Planck constant".to_string());
+            report
+                .warnings
+                .push("Limited floating point precision near Planck constant".to_string());
         }
 
         // Test reciprocal calculations
@@ -291,7 +319,8 @@ impl PhysicsValidator {
 
         // Test trigonometric precision in hbar calculation
         let hbar_calculated = constants::PLANCK_H / (2.0 * PI);
-        let relative_error_hbar = (constants::PLANCK_HBAR - hbar_calculated).abs() / constants::PLANCK_HBAR;
+        let relative_error_hbar =
+            (constants::PLANCK_HBAR - hbar_calculated).abs() / constants::PLANCK_HBAR;
 
         if relative_error_hbar > 1e-15 {
             report.warnings.push(format!(
@@ -309,18 +338,35 @@ impl PhysicsValidator {
         summary.push_str("=====================================================\\n\\n");
 
         // Overall status
-        if report.constants_valid && report.computational_bounds_valid && report.numerical_stability_valid {
+        if report.constants_valid
+            && report.computational_bounds_valid
+            && report.numerical_stability_valid
+        {
             summary.push_str("✅ Overall Status: PASS\\n");
         } else {
             summary.push_str("❌ Overall Status: FAIL\\n");
         }
 
-        summary.push_str(&format!("   Constants Valid: {}\\n",
-                                 if report.constants_valid { "✅" } else { "❌" }));
-        summary.push_str(&format!("   Computational Bounds Valid: {}\\n",
-                                 if report.computational_bounds_valid { "✅" } else { "❌" }));
-        summary.push_str(&format!("   Numerical Stability Valid: {}\\n\\n",
-                                 if report.numerical_stability_valid { "✅" } else { "❌" }));
+        summary.push_str(&format!(
+            "   Constants Valid: {}\\n",
+            if report.constants_valid { "✅" } else { "❌" }
+        ));
+        summary.push_str(&format!(
+            "   Computational Bounds Valid: {}\\n",
+            if report.computational_bounds_valid {
+                "✅"
+            } else {
+                "❌"
+            }
+        ));
+        summary.push_str(&format!(
+            "   Numerical Stability Valid: {}\\n\\n",
+            if report.numerical_stability_valid {
+                "✅"
+            } else {
+                "❌"
+            }
+        ));
 
         // Issues
         if !report.issues.is_empty() {
@@ -351,14 +397,38 @@ impl PhysicsValidator {
 
         // Physical constant values
         summary.push_str("📏 Physical Constants:\\n");
-        summary.push_str(&format!("   Planck constant (h): {:.10e} J⋅s\\n", constants::PLANCK_H));
-        summary.push_str(&format!("   Reduced Planck (ℏ): {:.10e} J⋅s\\n", constants::PLANCK_HBAR));
-        summary.push_str(&format!("   Boltzmann (kB): {:.10e} J/K\\n", constants::BOLTZMANN_K));
-        summary.push_str(&format!("   Speed of light (c): {:.0} m/s\\n", constants::SPEED_OF_LIGHT));
-        summary.push_str(&format!("   eV to Joules: {:.10e}\\n", constants::EV_TO_JOULES));
-        summary.push_str(&format!("   Room temperature: {:.1} K\\n", constants::ROOM_TEMPERATURE_K));
-        summary.push_str(&format!("   Attosecond energy: {:.2} keV\\n", constants::ATTOSECOND_ENERGY_KEV));
-        summary.push_str(&format!("   Consciousness scale: {:.0e} s\\n", constants::CONSCIOUSNESS_SCALE_NS));
+        summary.push_str(&format!(
+            "   Planck constant (h): {:.10e} J⋅s\\n",
+            constants::PLANCK_H
+        ));
+        summary.push_str(&format!(
+            "   Reduced Planck (ℏ): {:.10e} J⋅s\\n",
+            constants::PLANCK_HBAR
+        ));
+        summary.push_str(&format!(
+            "   Boltzmann (kB): {:.10e} J/K\\n",
+            constants::BOLTZMANN_K
+        ));
+        summary.push_str(&format!(
+            "   Speed of light (c): {:.0} m/s\\n",
+            constants::SPEED_OF_LIGHT
+        ));
+        summary.push_str(&format!(
+            "   eV to Joules: {:.10e}\\n",
+            constants::EV_TO_JOULES
+        ));
+        summary.push_str(&format!(
+            "   Room temperature: {:.1} K\\n",
+            constants::ROOM_TEMPERATURE_K
+        ));
+        summary.push_str(&format!(
+            "   Attosecond energy: {:.2} keV\\n",
+            constants::ATTOSECOND_ENERGY_KEV
+        ));
+        summary.push_str(&format!(
+            "   Consciousness scale: {:.0e} s\\n",
+            constants::CONSCIOUSNESS_SCALE_NS
+        ));
 
         // Computational bounds
         summary.push_str("\\n🧮 Computational Bounds:\\n");
@@ -368,9 +438,15 @@ impl PhysicsValidator {
         let thermal_energy = constants::BOLTZMANN_K * constants::ROOM_TEMPERATURE_K;
 
         summary.push_str(&format!("   Min time (1 fJ): {:.2e} s\\n", min_time));
-        summary.push_str(&format!("   Min uncertainty: {:.2e} J⋅s\\n", min_uncertainty));
-        summary.push_str(&format!("   Thermal energy: {:.2e} J ({:.1} meV)\\n",
-                                 thermal_energy, thermal_energy / constants::EV_TO_JOULES * 1000.0));
+        summary.push_str(&format!(
+            "   Min uncertainty: {:.2e} J⋅s\\n",
+            min_uncertainty
+        ));
+        summary.push_str(&format!(
+            "   Thermal energy: {:.2e} J ({:.1} meV)\\n",
+            thermal_energy,
+            thermal_energy / constants::EV_TO_JOULES * 1000.0
+        ));
 
         summary
     }
@@ -378,13 +454,13 @@ impl PhysicsValidator {
     /// Quick validation check for runtime use
     pub fn quick_check() -> bool {
         // Essential checks that must pass
-        constants::PLANCK_H > 0.0 &&
-        constants::PLANCK_HBAR > 0.0 &&
-        constants::BOLTZMANN_K > 0.0 &&
-        constants::SPEED_OF_LIGHT > 0.0 &&
-        constants::EV_TO_JOULES > 0.0 &&
-        (constants::PLANCK_HBAR - constants::PLANCK_H / (2.0 * PI)).abs() < 1e-40 &&
-        constants::CONSCIOUSNESS_SCALE_NS == 1e-9
+        constants::PLANCK_H > 0.0
+            && constants::PLANCK_HBAR > 0.0
+            && constants::BOLTZMANN_K > 0.0
+            && constants::SPEED_OF_LIGHT > 0.0
+            && constants::EV_TO_JOULES > 0.0
+            && (constants::PLANCK_HBAR - constants::PLANCK_H / (2.0 * PI)).abs() < 1e-40
+            && constants::CONSCIOUSNESS_SCALE_NS == 1e-9
     }
 }
 
@@ -397,18 +473,30 @@ mod tests {
         let report = PhysicsValidator::validate_constants();
 
         // Print full report for debugging
-        if !report.constants_valid || !report.computational_bounds_valid || !report.numerical_stability_valid {
+        if !report.constants_valid
+            || !report.computational_bounds_valid
+            || !report.numerical_stability_valid
+        {
             println!("{}", PhysicsValidator::generate_summary(&report));
         }
 
         assert!(report.constants_valid, "Physics constants must be valid");
-        assert!(report.computational_bounds_valid, "Computational bounds must be valid");
-        assert!(report.numerical_stability_valid, "Numerical calculations must be stable");
+        assert!(
+            report.computational_bounds_valid,
+            "Computational bounds must be valid"
+        );
+        assert!(
+            report.numerical_stability_valid,
+            "Numerical calculations must be stable"
+        );
     }
 
     #[test]
     fn test_quick_check() {
-        assert!(PhysicsValidator::quick_check(), "Quick physics check must pass");
+        assert!(
+            PhysicsValidator::quick_check(),
+            "Quick physics check must pass"
+        );
     }
 
     #[test]
@@ -427,7 +515,8 @@ mod tests {
         assert!(thermal_ev > 0.02 && thermal_ev < 0.03); // ~25 meV
 
         // Test attosecond energy
-        let attosecond_energy_j = constants::ATTOSECOND_ENERGY_KEV * 1000.0 * constants::EV_TO_JOULES;
+        let attosecond_energy_j =
+            constants::ATTOSECOND_ENERGY_KEV * 1000.0 * constants::EV_TO_JOULES;
         assert!(attosecond_energy_j > thermal_energy * 1000.0);
     }
 

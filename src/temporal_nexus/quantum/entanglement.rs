@@ -19,7 +19,7 @@
 //! - **Negativity**: Positive partial transpose criterion
 //! - **Bell Inequality**: CHSH inequality violation
 
-use crate::temporal_nexus::quantum::{QuantumError, QuantumResult};
+use crate::temporal_nexus::quantum::QuantumResult;
 
 /// Entanglement validator for temporal consciousness correlations
 #[derive(Debug, Clone)]
@@ -41,10 +41,10 @@ impl EntanglementValidator {
     pub fn new() -> Self {
         Self {
             min_entanglement_threshold: 0.5, // 50% minimum entanglement
-            bell_threshold: 2.0, // CHSH bound violation
-            decay_rate: 1e6, // 1 MHz decay rate
-            qubit_count: 2, // Start with two-qubit model
-            decoherence_time_s: 1e-6, // 1 microsecond typical
+            bell_threshold: 2.0,             // CHSH bound violation
+            decay_rate: 1e6,                 // 1 MHz decay rate
+            qubit_count: 2,                  // Start with two-qubit model
+            decoherence_time_s: 1e-6,        // 1 microsecond typical
         }
     }
 
@@ -99,7 +99,10 @@ impl EntanglementValidator {
     }
 
     /// Validate temporal correlation preservation
-    pub fn validate_temporal_correlation(&self, operation_time_s: f64) -> QuantumResult<EntanglementResult> {
+    pub fn validate_temporal_correlation(
+        &self,
+        operation_time_s: f64,
+    ) -> QuantumResult<EntanglementResult> {
         let concurrence = self.calculate_concurrence(operation_time_s);
         let entropy = self.calculate_entanglement_entropy(operation_time_s);
         let bell_parameter = self.calculate_bell_parameter(operation_time_s);
@@ -162,12 +165,24 @@ impl EntanglementValidator {
         // well-studied "binding" hypothesis; the slower bands are correlates
         // rather than mechanisms.
         let scales: [(&str, f64, ConsciousnessRelevance); 6] = [
-            ("neural spike", 1.0e-3, ConsciousnessRelevance::DirectlyRelevant),
+            (
+                "neural spike",
+                1.0e-3,
+                ConsciousnessRelevance::DirectlyRelevant,
+            ),
             ("gamma wave", 2.5e-2, ConsciousnessRelevance::HighlyRelevant),
             ("beta wave", 5.0e-2, ConsciousnessRelevance::Relevant),
             ("alpha wave", 1.0e-1, ConsciousnessRelevance::Relevant),
-            ("theta wave", 1.25e-1, ConsciousnessRelevance::PotentiallyRelevant),
-            ("delta wave", 5.0e-1, ConsciousnessRelevance::PotentiallyRelevant),
+            (
+                "theta wave",
+                1.25e-1,
+                ConsciousnessRelevance::PotentiallyRelevant,
+            ),
+            (
+                "delta wave",
+                5.0e-1,
+                ConsciousnessRelevance::PotentiallyRelevant,
+            ),
         ];
 
         let mut assessments = Vec::with_capacity(scales.len());
@@ -224,7 +239,11 @@ impl EntanglementValidator {
         time_s: f64,
     ) -> ConsciousnessNetwork {
         let survival = self.entanglement_survival(time_s);
-        let pair_count = if network_size < 2 { 0 } else { network_size * (network_size - 1) / 2 };
+        let pair_count = if network_size < 2 {
+            0
+        } else {
+            network_size * (network_size - 1) / 2
+        };
         let mut node_entanglements = Vec::with_capacity(pair_count);
         for i in 0..network_size {
             for j in (i + 1)..network_size {
@@ -345,12 +364,12 @@ pub enum CorrelationType {
 /// Consciousness relevance of time scales
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConsciousnessRelevance {
-    DirectlyRelevant,     // Directly related to neural activity
-    HighlyRelevant,       // Strongly connected to consciousness
-    Relevant,             // Potentially important for consciousness
-    PotentiallyRelevant,  // Theoretically relevant
-    Theoretical,          // Pure theoretical interest
-    Unknown,              // Relevance unclear
+    DirectlyRelevant,    // Directly related to neural activity
+    HighlyRelevant,      // Strongly connected to consciousness
+    Relevant,            // Potentially important for consciousness
+    PotentiallyRelevant, // Theoretically relevant
+    Theoretical,         // Pure theoretical interest
+    Unknown,             // Relevance unclear
 }
 
 #[cfg(test)]

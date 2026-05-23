@@ -39,7 +39,6 @@ use crate::error::{Result, SolverError};
 use crate::matrix::Matrix;
 use crate::types::Precision;
 use alloc::collections::BTreeMap;
-use alloc::vec::Vec;
 
 /// Op marker for [`verify_sparse_solution`]. SubLinear in `n`.
 #[derive(Debug, Clone, Copy, Default)]
@@ -47,8 +46,7 @@ pub struct VerifySparseSolutionOp;
 
 impl Complexity for VerifySparseSolutionOp {
     const CLASS: ComplexityClass = ComplexityClass::SubLinear;
-    const DETAIL: &'static str =
-        "Residual audit restricted to caller-supplied closure entries. \
+    const DETAIL: &'static str = "Residual audit restricted to caller-supplied closure entries. \
          O(|entries| · avg_row_nnz) — same class as the SubLinear orchestrator \
          whose output it verifies. Independent of n for sparse DD matrices.";
 }
@@ -257,8 +255,7 @@ mod tests {
         // Audit tolerance 1e-3 (relative): the SubLinear orchestrator's
         // truncation error at depth=8 + max_terms=32 lands around
         // 1.3e-4 relative on this matrix, so 1e-3 is a generous gate.
-        let report =
-            verify_sparse_solution(&m, &prev_solution, &b_new, &entries, 1e-3).unwrap();
+        let report = verify_sparse_solution(&m, &prev_solution, &b_new, &entries, 1e-3).unwrap();
         assert!(
             report.ok,
             "witness should pass on a genuine SubLinear output; max_residual={}, threshold={}, worst_row={:?}",

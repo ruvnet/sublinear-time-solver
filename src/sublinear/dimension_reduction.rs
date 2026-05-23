@@ -1,9 +1,9 @@
 //! Dimension reduction techniques for sublinear algorithms
 
-use crate::types::Precision;
-use crate::error::{SolverError, Result};
+use crate::error::{Result, SolverError};
 use crate::sublinear::johnson_lindenstrauss::JLEmbedding;
-use alloc::{vec::Vec, string::String};
+use crate::types::Precision;
+use alloc::vec::Vec;
 
 /// Dimension reduction method
 #[derive(Debug, Clone, PartialEq)]
@@ -44,7 +44,11 @@ impl DimensionReducer {
         }
 
         let jl_embedding = if method == ReductionMethod::JohnsonLindenstrauss {
-            Some(JLEmbedding::new(original_dim, distortion.unwrap_or(0.1), seed)?)
+            Some(JLEmbedding::new(
+                original_dim,
+                distortion.unwrap_or(0.1),
+                seed,
+            )?)
         } else {
             None
         };

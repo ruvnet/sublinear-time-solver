@@ -3,12 +3,12 @@
 //! Implements spectral sparsification to reduce matrix density
 //! while preserving spectral properties for sublinear solving.
 
+use crate::error::{Result, SolverError};
 use crate::matrix::Matrix;
 use crate::types::Precision;
-use crate::error::{SolverError, Result};
-use alloc::{vec::Vec, string::String};
-use rand::{Rng, SeedableRng};
+use alloc::vec::Vec;
 use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 
 /// Spectral sparsification algorithm
 #[derive(Debug, Clone)]
@@ -202,11 +202,7 @@ pub struct AdvancedSparsifier {
 
 impl AdvancedSparsifier {
     /// Create advanced sparsifier with multiple techniques
-    pub fn new(
-        eps: Precision,
-        target_sparsity: Precision,
-        seed: Option<u64>,
-    ) -> Result<Self> {
+    pub fn new(eps: Precision, target_sparsity: Precision, seed: Option<u64>) -> Result<Self> {
         Ok(Self {
             spectral: SpectralSparsifier::new(eps, target_sparsity, seed)?,
             use_random_projection: true,
@@ -263,9 +259,15 @@ mod tests {
 
     fn create_test_matrix() -> SparseMatrix {
         let triplets = vec![
-            (0, 0, 4.0), (0, 1, 1.0), (0, 2, 1.0),
-            (1, 0, 1.0), (1, 1, 4.0), (1, 2, 1.0),
-            (2, 0, 1.0), (2, 1, 1.0), (2, 2, 4.0),
+            (0, 0, 4.0),
+            (0, 1, 1.0),
+            (0, 2, 1.0),
+            (1, 0, 1.0),
+            (1, 1, 4.0),
+            (1, 2, 1.0),
+            (2, 0, 1.0),
+            (2, 1, 1.0),
+            (2, 2, 4.0),
         ];
         SparseMatrix::from_triplets(triplets, 3, 3).unwrap()
     }

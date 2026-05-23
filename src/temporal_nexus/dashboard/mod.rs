@@ -4,38 +4,20 @@
 // emergence metrics with nanosecond temporal precision.
 
 pub mod dashboard;
+pub mod exporter;
 pub mod metrics_collector;
 pub mod visualizer;
-pub mod exporter;
 
 pub use dashboard::{
-    ConsciousnessMetricsDashboard,
-    DashboardConfig,
-    ConsciousnessMetrics,
+    AnomalyAlert, ConsciousnessMetrics, ConsciousnessMetricsDashboard, DashboardConfig,
     MetricThresholds,
-    AnomalyAlert,
 };
 
-pub use metrics_collector::{
-    MetricsCollector,
-    CollectorConfig,
-    MetricSource,
-    TemporalMetrics,
-};
+pub use metrics_collector::{CollectorConfig, MetricSource, MetricsCollector, TemporalMetrics};
 
-pub use visualizer::{
-    ConsciousnessVisualizer,
-    VisualizationMode,
-    TerminalRenderer,
-    MetricChart,
-};
+pub use visualizer::{ConsciousnessVisualizer, MetricChart, TerminalRenderer, VisualizationMode};
 
-pub use exporter::{
-    MetricsExporter,
-    ExportFormat,
-    ExportConfig,
-    MetricsSummary,
-};
+pub use exporter::{ExportConfig, ExportFormat, MetricsExporter, MetricsSummary};
 
 // Re-export common types for convenience
 pub type Timestamp = std::time::Instant;

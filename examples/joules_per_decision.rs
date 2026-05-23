@@ -106,7 +106,11 @@ impl PowerCounter for RaplCounter {
     }
     fn read_joules(&self) -> f64 {
         match fs::read_to_string(&self.path) {
-            Ok(s) => s.trim().parse::<u64>().map(|uj| uj as f64 / 1_000_000.0).unwrap_or(f64::NAN),
+            Ok(s) => s
+                .trim()
+                .parse::<u64>()
+                .map(|uj| uj as f64 / 1_000_000.0)
+                .unwrap_or(f64::NAN),
             Err(_) => f64::NAN,
         }
     }
@@ -120,7 +124,9 @@ struct TimeOnlyCounter {
 
 impl TimeOnlyCounter {
     fn new() -> Self {
-        Self { start: Instant::now() }
+        Self {
+            start: Instant::now(),
+        }
     }
 }
 

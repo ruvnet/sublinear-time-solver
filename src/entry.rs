@@ -266,8 +266,10 @@ mod tests {
         let full = full_solver.solve(&a, &b, &opts).unwrap();
 
         for target in 0..n {
-            let est = solve_single_entry_neumann(&a, &b, target, /*max_terms=*/ 32, /*tol=*/ 1e-10)
-                .unwrap();
+            let est = solve_single_entry_neumann(
+                &a, &b, target, /*max_terms=*/ 32, /*tol=*/ 1e-10,
+            )
+            .unwrap();
             let diff = (est - full.solution[target]).abs();
             assert!(
                 diff < 1e-6,

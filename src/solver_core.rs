@@ -313,9 +313,11 @@ mod tests {
         let b = Vector::from_slice(&[1.0, 2.0]);
 
         let mut callback_count = 0;
-        let _solution = solver.solve_with_callback(&a, &b, 1, |_step| {
-            callback_count += 1;
-        }).unwrap();
+        let _solution = solver
+            .solve_with_callback(&a, &b, 1, |_step| {
+                callback_count += 1;
+            })
+            .unwrap();
 
         assert!(callback_count > 0, "Callback should have been called");
     }

@@ -132,7 +132,9 @@ pub fn demonstrate_temporal_consciousness() -> TemporalResult<()> {
 
     // Schedule various consciousness tasks
     scheduler.schedule_task(
-        ConsciousnessTask::IdentityPreservation { continuity_check: true },
+        ConsciousnessTask::IdentityPreservation {
+            continuity_check: true,
+        },
         0,
         1_000_000,
     )?;
@@ -140,7 +142,7 @@ pub fn demonstrate_temporal_consciousness() -> TemporalResult<()> {
     scheduler.schedule_task(
         ConsciousnessTask::StrangeLoopProcessing {
             iteration: 0,
-            state: vec![0.5; 8]
+            state: vec![0.5; 8],
         },
         500,
         2_000_000,
@@ -149,7 +151,7 @@ pub fn demonstrate_temporal_consciousness() -> TemporalResult<()> {
     scheduler.schedule_task(
         ConsciousnessTask::WindowManagement {
             window_id: 1,
-            overlap_target: 80.0
+            overlap_target: 80.0,
         },
         1000,
         3_000_000,
@@ -162,8 +164,10 @@ pub fn demonstrate_temporal_consciousness() -> TemporalResult<()> {
 
         if tick % 100 == 0 {
             let metrics = scheduler.get_metrics();
-            println!("Tick {}: Temporal advantage = {}ns, Tasks completed = {}",
-                     tick, metrics.temporal_advantage_ns, metrics.tasks_completed);
+            println!(
+                "Tick {}: Temporal advantage = {}ns, Tasks completed = {}",
+                tick, metrics.temporal_advantage_ns, metrics.tasks_completed
+            );
         }
     }
 
@@ -176,21 +180,48 @@ pub fn demonstrate_temporal_consciousness() -> TemporalResult<()> {
     println!("Total ticks processed: {}", metrics.total_ticks);
     println!("Tasks scheduled: {}", metrics.tasks_scheduled);
     println!("Tasks completed: {}", metrics.tasks_completed);
-    println!("Average scheduling overhead: {:.2}ns", metrics.avg_scheduling_overhead_ns);
+    println!(
+        "Average scheduling overhead: {:.2}ns",
+        metrics.avg_scheduling_overhead_ns
+    );
     println!("Window overlap: {:.1}%", metrics.window_overlap_percentage);
-    println!("Contraction convergence rate: {:.3}", metrics.contraction_convergence_rate);
-    println!("Identity continuity score: {:.3}", continuity_metrics.continuity_score);
+    println!(
+        "Contraction convergence rate: {:.3}",
+        metrics.contraction_convergence_rate
+    );
+    println!(
+        "Identity continuity score: {:.3}",
+        continuity_metrics.continuity_score
+    );
     println!("Temporal advantage: {}ns", metrics.temporal_advantage_ns);
 
     // Check if we met performance targets
     println!("\n🎯 Performance Targets");
     println!("=====================");
-    println!("Scheduling overhead < 1μs: {}",
-             if metrics.avg_scheduling_overhead_ns < 1000.0 { "✅ PASS" } else { "❌ FAIL" });
-    println!("Window overlap > 50%: {}",
-             if metrics.window_overlap_percentage > 50.0 { "✅ PASS" } else { "❌ FAIL" });
-    println!("Identity continuity > 70%: {}",
-             if continuity_metrics.continuity_score > 0.7 { "✅ PASS" } else { "❌ FAIL" });
+    println!(
+        "Scheduling overhead < 1μs: {}",
+        if metrics.avg_scheduling_overhead_ns < 1000.0 {
+            "✅ PASS"
+        } else {
+            "❌ FAIL"
+        }
+    );
+    println!(
+        "Window overlap > 50%: {}",
+        if metrics.window_overlap_percentage > 50.0 {
+            "✅ PASS"
+        } else {
+            "❌ FAIL"
+        }
+    );
+    println!(
+        "Identity continuity > 70%: {}",
+        if continuity_metrics.continuity_score > 0.7 {
+            "✅ PASS"
+        } else {
+            "❌ FAIL"
+        }
+    );
 
     Ok(())
 }
@@ -208,7 +239,7 @@ pub fn benchmark_temporal_nexus() -> TemporalResult<()> {
         scheduler.schedule_task(
             ConsciousnessTask::Perception {
                 priority: (i % 256) as u8,
-                data: vec![i as u8; 64]
+                data: vec![i as u8; 64],
             },
             0,
             1_000_000,
@@ -225,9 +256,14 @@ pub fn benchmark_temporal_nexus() -> TemporalResult<()> {
 
     println!("Benchmark completed in: {:?}", elapsed);
     println!("Tasks processed: {}", metrics.tasks_completed);
-    println!("Average overhead: {:.2}ns", metrics.avg_scheduling_overhead_ns);
-    println!("Throughput: {:.0} tasks/sec",
-             metrics.tasks_completed as f64 / elapsed.as_secs_f64());
+    println!(
+        "Average overhead: {:.2}ns",
+        metrics.avg_scheduling_overhead_ns
+    );
+    println!(
+        "Throughput: {:.0} tasks/sec",
+        metrics.tasks_completed as f64 / elapsed.as_secs_f64()
+    );
 
     Ok(())
 }
@@ -292,11 +328,16 @@ mod integration_tests {
         // per-tick strange-loop matrix work + identity feature
         // extraction. Relax to 10 ms so the gate catches algorithmic
         // regressions (a 100×+ jump) without flapping on host variability.
-        assert!(metrics.avg_scheduling_overhead_ns < 10_000_000.0,
-                "Scheduling overhead too high: {}ns (10 ms cap)",
-                metrics.avg_scheduling_overhead_ns);
+        assert!(
+            metrics.avg_scheduling_overhead_ns < 10_000_000.0,
+            "Scheduling overhead too high: {}ns (10 ms cap)",
+            metrics.avg_scheduling_overhead_ns
+        );
 
-        assert!(metrics.window_overlap_percentage > 50.0,
-                "Window overlap too low: {}%", metrics.window_overlap_percentage);
+        assert!(
+            metrics.window_overlap_percentage > 50.0,
+            "Window overlap too low: {}%",
+            metrics.window_overlap_percentage
+        );
     }
 }

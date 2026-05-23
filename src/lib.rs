@@ -69,26 +69,21 @@ extern crate alloc;
 extern crate std;
 
 // Re-export commonly used types
-pub use error::{SolverError, Result};
-pub use matrix::{Matrix, SparseMatrix, SparseFormat};
+pub use error::{Result, SolverError};
+pub use matrix::{Matrix, SparseFormat, SparseMatrix};
 pub use solver::{
-    SolverAlgorithm, SolverOptions, SolverResult, PartialSolution,
-    NeumannSolver, ForwardPushSolver, BackwardPushSolver, HybridSolver
+    BackwardPushSolver, ForwardPushSolver, HybridSolver, NeumannSolver, PartialSolution,
+    SolverAlgorithm, SolverOptions, SolverResult,
 };
-pub use types::{
-    NodeId, EdgeId, Precision, ConvergenceMode, NormType,
-    ErrorBounds, SolverStats
-};
+pub use types::{ConvergenceMode, EdgeId, ErrorBounds, NodeId, NormType, Precision, SolverStats};
 
 // Sublinear algorithms with true O(log n) complexity
-pub use sublinear::{
-    SublinearConfig, SublinearSolver, ComplexityBound,
-};
-pub use sublinear::sublinear_neumann::{SublinearNeumannSolver, SublinearNeumannResult};
+pub use sublinear::sublinear_neumann::{SublinearNeumannResult, SublinearNeumannSolver};
+pub use sublinear::{ComplexityBound, SublinearConfig, SublinearSolver};
 
 // SIMD operations for high performance
 #[cfg(any(feature = "simd", feature = "std"))]
-pub use simd_ops::{matrix_vector_multiply_simd, dot_product_simd, axpy_simd};
+pub use simd_ops::{axpy_simd, dot_product_simd, matrix_vector_multiply_simd};
 
 #[cfg(feature = "std")]
 pub use simd_ops::parallel_matrix_vector_multiply;
@@ -101,7 +96,7 @@ pub use math_wasm::{Matrix as WasmMatrix, Vector as WasmVector};
 pub use solver_core::{ConjugateGradientSolver, SolverConfig as WasmSolverConfig};
 
 #[cfg(feature = "wasm")]
-pub use wasm_iface::{WasmSublinearSolver, MatrixView, SolutionStep};
+pub use wasm_iface::{MatrixView, SolutionStep, WasmSublinearSolver};
 
 // Core modules
 pub mod error;
@@ -120,21 +115,21 @@ pub use complexity::{Complexity, ComplexityClass, ComplexityIntrospect};
 // Coherence gate (ADR-001 roadmap item #3). Refuses polynomial-time solves
 // on near-singular systems. Opt-in via `SolverOptions::coherence_threshold`.
 pub mod coherence;
-pub use coherence::{coherence_score, check_coherence_or_reject};
+pub use coherence::{check_coherence_or_reject, coherence_score};
 
 // Event-gated incremental solve (ADR-001 roadmap item #2). Warm-starts
 // the underlying iterative solver from the previous solution when only a
 // sparse delta of the RHS changed — central to the ADR's "intelligence
 // is sparse, event-driven activation" thesis.
 pub mod incremental;
+pub use coherence::{
+    approximate_spectral_radius, delta_below_solve_threshold, delta_inf_bound,
+    optimal_neumann_terms, optimal_neumann_terms_with_rho, CoherenceCache,
+};
 pub use incremental::{
     solve_on_change_sublinear, solve_on_change_sublinear_auto,
     solve_on_change_sublinear_auto_with_rho, IncrementalConfig, IncrementalSolver,
     SolveOnChangeSublinearOp, SparseDelta,
-};
-pub use coherence::{
-    approximate_spectral_radius, delta_below_solve_threshold, delta_inf_bound,
-    optimal_neumann_terms, optimal_neumann_terms_with_rho, CoherenceCache,
 };
 
 // Bounding planning across chains of solves (ADR-001 #4 phase-3).
@@ -164,8 +159,9 @@ pub use stream::{
 pub mod contrastive;
 pub use contrastive::{
     contrastive_solve_on_change, contrastive_solve_on_change_sublinear,
-    contrastive_solve_on_change_sublinear_auto, contrastive_solve_on_change_sublinear_auto_with_rho,
-    find_anomalous_rows, find_anomalous_rows_in_subset, find_rows_above_threshold, AnomalyRow,
+    contrastive_solve_on_change_sublinear_auto,
+    contrastive_solve_on_change_sublinear_auto_with_rho, find_anomalous_rows,
+    find_anomalous_rows_in_subset, find_rows_above_threshold, AnomalyRow,
     ContrastiveSolveOnChangeOp, ContrastiveSolveOnChangeSublinearOp,
 };
 
@@ -298,19 +294,19 @@ pub struct BuildInfo {
 
 fn get_enabled_features() -> Vec<&'static str> {
     let mut features = Vec::new();
-    
+
     #[cfg(feature = "std")]
     features.push("std");
-    
+
     #[cfg(feature = "wasm")]
     features.push("wasm");
-    
+
     #[cfg(feature = "cli")]
     features.push("cli");
-    
+
     #[cfg(feature = "simd")]
     features.push("simd");
-    
+
     features
 }
 
@@ -351,49 +347,28 @@ pub mod consciousness_demo;
 // Re-export consciousness validation types
 #[cfg(feature = "consciousness")]
 pub use temporal_consciousness_goap::{
-    TemporalConsciousnessGOAP,
-    ConsciousnessGoal,
-    ProofAction,
-    ConsciousnessValidationResults,
+    ConsciousnessGoal, ConsciousnessValidationResults, ProofAction, TemporalConsciousnessGOAP,
 };
 
 #[cfg(feature = "consciousness")]
 pub use consciousness_experiments::{
-    ConsciousnessExperiments,
-    ComprehensiveValidationResult,
-    NanosecondExperimentResult,
-    IdentityComparisonResult,
-    TemporalAdvantageResult,
-    WaveCollapseResult,
+    ComprehensiveValidationResult, ConsciousnessExperiments, IdentityComparisonResult,
+    NanosecondExperimentResult, TemporalAdvantageResult, WaveCollapseResult,
 };
 
 #[cfg(feature = "consciousness")]
 pub use temporal_consciousness_validator::{
-    TemporalConsciousnessValidator,
-    FinalValidationReport,
-    ValidationPhase,
+    FinalValidationReport, TemporalConsciousnessValidator, ValidationPhase,
 };
 
 #[cfg(feature = "consciousness")]
-pub use mcp_consciousness_integration::{
-    MCPConsciousnessIntegration,
-    TemporalConsciousnessProof,
-};
+pub use mcp_consciousness_integration::{MCPConsciousnessIntegration, TemporalConsciousnessProof};
 
 // Re-export temporal nexus core types
 pub use temporal_nexus::core::{
-    NanosecondScheduler,
-    TemporalConfig,
-    ConsciousnessTask,
-    TemporalResult,
-    TemporalError,
-    TscTimestamp,
-    TemporalWindow,
-    WindowOverlapManager,
-    StrangeLoopOperator,
-    ContractionMetrics,
-    IdentityContinuityTracker,
-    ContinuityMetrics,
+    ConsciousnessTask, ContinuityMetrics, ContractionMetrics, IdentityContinuityTracker,
+    NanosecondScheduler, StrangeLoopOperator, TemporalConfig, TemporalError, TemporalResult,
+    TemporalWindow, TscTimestamp, WindowOverlapManager,
 };
 
 /// Quick validation function for temporal consciousness

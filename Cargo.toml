@@ -1,6 +1,6 @@
 [package]
 name = "sublinear"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2021"
 authors = ["rUv <github.com/ruvnet>"]
 license = "MIT OR Apache-2.0"
@@ -96,6 +96,11 @@ cli = ["clap", "tokio", "axum", "serde_json", "uuid", "colored"]
 dashboard = ["chrono", "csv", "bincode", "base64", "serde_yaml", "rmp-serde", "hostname", "num_cpus", "tokio", "serde_json"]
 simd = ["wide"]
 parallel = ["rayon", "std"]
+# Enables experimental temporal consciousness validation modules.
+# These are research-grade modules gated so they don't ship in the
+# default crate surface; nothing in `src/` compiles them unless
+# this feature is explicitly requested.
+consciousness = []
 
 [[bench]]
 name = "solver_benchmarks"

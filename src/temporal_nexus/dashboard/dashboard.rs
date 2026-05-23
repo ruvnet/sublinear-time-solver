@@ -1,14 +1,14 @@
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
-use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast;
 
-use crate::temporal_nexus::core::NanosecondScheduler;
 use super::{
-    MetricsCollector, ConsciousnessVisualizer, MetricsExporter,
-    ConsciousnessLevel, TemporalAdvantage, PrecisionNanos, Timestamp,
+    ConsciousnessLevel, ConsciousnessVisualizer, MetricsCollector, MetricsExporter, PrecisionNanos,
+    TemporalAdvantage, Timestamp,
 };
+use crate::temporal_nexus::core::NanosecondScheduler;
 
 /// Core consciousness metrics tracked by the dashboard
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -57,7 +57,7 @@ impl Default for ConsciousnessMetrics {
             coherence_preservation: 1.0,
             entanglement_strength: 0.0,
             decoherence_time_ns: 1_000_000.0, // 1 ms default
-            bell_parameter: 2.0, // Classical limit
+            bell_parameter: 2.0,              // Classical limit
         }
     }
 }
@@ -167,7 +167,9 @@ impl ConsciousnessMetricsDashboard {
             visualizer: ConsciousnessVisualizer::new(config.visualization_mode.clone()),
             exporter: MetricsExporter::new(),
             current_metrics: Arc::new(RwLock::new(ConsciousnessMetrics::default())),
-            metrics_history: Arc::new(Mutex::new(VecDeque::with_capacity(config.history_buffer_size))),
+            metrics_history: Arc::new(Mutex::new(VecDeque::with_capacity(
+                config.history_buffer_size,
+            ))),
             alert_history: Arc::new(Mutex::new(VecDeque::with_capacity(100))),
             alert_sender,
             alert_receiver,
@@ -179,11 +181,20 @@ impl ConsciousnessMetricsDashboard {
     }
 
     /// Initialize dashboard with scheduler reference
-    pub fn initialize(&mut self, scheduler: Arc<Mutex<NanosecondScheduler>>) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn initialize(
+        &mut self,
+        scheduler: Arc<Mutex<NanosecondScheduler>>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.scheduler_ref = Some(scheduler);
         println!("🧠 Consciousness Metrics Dashboard initialized");
-        println!("📊 Monitoring at {}ms intervals", self.config.update_interval_ms);
-        println!("🎯 Nanosecond precision monitoring: {}", self.config.precision_monitoring);
+        println!(
+            "📊 Monitoring at {}ms intervals",
+            self.config.update_interval_ms
+        );
+        println!(
+            "🎯 Nanosecond precision monitoring: {}",
+            self.config.precision_monitoring
+        );
         Ok(())
     }
 
@@ -214,12 +225,16 @@ impl ConsciousnessMetricsDashboard {
     }
 
     /// Collect metrics from the nanosecond scheduler and other sources
-    pub async fn collect_metrics(&self) -> Result<ConsciousnessMetrics, Box<dyn std::error::Error>> {
+    pub async fn collect_metrics(
+        &self,
+    ) -> Result<ConsciousnessMetrics, Box<dyn std::error::Error>> {
         let start_time = Instant::now();
 
         // Collect base metrics from scheduler if available
         let mut metrics = if let Some(scheduler_ref) = &self.scheduler_ref {
-            self.collector.collect_from_scheduler(scheduler_ref.clone()).await?
+            self.collector
+                .collect_from_scheduler(scheduler_ref.clone())
+                .await?
         } else {
             ConsciousnessMetrics::default()
         };
@@ -270,7 +285,9 @@ impl ConsciousnessMetricsDashboard {
         }
 
         // Update visualization
-        self.visualizer.render(&metrics, &self.get_recent_history(50)).await?;
+        self.visualizer
+            .render(&metrics, &self.get_recent_history(50))
+            .await?;
 
         // Update last update time
         {
@@ -282,15 +299,23 @@ impl ConsciousnessMetricsDashboard {
     }
 
     /// Export metrics to configured format
-    pub async fn export_metrics(&mut self, format: super::ExportFormat) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn export_metrics(
+        &mut self,
+        format: super::ExportFormat,
+    ) -> Result<String, Box<dyn std::error::Error>> {
         let history = self.get_full_history();
         let current = self.current_metrics.read().unwrap().clone();
 
-        self.exporter.export_metrics(&history, &current, format).await
+        self.exporter
+            .export_metrics(&history, &current, format)
+            .await
     }
 
     /// Check for consciousness anomalies and send alerts
-    pub async fn alert_on_anomaly(&self, metrics: &ConsciousnessMetrics) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn alert_on_anomaly(
+        &self,
+        metrics: &ConsciousnessMetrics,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let mut alerts = Vec::new();
 
         // Check emergence level
@@ -354,17 +379,17 @@ impl ConsciousnessMetricsDashboard {
     /// Get recent metrics history
     pub fn get_recent_history(&self, count: usize) -> Vec<ConsciousnessMetrics> {
         let history = self.metrics_history.lock().unwrap();
-        history.iter()
-            .rev()
-            .take(count)
-            .rev()
-            .cloned()
-            .collect()
+        history.iter().rev().take(count).rev().cloned().collect()
     }
 
     /// Get full metrics history
     pub fn get_full_history(&self) -> Vec<ConsciousnessMetrics> {
-        self.metrics_history.lock().unwrap().iter().cloned().collect()
+        self.metrics_history
+            .lock()
+            .unwrap()
+            .iter()
+            .cloned()
+            .collect()
     }
 
     // Private helper methods
@@ -374,7 +399,10 @@ impl ConsciousnessMetricsDashboard {
         self.update_display().await
     }
 
-    async fn check_anomalies(&self, metrics: &ConsciousnessMetrics) -> Result<(), Box<dyn std::error::Error>> {
+    async fn check_anomalies(
+        &self,
+        metrics: &ConsciousnessMetrics,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.alert_on_anomaly(metrics).await
     }
 
@@ -403,7 +431,8 @@ impl ConsciousnessMetricsDashboard {
             AlertSeverity::Emergency => "🆘",
         };
 
-        println!("{} {} [{}]: {} ({})",
+        println!(
+            "{} {} [{}]: {} ({})",
             severity_emoji,
             alert.metric_name,
             format!("{:?}", alert.severity).to_uppercase(),
@@ -416,9 +445,7 @@ impl ConsciousnessMetricsDashboard {
 
     async fn auto_export(&self) -> Result<(), Box<dyn std::error::Error>> {
         // For auto-export, we'll use a simpler approach that doesn't require mutable access
-        let timestamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)?
-            .as_secs();
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
 
         let filename = format!("consciousness_metrics_{}.json", timestamp);
 

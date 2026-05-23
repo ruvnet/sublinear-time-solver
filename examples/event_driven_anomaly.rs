@@ -41,12 +41,12 @@
 //! the *information content of the event*, not the size of the world.
 
 use std::time::Instant;
+use sublinear_solver::coherence::coherence_score;
 use sublinear_solver::{
     contrastive_solve_on_change_sublinear_auto, delta_below_solve_threshold,
     solve_on_change_sublinear_auto, AnomalyRow, Matrix, NeumannSolver, SolverAlgorithm,
     SolverOptions, SparseDelta, SparseMatrix,
 };
-use sublinear_solver::coherence::coherence_score;
 
 /// Build a strictly diagonally-dominant `n × n` "ring-stencil" matrix:
 /// `a[i,i] = 5`, plus ±1 at four nearest neighbours with wrap. Models a
@@ -113,7 +113,7 @@ fn main() {
     let events: &[(&str, usize, f64)] = &[
         ("sensor #42 spike   ", 42, 1.50),
         ("sensor #117 drift  ", 117, -0.40),
-        ("sensor #88  noise  ", 88, 1.0e-12),  // ← gated-out
+        ("sensor #88  noise  ", 88, 1.0e-12), // ← gated-out
         ("sensor #200 spike  ", 200, 2.10),
         ("sensor #7 dropout  ", 7, -1.80),
         ("sensor #155 outlier", 155, 3.25),
@@ -183,9 +183,7 @@ fn main() {
         "  baseline       Linear      {:>5} µs    full n-vector solve, one-shot",
         baseline_us
     );
-    println!(
-        "  coherence gate O(|δ|)        ~0 µs    skip tiny deltas before any solve"
-    );
+    println!("  coherence gate O(|δ|)        ~0 µs    skip tiny deltas before any solve");
     println!(
         "  per-event      SubLinear   auto-tuned closure_depth+max_terms from coherence={coherence:.3}"
     );

@@ -10,17 +10,15 @@
 //! Quick mode (single sample, useful in CI):
 //!   `cargo bench --bench solver_benchmarks -- --quick`
 
-use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use std::hint::black_box;
 
-use sublinear_solver::{
-    closure_indices,
-    Matrix, SparseMatrix, NeumannSolver, SolverAlgorithm, SolverOptions,
-    OptimizedConjugateGradientSolver, OptimizedSparseMatrix,
-    IncrementalSolver, SparseDelta, solve_on_change_sublinear,
-    verify_sparse_solution,
-};
 use sublinear_solver::optimized_solver::OptimizedSolverConfig;
+use sublinear_solver::{
+    closure_indices, solve_on_change_sublinear, verify_sparse_solution, IncrementalSolver, Matrix,
+    NeumannSolver, OptimizedConjugateGradientSolver, OptimizedSparseMatrix, SolverAlgorithm,
+    SolverOptions, SparseDelta, SparseMatrix,
+};
 
 /// Build a deterministic diagonally-dominant N×N test matrix
 /// (5 on the diagonal, +1 / +1 / -1 / -1 on the four nearest off-diagonals
@@ -61,8 +59,7 @@ fn bench_neumann_series(c: &mut Criterion) {
                 // Tolerate non-convergence at the bench's `tolerance =
                 // 1e-4`; we're measuring iteration throughput, not
                 // strict convergence (correctness covered by tests).
-                let r = solver
-                    .solve(black_box(&matrix), black_box(&b), black_box(&opts));
+                let r = solver.solve(black_box(&matrix), black_box(&b), black_box(&opts));
                 black_box(r.is_ok());
             });
         });

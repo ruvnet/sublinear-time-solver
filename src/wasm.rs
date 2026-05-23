@@ -2,10 +2,10 @@
 //!
 //! This module provides high-performance WASM exports for browser and Node.js environments.
 
-use wasm_bindgen::prelude::*;
-use serde::{Deserialize, Serialize};
-use crate::sublinear::{SublinearNeumannSolver, SublinearConfig, SublinearSolver};
 use crate::matrix::SparseMatrix;
+use crate::sublinear::{SublinearConfig, SublinearNeumannSolver, SublinearSolver};
+use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
@@ -31,7 +31,13 @@ impl WasmSolver {
 
     /// Solve a linear system Ax = b using the Jacobi method.
     #[wasm_bindgen(js_name = solveJacobi)]
-    pub fn solve_jacobi(&self, matrix_data: Vec<f64>, rows: usize, cols: usize, b: Vec<f64>) -> Result<Vec<f64>, JsValue> {
+    pub fn solve_jacobi(
+        &self,
+        matrix_data: Vec<f64>,
+        rows: usize,
+        cols: usize,
+        b: Vec<f64>,
+    ) -> Result<Vec<f64>, JsValue> {
         if rows != cols || rows != b.len() {
             return Err(JsValue::from_str("Invalid dimensions"));
         }
@@ -71,7 +77,13 @@ impl WasmSolver {
 
     /// Solve using conjugate gradient method (for symmetric positive definite matrices).
     #[wasm_bindgen(js_name = solveConjugateGradient)]
-    pub fn solve_conjugate_gradient(&self, matrix_data: Vec<f64>, rows: usize, cols: usize, b: Vec<f64>) -> Result<Vec<f64>, JsValue> {
+    pub fn solve_conjugate_gradient(
+        &self,
+        matrix_data: Vec<f64>,
+        rows: usize,
+        cols: usize,
+        b: Vec<f64>,
+    ) -> Result<Vec<f64>, JsValue> {
         if rows != cols || rows != b.len() {
             return Err(JsValue::from_str("Invalid dimensions"));
         }
@@ -156,11 +168,7 @@ impl WasmSolver {
     /// Benchmark the solver performance.
     #[wasm_bindgen(js_name = benchmark)]
     pub fn benchmark(&self, size: usize) -> String {
-        let start = web_sys::window()
-            .unwrap()
-            .performance()
-            .unwrap()
-            .now();
+        let start = web_sys::window().unwrap().performance().unwrap().now();
 
         // Generate test matrix (diagonally dominant)
         let mut matrix = vec![0.0; size * size];
@@ -178,11 +186,7 @@ impl WasmSolver {
 
         let _ = self.solve_jacobi(matrix, size, size, b);
 
-        let elapsed = web_sys::window()
-            .unwrap()
-            .performance()
-            .unwrap()
-            .now() - start;
+        let elapsed = web_sys::window().unwrap().performance().unwrap().now() - start;
 
         format!("Size: {}, Time: {:.2}ms", size, elapsed)
     }
@@ -233,20 +237,13 @@ impl PerformanceMetrics {
             }
         }
 
-        let start = web_sys::window()
-            .unwrap()
-            .performance()
-            .unwrap()
-            .now();
+        let start = web_sys::window().unwrap().performance().unwrap().now();
 
-        let solution = solver.solve_conjugate_gradient(matrix.clone(), size, size, b.clone())
+        let solution = solver
+            .solve_conjugate_gradient(matrix.clone(), size, size, b.clone())
             .unwrap_or_else(|_| vec![0.0; size]);
 
-        let wasm_time = web_sys::window()
-            .unwrap()
-            .performance()
-            .unwrap()
-            .now() - start;
+        let wasm_time = web_sys::window().unwrap().performance().unwrap().now() - start;
 
         // Estimate JavaScript baseline (typically 5-10x slower)
         let js_baseline_estimate = wasm_time * 7.5;
@@ -313,7 +310,9 @@ impl WasmSublinearSolver {
         let n = (max_row + 1).max(max_col + 1);
 
         if b.len() != n {
-            return Err(JsValue::from_str("Vector b size must match matrix dimension"));
+            return Err(JsValue::from_str(
+                "Vector b size must match matrix dimension",
+            ));
         }
 
         // Create sparse matrix
@@ -324,7 +323,8 @@ impl WasmSublinearSolver {
         let solver = SublinearNeumannSolver::new(self.config.clone());
 
         // Solve with sublinear complexity
-        let result = solver.solve_sublinear_guaranteed(&matrix, &b)
+        let result = solver
+            .solve_sublinear_guaranteed(&matrix, &b)
             .map_err(|e| JsValue::from_str(&format!("Solve failed: {:?}", e)))?;
 
         // Serialize result
@@ -366,7 +366,7 @@ impl WasmSublinearSolver {
                 });
                 serde_json::to_string(&result)
                     .map_err(|e| JsValue::from_str(&format!("Serialization failed: {}", e)))
-            },
+            }
             Err(e) => {
                 let result = serde_json::json!({
                     "conditions_satisfied": false,

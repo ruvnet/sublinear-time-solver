@@ -382,14 +382,8 @@ mod tests {
             build_event(n, 11, 1.0),
         ];
         let mut budget = PlanBudget::new(ComplexityClass::SubLinear, 2);
-        let out: Vec<_> = event_stream_iter(
-            &m,
-            &prev,
-            events.into_iter(),
-            &cfg,
-            Some(&mut budget),
-        )
-        .collect();
+        let out: Vec<_> =
+            event_stream_iter(&m, &prev, events.into_iter(), &cfg, Some(&mut budget)).collect();
         // Two Solved + one BudgetRefused, then iterator ends (3 total).
         assert_eq!(out.len(), 3);
         assert_eq!(out[0].status, EventStatus::Solved);
