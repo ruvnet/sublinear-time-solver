@@ -204,7 +204,7 @@ impl RustTemporalSolver {
             });
         }
 
-        latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        latencies.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let mean_latency = latencies.iter().sum::<f64>() / latencies.len() as f64;
         let variance = latencies.iter()

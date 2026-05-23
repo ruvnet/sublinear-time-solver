@@ -243,7 +243,7 @@ impl AdaptiveSampler {
         }
 
         // Sort and create quantile-based boundaries
-        function_samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        function_samples.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         self.strata_boundaries.clear();
 
         for i in 0..=num_strata {

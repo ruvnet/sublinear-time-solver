@@ -644,7 +644,7 @@ impl MetricsExporter {
         }
 
         let mut sorted_values = values.to_vec();
-        sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let min = sorted_values[0];
         let max = sorted_values[sorted_values.len() - 1];
@@ -732,7 +732,11 @@ impl MetricsExporter {
 
         let peak_metric = history
             .iter()
-            .max_by(|a, b| a.emergence_level.partial_cmp(&b.emergence_level).unwrap())
+            .max_by(|a, b| {
+                a.emergence_level
+                    .partial_cmp(&b.emergence_level)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            })
             .unwrap();
 
         let stability_score = self.calculate_stability_score(history);

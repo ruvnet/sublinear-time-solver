@@ -524,7 +524,7 @@ impl RealWorldValidator {
         }
 
         let mut sorted = latencies.to_vec();
-        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let mean = latencies.iter().sum::<f64>() / latencies.len() as f64;
         let variance = latencies.iter()

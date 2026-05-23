@@ -158,7 +158,7 @@ impl EnsembleModel {
             // Return class with highest weighted votes
             votes.iter()
                 .enumerate()
-                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
                 .map(|(idx, _)| idx)
                 .unwrap_or(1) // Default to middle class
         }).collect()
@@ -292,7 +292,7 @@ impl BoostedEnsemble {
 
             class_scores.iter()
                 .enumerate()
-                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
                 .map(|(idx, _)| idx)
                 .unwrap_or(1)
         }).collect()

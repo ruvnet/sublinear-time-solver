@@ -354,7 +354,7 @@ impl PageRankSelector {
         // Select top k indices
         let mut indexed_scores: Vec<(usize, f32)> =
             scores.iter().enumerate().map(|(i, &s)| (i, s)).collect();
-        indexed_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        indexed_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         indexed_scores.into_iter().take(k).map(|(i, _)| i).collect()
     }

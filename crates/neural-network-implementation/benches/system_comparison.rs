@@ -184,8 +184,8 @@ impl SystemComparisonContext {
 
         // Calculate statistics
         latencies.sort_unstable();
-        errors.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        absolute_errors.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        errors.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        absolute_errors.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let sample_count = latencies.len();
         let success_rate = (sample_count - prediction_errors) as f64 / sample_count as f64;
@@ -277,9 +277,9 @@ impl SystemComparisonContext {
 
         // Calculate statistics
         latencies.sort_unstable();
-        errors.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        absolute_errors.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        certificate_errors.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        errors.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        absolute_errors.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        certificate_errors.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let sample_count = latencies.len();
         let success_rate = (sample_count - prediction_errors) as f64 / sample_count as f64;

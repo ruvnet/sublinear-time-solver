@@ -174,7 +174,7 @@ impl StatisticalAnalysisContext {
         }
 
         // Sort by value
-        combined.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        combined.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
 
         // Assign ranks (handling ties with average ranks)
         let mut ranks = vec![0.0; combined.len()];
@@ -258,7 +258,7 @@ impl StatisticalAnalysisContext {
             bootstrap_diffs.push(mean_a - mean_b);
         }
 
-        bootstrap_diffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        bootstrap_diffs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         // 95% confidence interval
         let lower_idx = ((n_bootstrap as f64) * 0.025) as usize;

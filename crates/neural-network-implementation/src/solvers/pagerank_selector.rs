@@ -136,7 +136,7 @@ impl PageRankSelector {
                 .collect();
 
             // Sort by distance and take k nearest neighbors
-            distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+            distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
             let neighbors: Vec<usize> = distances
                 .into_iter()
                 .take(k)
@@ -227,7 +227,7 @@ impl PageRankSelector {
         }
 
         // Sort by combined score (descending)
-        combined_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        combined_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Select top samples with diversity constraints
         let selected = self.select_with_diversity_constraint(&combined_scores, n_samples)?;

@@ -352,7 +352,7 @@ impl SolverGate {
         // Compute P99.9
         if self.recent_times.len() > 10 {
             let mut sorted_times = self.recent_times.clone();
-            sorted_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted_times.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
             let p99_9_index = ((sorted_times.len() as f64) * 0.999) as usize;
             self.stats.p99_9_verification_time_us = sorted_times.get(p99_9_index)
                 .copied()
