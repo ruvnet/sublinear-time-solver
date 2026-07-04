@@ -41,6 +41,13 @@ impl WasmSolver {
         if rows != cols || rows != b.len() {
             return Err(JsValue::from_str("Invalid dimensions"));
         }
+        // Guard the flat-buffer indexing `matrix_data[i * cols + j]` below:
+        // reject any buffer that does not hold exactly rows*cols elements.
+        // `checked_mul` also rejects a rows*cols overflow on wasm32.
+        match rows.checked_mul(cols) {
+            Some(expected) if expected == matrix_data.len() => {}
+            _ => return Err(JsValue::from_str("matrix_data length must equal rows * cols")),
+        }
 
         // Simple Jacobi iteration for demonstration
         let mut x = vec![0.0; rows];
@@ -87,6 +94,12 @@ impl WasmSolver {
         if rows != cols || rows != b.len() {
             return Err(JsValue::from_str("Invalid dimensions"));
         }
+        // Guard flat-buffer indexing in matrix_vector_multiply against a short
+        // buffer or a rows*cols overflow (wasm32).
+        match rows.checked_mul(cols) {
+            Some(expected) if expected == matrix_data.len() => {}
+            _ => return Err(JsValue::from_str("matrix_data length must equal rows * cols")),
+        }
 
         let n = rows;
         let mut x = vec![0.0; n];
@@ -129,7 +142,22 @@ impl WasmSolver {
 
     /// Compute PageRank for a graph.
     #[wasm_bindgen(js_name = computePageRank)]
-    pub fn compute_pagerank(&self, adjacency: Vec<f64>, n: usize, damping: f64) -> Vec<f64> {
+    pub fn compute_pagerank(
+        &self,
+        adjacency: Vec<f64>,
+        n: usize,
+        damping: f64,
+    ) -> Result<Vec<f64>, JsValue> {
+        if n == 0 {
+            return Err(JsValue::from_str("n must be greater than zero"));
+        }
+        // `adjacency` is indexed as an n*n dense matrix; require exactly that
+        // many elements and reject an n*n overflow before allocating.
+        match n.checked_mul(n) {
+            Some(expected) if expected == adjacency.len() => {}
+            _ => return Err(JsValue::from_str("adjacency length must equal n * n")),
+        }
+
         let mut rank = vec![1.0 / n as f64; n];
         let mut new_rank = vec![0.0; n];
 
@@ -162,7 +190,7 @@ impl WasmSolver {
             }
         }
 
-        rank
+        Ok(rank)
     }
 
     /// Benchmark the solver performance.

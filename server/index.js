@@ -17,8 +17,14 @@ class SolverServer extends EventEmitter {
     this.config = {
       port: options.port || 3000,
       cors: options.cors || false,
+      // Explicit origin allowlist for credentialed CORS. When empty, we never
+      // reflect an arbitrary Origin together with credentials (see setupMiddleware).
+      corsOrigins: options.corsOrigins || null,
       workers: options.workers || 1,
       maxSessions: options.maxSessions || 100,
+      // Hard upper bound on any matrix/vector dimension accepted from a request.
+      // Prevents attacker-declared dimensions from driving unbounded allocations.
+      maxDimension: options.maxDimension || 1000000,
       authToken: options.authToken,
       flowNexusEnabled: options.flowNexusEnabled || false,
       ...options
@@ -46,9 +52,15 @@ class SolverServer extends EventEmitter {
 
     // CORS
     if (this.config.cors) {
+      const allowlist = Array.isArray(this.config.corsOrigins)
+        ? this.config.corsOrigins
+        : (this.config.corsOrigins ? [this.config.corsOrigins] : null);
+      // Only pair credentials with an explicit origin allowlist. Reflecting an
+      // arbitrary Origin (`origin: true`) while allowing credentials lets any
+      // website make credentialed cross-origin reads once auth is added.
       this.app.use(cors({
-        origin: true,
-        credentials: true,
+        origin: allowlist || false,
+        credentials: allowlist !== null,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'X-Session-ID']
       }));
@@ -79,8 +91,10 @@ class SolverServer extends EventEmitter {
       next();
     });
 
-    // Authentication middleware
-    this.app.use('/api/protected', this.authenticateToken.bind(this));
+    // Authentication middleware. Mounted on the real API prefix (`/api/v1`),
+    // not an unused `/api/protected` path — otherwise `--auth-token` never
+    // actually gated any endpoint. No-op when authToken is unset.
+    this.app.use('/api/v1', this.authenticateToken.bind(this));
   }
 
   setupRoutes() {
@@ -135,6 +149,11 @@ class SolverServer extends EventEmitter {
             error: 'Matrix and vector are required',
             code: 'MISSING_INPUT'
           });
+        }
+
+        const sizeError = this.validateProblemSize(matrix, vector);
+        if (sizeError) {
+          return res.status(400).json({ error: sizeError, code: 'INVALID_DIMENSIONS' });
         }
 
         const sessionId = uuidv4();
@@ -194,6 +213,11 @@ class SolverServer extends EventEmitter {
           return res.status(400).json({
             error: 'Matrix and vector are required'
           });
+        }
+
+        const sizeError = this.validateProblemSize(matrix, vector);
+        if (sizeError) {
+          return res.status(400).json({ error: sizeError, code: 'INVALID_DIMENSIONS' });
         }
 
         const jobId = await this.sessions.submitJob({
@@ -450,6 +474,46 @@ class SolverServer extends EventEmitter {
     // WebSocket setup will be done when server starts
   }
 
+  /**
+   * Validate that a matrix/vector payload declares sane, bounded dimensions
+   * before any session/job is created. Returns an error string, or null if ok.
+   * Guards against tiny sparse bodies that declare enormous dimensions
+   * (e.g. rows: 2e9) which would drive unbounded allocations downstream.
+   */
+  validateProblemSize(matrix, vector) {
+    const max = this.config.maxDimension;
+
+    const isPositiveInt = (v) => Number.isInteger(v) && v > 0;
+    let rows;
+    let cols;
+
+    if (Array.isArray(matrix)) {
+      // Dense: array of rows.
+      rows = matrix.length;
+      cols = Array.isArray(matrix[0]) ? matrix[0].length : rows;
+    } else if (matrix && typeof matrix === 'object') {
+      // Sparse (COO/CSR) or {data, rows, cols} shape.
+      rows = matrix.rows ?? matrix.size ?? matrix.dimension;
+      cols = matrix.cols ?? matrix.size ?? matrix.dimension ?? rows;
+    } else {
+      return 'Matrix must be an array or object';
+    }
+
+    if (!isPositiveInt(rows) || !isPositiveInt(cols)) {
+      return 'Matrix dimensions must be positive integers';
+    }
+    if (rows > max || cols > max) {
+      return `Matrix dimension exceeds limit of ${max}`;
+    }
+    if (!Array.isArray(vector) && !ArrayBuffer.isView(vector)) {
+      return 'Vector must be an array';
+    }
+    if (vector.length !== rows) {
+      return `Vector length (${vector.length}) must match matrix rows (${rows})`;
+    }
+    return null;
+  }
+
   authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -494,8 +558,34 @@ class SolverServer extends EventEmitter {
     });
   }
 
+  /**
+   * Extract a bearer token from a WebSocket upgrade request, accepting either
+   * an Authorization header or a `?token=` query parameter (browsers cannot set
+   * headers on the WS handshake).
+   */
+  extractWsToken(req) {
+    const authHeader = req.headers['authorization'];
+    if (authHeader) return authHeader.split(' ')[1];
+    try {
+      const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+      return url.searchParams.get('token');
+    } catch {
+      return undefined;
+    }
+  }
+
   setupWebSocketHandlers() {
     this.wss.on('connection', (ws, req) => {
+      // Enforce the same auth token as the HTTP API. No-op when unset.
+      if (this.config.authToken) {
+        const token = this.extractWsToken(req);
+        if (token !== this.config.authToken) {
+          ws.send(JSON.stringify({ type: 'error', error: 'Authentication failed', code: 'AUTH_INVALID' }));
+          ws.close(1008, 'Authentication failed');
+          return;
+        }
+      }
+
       console.log('WebSocket connection established');
 
       ws.on('message', async (data) => {
@@ -582,6 +672,13 @@ class SolverServer extends EventEmitter {
   }
 
   async startWebSocketSolve(ws, message) {
+    if (!message.matrix || !message.vector) {
+      throw new Error('Matrix and vector are required');
+    }
+    const sizeError = this.validateProblemSize(message.matrix, message.vector);
+    if (sizeError) {
+      throw new Error(sizeError);
+    }
     const sessionId = uuidv4();
     const session = await this.sessions.createSession(sessionId, {
       matrix: message.matrix,
