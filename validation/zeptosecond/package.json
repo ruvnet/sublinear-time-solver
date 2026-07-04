@@ -1,0 +1,14 @@
+{
+  "name": "zeptosecond-validation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Test, optimize and prove the 247-zeptosecond photon transit measurement (Grundmann et al., Science 2020) with exact zeptosecond arithmetic, Monte Carlo simulation, and ruvector integration",
+  "type": "module",
+  "scripts": {
+    "test": "node --test .",
+    "bench": "node benchmark.mjs"
+  },
+  "dependencies": {
+    "ruvector": "^0.2.33"
+  }
+}
