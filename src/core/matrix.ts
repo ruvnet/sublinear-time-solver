@@ -239,6 +239,48 @@ export class MatrixOperations {
   }
 
   /**
+   * Compute, in a single pass, the diagonal and off-diagonal absolute row/col
+   * sums used for diagonal-dominance. O(nnz) for COO (vs O(rows*nnz) when each
+   * row/col sum re-scanned all entries). Semantics match getDiagonal (first
+   * stored value at (i,i)) and getRowSum/getColumnSum (sum of |value| over all
+   * stored off-diagonal entries, duplicates included).
+   */
+  private static computeDominanceComponents(matrix: Matrix): { diag: Float64Array; rowOff: Float64Array; colOff: Float64Array } {
+    const n = matrix.rows;
+    const diag = new Float64Array(n);
+    const rowOff = new Float64Array(n);
+    const colOff = new Float64Array(n);
+
+    if (matrix.format === 'dense') {
+      const dense = matrix as DenseMatrix;
+      for (let i = 0; i < n; i++) {
+        const rowData = dense.data[i];
+        for (let j = 0; j < matrix.cols; j++) {
+          const v = rowData[j];
+          if (i === j) diag[i] = v;
+          else { rowOff[i] += Math.abs(v); colOff[j] += Math.abs(v); }
+        }
+      }
+    } else {
+      const sparse = matrix as SparseMatrix;
+      const diagSet = new Uint8Array(n);
+      for (let k = 0; k < sparse.values.length; k++) {
+        const i = sparse.rowIndices[k];
+        const j = sparse.colIndices[k];
+        const v = sparse.values[k];
+        if (i === j) {
+          if (!diagSet[i]) { diag[i] = v; diagSet[i] = 1; } // first-match wins
+        } else {
+          rowOff[i] += Math.abs(v);
+          colOff[j] += Math.abs(v);
+        }
+      }
+    }
+
+    return { diag, rowOff, colOff };
+  }
+
+  /**
    * Check if matrix is diagonally dominant
    */
   static checkDiagonalDominance(matrix: Matrix): { isRowDD: boolean; isColDD: boolean; strength: number } {
@@ -248,15 +290,17 @@ export class MatrixOperations {
       return { isRowDD: false, isColDD: false, strength: 0 };
     }
 
+    const { diag, rowOff, colOff } = this.computeDominanceComponents(matrix);
+
     let isRowDD = true;
     let isColDD = true;
     let minRowStrength = Infinity;
     let minColStrength = Infinity;
 
     for (let i = 0; i < matrix.rows; i++) {
-      const diagonal = Math.abs(this.getDiagonal(matrix, i));
-      const rowOffDiagonalSum = this.getRowSum(matrix, i, true);
-      const colOffDiagonalSum = this.getColumnSum(matrix, i, true);
+      const diagonal = Math.abs(diag[i]);
+      const rowOffDiagonalSum = rowOff[i];
+      const colOffDiagonalSum = colOff[i];
 
       if (diagonal === 0) {
         isRowDD = false;
@@ -313,14 +357,17 @@ export class MatrixOperations {
       return true;
     }
 
-    // For sparse matrices, check symmetry by comparing entries
-    for (let i = 0; i < matrix.rows; i++) {
-      for (let j = i + 1; j < matrix.cols; j++) {
-        const entry_ij = this.getEntry(matrix, i, j);
-        const entry_ji = this.getEntry(matrix, j, i);
-        if (Math.abs(entry_ij - entry_ji) > tolerance) {
-          return false;
-        }
+    // For sparse matrices, only stored off-diagonal coordinates can break
+    // symmetry: a pair where both sides are absent is 0 == 0. Iterating the
+    // stored entries (O(nnz)) and comparing each against its mirror via the
+    // O(1) index catches every asymmetric pair, matching the O(V^2) probe.
+    const sparse = matrix as SparseMatrix;
+    for (let k = 0; k < sparse.values.length; k++) {
+      const i = sparse.rowIndices[k];
+      const j = sparse.colIndices[k];
+      if (i === j) continue;
+      if (Math.abs(this.getEntry(matrix, i, j) - this.getEntry(matrix, j, i)) > tolerance) {
+        return false;
       }
     }
 

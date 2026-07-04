@@ -105,3 +105,64 @@ for (const n of [4, 8, 16]) {
 
 console.log(`getEntry characterization: ${checks} checks passed`);
 console.log('reference modularity:', JSON.stringify(refModularity));
+
+// --- checkDiagonalDominance / isSymmetric behavior lock ---------------------
+// Naive references replicating the ORIGINAL semantics exactly:
+//  - diagonal via getEntry (first-match / implicit zero)
+//  - off-diagonal row/col sums over ALL stored entries (duplicates included),
+//    using |value|, excluding the diagonal coordinate.
+function refDominance(m: Matrix): { isRowDD: boolean; isColDD: boolean; strength: number } {
+  if (m.rows !== m.cols) return { isRowDD: false, isColDD: false, strength: 0 };
+  const n = m.rows;
+  const rowSum = (r: number) => {
+    let s = 0;
+    if (m.format === 'dense') { for (let j = 0; j < n; j++) if (j !== r) s += Math.abs((m as DenseMatrix).data[r][j]); }
+    else { const sp = m as SparseMatrix; for (let k = 0; k < sp.values.length; k++) if (sp.rowIndices[k] === r && sp.colIndices[k] !== r) s += Math.abs(sp.values[k]); }
+    return s;
+  };
+  const colSum = (c: number) => {
+    let s = 0;
+    if (m.format === 'dense') { for (let i = 0; i < n; i++) if (i !== c) s += Math.abs((m as DenseMatrix).data[i][c]); }
+    else { const sp = m as SparseMatrix; for (let k = 0; k < sp.values.length; k++) if (sp.colIndices[k] === c && sp.rowIndices[k] !== c) s += Math.abs(sp.values[k]); }
+    return s;
+  };
+  let isRowDD = true, isColDD = true, minRow = Infinity, minCol = Infinity;
+  for (let i = 0; i < n; i++) {
+    const d = Math.abs(refGetEntry(m, i, i));
+    if (d === 0) { return { isRowDD: false, isColDD: false, strength: 0 }; }
+    const rs = d - rowSum(i), cs = d - colSum(i);
+    if (rs < 0) isRowDD = false; else minRow = Math.min(minRow, rs / d);
+    if (cs < 0) isColDD = false; else minCol = Math.min(minCol, cs / d);
+  }
+  return { isRowDD, isColDD, strength: Math.max(isRowDD ? minRow : 0, isColDD ? minCol : 0) };
+}
+function refSymmetric(m: Matrix, tol = 1e-10): boolean {
+  if (m.rows !== m.cols) return false;
+  for (let i = 0; i < m.rows; i++) for (let j = i + 1; j < m.cols; j++) {
+    if (Math.abs(refGetEntry(m, i, j) - refGetEntry(m, j, i)) > tol) return false;
+  }
+  return true;
+}
+
+// Build a diagonally-dominant COO so the DD branch is exercised too.
+function ddCoo(n: number, rng: () => number): SparseMatrix {
+  const values: number[] = [], rowIndices: number[] = [], colIndices: number[] = [];
+  for (let i = 0; i < n; i++) {
+    let off = 0;
+    for (let j = 0; j < n; j++) if (i !== j && rng() < 0.2) { const v = Math.round(rng() * 3) + 1; values.push(v); rowIndices.push(i); colIndices.push(j); off += v; }
+    values.push(off + 5); rowIndices.push(i); colIndices.push(i); // dominant diagonal
+  }
+  return { rows: n, cols: n, values, rowIndices, colIndices, format: 'coo' };
+}
+
+const drng = makeLcg(11);
+let ddChecks = 0;
+for (const n of [1, 4, 12, 30]) {
+  const mats: Matrix[] = [randomCoo(n, drng), randomDense(n, drng), ddCoo(n, drng)];
+  for (const m of mats) {
+    assert.deepEqual(MatrixOperations.checkDiagonalDominance(m), refDominance(m), `dominance mismatch (${m.format}, n=${n})`);
+    assert.equal(MatrixOperations.isSymmetric(m), refSymmetric(m), `symmetry mismatch (${m.format}, n=${n})`);
+    ddChecks += 2;
+  }
+}
+console.log(`dominance/symmetry characterization: ${ddChecks} checks passed`);
