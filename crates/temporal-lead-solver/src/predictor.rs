@@ -5,9 +5,9 @@
 //! - Feng, Li, Peng 2025: "Sublinear-Time Algorithms for Diagonally Dominant Linear Systems"
 //! - Andoni, Krauthgamer, Pogrow 2019: ITCS SDD local solvers
 
-use crate::core::{Matrix, Vector, Complexity};
+use crate::core::{Matrix, Vector};
 use crate::physics::{Distance, TemporalAdvantage};
-use crate::solver::{SublinearSolver, SolverMethod, SolverResult};
+use crate::solver::SolverMethod;
 use crate::FTLError;
 use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
@@ -32,7 +32,7 @@ impl DominanceParameters {
     pub fn from_matrix(m: &Matrix) -> Self {
         let (n, _) = m.shape();
         let mut delta = f64::MAX;
-        let mut s_max = 0.0;
+        let mut s_max: f64 = 0.0;
 
         // Compute dominance parameters
         for i in 0..n {

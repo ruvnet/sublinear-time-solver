@@ -1,9 +1,8 @@
 //! Sublinear-time solver implementation for FTL predictions
 
-use crate::core::{Matrix, Vector, SparseMatrix, Complexity};
+use crate::core::{Matrix, Vector, Complexity};
 use crate::FTLError;
 use std::time::{Duration, Instant};
-use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// Solver methods available
@@ -99,11 +98,14 @@ impl SublinearSolver {
         // Verify complexity is O(log n)
         let complexity = self.estimate_complexity(a.shape().0, elapsed);
 
+        // Compute residual before moving `solution` into the result struct.
+        let residual = self.compute_residual(a, &solution, b);
+
         Ok(SolverResult {
             solution,
             method,
             iterations: self.config.max_iterations,
-            residual: self.compute_residual(a, &solution, b),
+            residual,
             time: elapsed,
             complexity,
         })
@@ -296,7 +298,9 @@ impl SublinearSolver {
     /// Compute iteration matrix for Neumann series
     fn compute_iteration_matrix(&self, a: &Matrix) -> crate::Result<Matrix> {
         let (n, _) = a.shape();
-        let mut m = Matrix::random(n, n);
+        // Start from zeros — every entry is overwritten below, so filling with
+        // n^2 random values (the previous Matrix::random) was wasted work.
+        let mut m = Matrix::zeros(n, n);
 
         // M = I - D^(-1)A where D is diagonal of A
         for i in 0..n {
