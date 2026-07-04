@@ -6,6 +6,41 @@ import { Matrix, SparseMatrix, DenseMatrix, Vector, MatrixAnalysis, SolverError,
 
 export class MatrixOperations {
   /**
+   * Matrices that have already passed validateMatrix, so per-entry accessors
+   * don't re-run an O(nnz) validation on every call. Assumes matrices are
+   * treated as immutable after first use (true for the analysis/solve paths).
+   */
+  private static validatedMatrices = new WeakSet<Matrix>();
+
+  /**
+   * Lazily-built O(1) entry lookup for COO matrices, keyed per matrix object.
+   * Key is `row * cols + col`; value is the FIRST value seen for that
+   * coordinate, matching the original linear-scan first-match-wins semantics.
+   */
+  private static cooIndexCache = new WeakMap<Matrix, Map<number, number>>();
+
+  private static ensureValidated(matrix: Matrix): void {
+    if (!this.validatedMatrices.has(matrix)) {
+      this.validateMatrix(matrix);
+    }
+  }
+
+  private static getCooIndex(matrix: SparseMatrix): Map<number, number> {
+    let index = this.cooIndexCache.get(matrix);
+    if (!index) {
+      index = new Map<number, number>();
+      const { values, rowIndices, colIndices, cols } = matrix;
+      for (let k = 0; k < values.length; k++) {
+        const key = rowIndices[k] * cols + colIndices[k];
+        // Keep the first occurrence to preserve legacy first-match-wins.
+        if (!index.has(key)) index.set(key, values[k]);
+      }
+      this.cooIndexCache.set(matrix, index);
+    }
+    return index;
+  }
+
+  /**
    * Validates matrix format and properties
    */
   static validateMatrix(matrix: Matrix): void {
@@ -52,6 +87,8 @@ export class MatrixOperations {
     } else {
       throw new SolverError(`Unsupported matrix format: ${matrix.format}`, ErrorCodes.INVALID_MATRIX);
     }
+
+    this.validatedMatrices.add(matrix);
   }
 
   /**
@@ -93,7 +130,7 @@ export class MatrixOperations {
    * Get matrix entry at (row, col)
    */
   static getEntry(matrix: Matrix, row: number, col: number): number {
-    this.validateMatrix(matrix);
+    this.ensureValidated(matrix);
 
     if (row < 0 || row >= matrix.rows || col < 0 || col >= matrix.cols) {
       throw new SolverError(`Index (${row}, ${col}) out of bounds`, ErrorCodes.INVALID_DIMENSIONS);
@@ -104,12 +141,8 @@ export class MatrixOperations {
       return dense.data[row][col];
     } else if (matrix.format === 'coo') {
       const sparse = matrix as SparseMatrix;
-      for (let k = 0; k < sparse.values.length; k++) {
-        if (sparse.rowIndices[k] === row && sparse.colIndices[k] === col) {
-          return sparse.values[k];
-        }
-      }
-      return 0; // Implicit zero
+      // O(1) lookup via the per-matrix index instead of an O(nnz) scan.
+      return this.getCooIndex(sparse).get(row * matrix.cols + col) ?? 0;
     }
 
     return 0;

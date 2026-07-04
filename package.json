@@ -42,6 +42,7 @@
     "build:dev": "tsc --watch",
     "clean": "rm -rf dist/",
     "test": "npm run build && node --test tests/",
+    "test:refactor": "tsx tests/matrix-getentry-characterization.mts && tsx tests/graph-modularity-equivalence.mts",
     "lint": "echo 'Linting would go here'",
     "start": "npm run build && node dist/mcp/server.js",
     "serve": "npm run build && node dist/cli/index.js serve",
