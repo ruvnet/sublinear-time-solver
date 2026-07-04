@@ -183,6 +183,7 @@ class SolverStream extends EventEmitter {
   async *createAsyncIterator() {
     let done = false;
 
+    try {
     while (!done) {
       // Wait for next update
       const update = await this.waitForUpdate();
@@ -228,8 +229,11 @@ class SolverStream extends EventEmitter {
         };
       }
     }
-
-    this.cleanup();
+    } finally {
+      // Runs on normal completion AND on early consumer break/return (client
+      // disconnect), so the worker is always released back to the pool.
+      this.cleanup();
+    }
   }
 
   waitForUpdate() {

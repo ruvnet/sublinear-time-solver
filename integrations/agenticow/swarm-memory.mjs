@@ -144,10 +144,15 @@ export class SwarmMemory {
    */
   commit(agentId) {
     const branch = this.#branch(agentId);
-    const result = branch.promote(this.#base);
-    branch.close();
-    this.#agents.delete(agentId);
-    return result;
+    try {
+      return branch.promote(this.#base);
+    } finally {
+      // Always retire the branch, even if promote() throws (native I/O or
+      // epoch/dimension conflict), so the handle isn't leaked and the agent
+      // isn't left in a half-promoted "live" zombie state.
+      try { branch.close(); } catch { /* already closed */ }
+      this.#agents.delete(agentId);
+    }
   }
 
   /**
@@ -156,8 +161,11 @@ export class SwarmMemory {
    */
   discard(agentId) {
     const branch = this.#branch(agentId);
-    branch.close();
-    this.#agents.delete(agentId);
+    try {
+      branch.close();
+    } finally {
+      this.#agents.delete(agentId);
+    }
   }
 
   /** Snapshot the whole hive base before a risky round. Returns a checkpoint id. */

@@ -3,6 +3,7 @@
  */
 
 import * as fs from 'fs/promises';
+import { realpathSync, existsSync } from 'fs';
 import * as path from 'path';
 import { SearchResult } from '../core/types.js';
 
@@ -54,6 +55,17 @@ export class OutputManager {
     const rel = path.relative(root, resolved);
     if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) {
       throw new Error(`outputPath escapes the project directory: ${outputPath}`);
+    }
+    // Lexical checks above don't dereference symlinks. Realpath the deepest
+    // existing ancestor of the target and confirm it is still inside the
+    // (realpath'd) project root, defeating a symlink that points outside.
+    const realRoot = realpathSync(root);
+    let probe = resolved;
+    while (!existsSync(probe)) probe = path.dirname(probe);
+    const realProbe = realpathSync(probe);
+    const realRel = path.relative(realRoot, realProbe);
+    if (realRel !== '' && (realRel.startsWith('..') || path.isAbsolute(realRel))) {
+      throw new Error(`outputPath escapes the project directory via a symlink: ${outputPath}`);
     }
     return outputPath;
   }

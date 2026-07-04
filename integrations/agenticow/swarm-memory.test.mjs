@@ -33,25 +33,30 @@ const hasAgenticow = agenticowMod !== null;
 // isolated; promote copies local edits up; checkpoint/rollback snapshot local.
 // ---------------------------------------------------------------------------
 function makeFakeMemory(parent = null, label = 'base') {
-  const local = new Map(); // id -> {vector, text}
-  let checkpoints = [];
+  const local = new Map(); // id -> {vector, text}  (current working layer)
+  const sealed = [];       // [{id, map}] immutable checkpoint layers, oldest first
   const cosine = (a, b) => {
     let dot = 0, na = 0, nb = 0;
     for (let i = 0; i < a.length; i++) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }
     return 1 - dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-12);
   };
   const chain = (self) => {
-    // resolve id -> {entry, branch}, local wins over parent
+    // resolve id -> {entry, branch}: parent, then sealed layers oldest→newest,
+    // then the live working layer, later writers winning.
     const seen = new Map();
-    const walk = (node, lbl) => {
-      if (node.__parent) walk(node.__parent, node.__parentLabel);
+    const walk = (node) => {
+      if (node.__parent) walk(node.__parent);
+      for (const layer of node.__sealed) {
+        for (const [id, e] of layer.map) seen.set(id, { e, branch: node.__label });
+      }
       for (const [id, e] of node.__local) seen.set(id, { e, branch: node.__label });
     };
-    walk(self, label);
+    walk(self);
     return seen;
   };
   const self = {
     __local: local,
+    __sealed: sealed,
     __parent: parent,
     __parentLabel: parent?.__label ?? null,
     __label: label,
@@ -93,17 +98,22 @@ function makeFakeMemory(parent = null, label = 'base') {
       for (const [id, e] of local) { target.__local.set(id, e); ingested++; }
       return { ingested, deleted: 0 };
     },
-    checkpoint(cpLabel = `cp-${checkpoints.length}`) {
-      checkpoints.push({ id: `${cpLabel}-${checkpoints.length}`, snapshot: new Map(local) });
+    // Seal the working layer into an immutable checkpoint (still readable),
+    // then start a fresh working layer — mirrors agenticow.
+    checkpoint(cpLabel = `cp-${sealed.length}`) {
+      const id = `${cpLabel}-${sealed.length}`;
+      sealed.push({ id, map: new Map(local) });
       local.clear();
-      return { id: checkpoints[checkpoints.length - 1].id, label: cpLabel, path: '', depth: checkpoints.length };
+      return { id, label: cpLabel, path: '', depth: sealed.length };
     },
+    // Discard everything written after the given checkpoint: drop newer sealed
+    // layers and clear the working layer, so readable state reverts to exactly
+    // the checkpoint (data up to and including it survives).
     rollback(checkpointId) {
-      const cp = checkpointId
-        ? checkpoints.find((c) => c.id === checkpointId)
-        : checkpoints[checkpoints.length - 1];
+      let idx = checkpointId ? sealed.findIndex((c) => c.id === checkpointId) : sealed.length - 1;
+      if (idx >= 0) sealed.length = idx + 1;
       local.clear();
-      return { restoredTo: cp?.id ?? 'base', depth: checkpoints.length };
+      return { restoredTo: sealed[idx]?.id ?? 'base', depth: sealed.length };
     },
     lineage() {
       return [{ role: 'working', id: label, label, path: '', parent: parent?.__label ?? null, createdAt: 0, mutations: local.size, tombstones: 0 }];
@@ -192,7 +202,7 @@ describe(`SwarmMemory (${hasAgenticow ? 'native agenticow' : 'COW fake'})`, () =
     hive.close();
   });
 
-  test('checkpoint + rollback snapshots the collective base', () => {
+  test('checkpoint + rollback reverts the collective base to the snapshot', () => {
     const hive = new SwarmMemory(openBase(), DIM);
     hive.seed([{ id: 1, vector: [1, 0, 0], text: 'stable' }]);
     const cp = hive.checkpoint('before-risky-round');
@@ -201,9 +211,23 @@ describe(`SwarmMemory (${hasAgenticow ? 'native agenticow' : 'COW fake'})`, () =
     hive.spawn('risky');
     hive.remember('risky', [0, 1, 0], 'risky-write');
     hive.commit('risky');
+    // the risky write is now committed into the base
+    assert.equal(hive.recallShared([0, 1, 0], 1)[0].text, 'risky-write', 'commit reached base');
 
     const rb = hive.rollback(cp.id);
     assert.ok(rb.restoredTo, 'rollback reports where it restored to');
+
+    // The whole point: post-checkpoint writes are gone, checkpointed data stays.
+    assert.notEqual(
+      hive.recallShared([0, 1, 0], 2)[0]?.text,
+      'risky-write',
+      'rollback must discard the post-checkpoint write',
+    );
+    assert.equal(
+      hive.recallShared([1, 0, 0], 1)[0].text,
+      'stable',
+      'rollback must preserve data captured by the checkpoint',
+    );
     hive.close();
   });
 

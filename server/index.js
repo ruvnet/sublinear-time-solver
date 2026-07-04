@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { WebSocketServer } = require('ws');
 const { EventEmitter } = require('events');
+const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const { StreamingManager } = require('./streaming');
 const { SessionManager } = require('./session-manager');
@@ -25,6 +26,13 @@ class SolverServer extends EventEmitter {
       // Hard upper bound on any matrix/vector dimension accepted from a request.
       // Prevents attacker-declared dimensions from driving unbounded allocations.
       maxDimension: options.maxDimension || 1000000,
+      // Cap on total dense elements (rows*cols) and on sparse non-zeros. A
+      // per-axis cap alone lets a 1e6 x 1e6 body through — O(rows*cols) work
+      // per solver sweep pins the worker. These bound the actual work/memory.
+      maxElements: options.maxElements || 25000000,     // ~200MB as f64
+      maxNonZeros: options.maxNonZeros || 5000000,
+      // Cap on solver iterations requested per job (compounds worker starvation).
+      maxIterations: options.maxIterations || 100000,
       authToken: options.authToken,
       flowNexusEnabled: options.flowNexusEnabled || false,
       ...options
@@ -161,7 +169,7 @@ class SolverServer extends EventEmitter {
           matrix,
           vector,
           method,
-          options,
+          options: this.sanitizeOptions(options),
           flowNexus: flow_nexus
         });
 
@@ -175,7 +183,13 @@ class SolverServer extends EventEmitter {
         // Start streaming solve
         const stream = await this.streaming.startSolve(session);
 
+        // Track client disconnect so we stop pulling from the solver and let
+        // the async iterator's finally release the worker (see streaming.js).
+        let clientGone = false;
+        res.on('close', () => { clientGone = true; });
+
         for await (const update of stream) {
+          if (clientGone) break;
           const data = JSON.stringify({
             type: 'iteration_update',
             session_id: sessionId,
@@ -184,11 +198,17 @@ class SolverServer extends EventEmitter {
           }) + '\n';
 
           if (!res.write(data)) {
-            // Backpressure handling
-            await new Promise(resolve => res.once('drain', resolve));
+            // Backpressure: resume on drain OR on client disconnect, so a
+            // closed socket (drain never fires) can't hang the handler and
+            // pin the worker.
+            await new Promise((resolve) => {
+              const done = () => { res.removeListener('drain', done); res.removeListener('close', done); resolve(); };
+              res.once('drain', done);
+              res.once('close', done);
+            });
           }
 
-          if (update.converged || update.error) {
+          if (clientGone || update.converged || update.error) {
             break;
           }
         }
@@ -224,7 +244,7 @@ class SolverServer extends EventEmitter {
           matrix,
           vector,
           method,
-          options
+          options: this.sanitizeOptions(options)
         });
 
         res.json({
@@ -484,17 +504,33 @@ class SolverServer extends EventEmitter {
     const max = this.config.maxDimension;
 
     const isPositiveInt = (v) => Number.isInteger(v) && v > 0;
+    const arrayLen = (v) => (Array.isArray(v) || ArrayBuffer.isView(v) ? v.length : undefined);
     let rows;
     let cols;
+    let isDense = false;
+    let nnz; // number of stored entries for a sparse matrix, if determinable
 
     if (Array.isArray(matrix)) {
       // Dense: array of rows.
+      isDense = true;
       rows = matrix.length;
       cols = Array.isArray(matrix[0]) ? matrix[0].length : rows;
     } else if (matrix && typeof matrix === 'object') {
       // Sparse (COO/CSR) or {data, rows, cols} shape.
       rows = matrix.rows ?? matrix.size ?? matrix.dimension;
       cols = matrix.cols ?? matrix.size ?? matrix.dimension ?? rows;
+      const data = matrix.data;
+      if (Array.isArray(data) && Array.isArray(data[0])) {
+        // dense-as-object (data is an array of rows)
+        isDense = true;
+      } else {
+        // Count stored entries from the common COO/CSR value carriers.
+        nnz = arrayLen(matrix.values)
+          ?? arrayLen(data?.values)
+          ?? arrayLen(data)
+          ?? arrayLen(matrix.rowIndices)
+          ?? arrayLen(data?.rowIndices);
+      }
     } else {
       return 'Matrix must be an array or object';
     }
@@ -505,6 +541,13 @@ class SolverServer extends EventEmitter {
     if (rows > max || cols > max) {
       return `Matrix dimension exceeds limit of ${max}`;
     }
+    // Bound the actual work/memory, not just each axis.
+    if (isDense && rows * cols > this.config.maxElements) {
+      return `Matrix element count (${rows} x ${cols}) exceeds limit of ${this.config.maxElements}`;
+    }
+    if (nnz !== undefined && nnz > this.config.maxNonZeros) {
+      return `Matrix non-zero count (${nnz}) exceeds limit of ${this.config.maxNonZeros}`;
+    }
     if (!Array.isArray(vector) && !ArrayBuffer.isView(vector)) {
       return 'Vector must be an array';
     }
@@ -514,18 +557,53 @@ class SolverServer extends EventEmitter {
     return null;
   }
 
+  /**
+   * Constant-time comparison of a presented token against the configured one,
+   * avoiding a timing side-channel on the secret. Returns true when auth is
+   * disabled (no configured token).
+   */
+  tokenMatches(token) {
+    const expected = this.config.authToken;
+    if (!expected) return true; // auth disabled
+    if (typeof token !== 'string' || token.length === 0) return false;
+    const a = Buffer.from(token);
+    const b = Buffer.from(expected);
+    // timingSafeEqual requires equal lengths; length inequality is already a
+    // mismatch and the early return leaks only length, not content.
+    if (a.length !== b.length) return false;
+    return crypto.timingSafeEqual(a, b);
+  }
+
+  /**
+   * Clamp caller-supplied solver options to safe bounds. An unbounded
+   * maxIterations lets one request occupy a worker indefinitely.
+   */
+  sanitizeOptions(options) {
+    const opts = (options && typeof options === 'object') ? { ...options } : {};
+    const max = this.config.maxIterations;
+    const n = Number(opts.maxIterations);
+    if (Number.isFinite(n) && n > 0) {
+      opts.maxIterations = Math.min(Math.floor(n), max);
+    } else {
+      opts.maxIterations = Math.min(1000, max);
+    }
+    return opts;
+  }
+
   authenticateToken(req, res, next) {
+    if (!this.config.authToken) return next(); // auth disabled
+
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    if (!token && this.config.authToken) {
+    if (!token) {
       return res.status(401).json({
         error: 'Authentication token required',
         code: 'AUTH_REQUIRED'
       });
     }
 
-    if (this.config.authToken && token !== this.config.authToken) {
+    if (!this.tokenMatches(token)) {
       return res.status(403).json({
         error: 'Invalid authentication token',
         code: 'AUTH_INVALID'
@@ -579,7 +657,7 @@ class SolverServer extends EventEmitter {
       // Enforce the same auth token as the HTTP API. No-op when unset.
       if (this.config.authToken) {
         const token = this.extractWsToken(req);
-        if (token !== this.config.authToken) {
+        if (!this.tokenMatches(token)) {
           ws.send(JSON.stringify({ type: 'error', error: 'Authentication failed', code: 'AUTH_INVALID' }));
           ws.close(1008, 'Authentication failed');
           return;
@@ -684,7 +762,7 @@ class SolverServer extends EventEmitter {
       matrix: message.matrix,
       vector: message.vector,
       method: message.method || 'adaptive',
-      options: message.options || {}
+      options: this.sanitizeOptions(message.options)
     });
 
     // Start streaming to WebSocket
