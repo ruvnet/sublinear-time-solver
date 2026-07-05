@@ -148,6 +148,44 @@ final verdict: plateau=true  classification=local-optimum  (first declared at ge
 npm run plateau && npm run verify:plateau
 ```
 
+## REAL evaluation on the sublinear repo (synthetic → real, crossed here)
+
+`run-real-eval.mts` is the one part of this package whose outcomes are **not
+fixtures**. It uses `ruvnet/sublinear-time-solver` as the task and evaluates by
+**executing the repo's real solver**:
+
+- **task**: solve 8 real diagonally-dominant systems `A x = b` to residual < 1e-6
+- **candidate**: the repo's real `SublinearSolver` (fixed Neumann)
+- **baseline**: the pre-fix buggy Neumann (missing sign — converges to `A x = D b`)
+- **score**: `solved := measured ‖A x − b‖ < 1e-6`, computed with the repo's real
+  `MatrixOperations` — deterministic and reproducible
+- **gate**: the real ADR-076 `decidePromotion`
+
+Measured result (real, not fixtured):
+
+```
+baseline (buggy Neumann)  verified-solves: 0/8   median residual 1.5e+01
+candidate (repo solver)   verified-solves: 8/8   median residual 6.7e-13
+gate promote: true — verified-solve rate 0 → 1, statistically real
+```
+
+`verify-real-eval.mts` is the strongest verifier in this package: it
+**re-executes both solvers** on the sealed systems, recomputes the residuals and
+the gate decision, and asserts they reproduce (9/9). It trusts no
+producer-claimed number — it regenerates them by running real code.
+
+```bash
+npm run real-eval          # measure by running the real solver
+npm run verify:real-eval   # re-execute the solver and reproduce the decision
+```
+
+**Honest scope.** This makes *evaluation* real: real code, real systems, real
+measured correctness, gated for real. The two variants were authored by the
+operator, so it is **real evaluation, not autonomous discovery**. The remaining
+step to a turning flywheel is an autonomous mutator proposing the candidate
+(instead of a human) and a real agent executing it — the `evaluate()` seam in
+`src/real-task.mts` is exactly where that plugs in.
+
 ## The line this does NOT cross (and what would)
 
 Everything here proves *mechanism and structure*. It does **not** prove the
