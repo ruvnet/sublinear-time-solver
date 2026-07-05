@@ -1,0 +1,15 @@
+{
+  "kind": "novel-lineage",
+  "immutableRootHint": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+  "chain": [
+    {
+      "id": "champion",
+      "solves": 0
+    },
+    {
+      "id": "discovered",
+      "parent": "champion",
+      "solves": 8
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+[
+  {
+    "round": 0,
+    "k": 0,
+    "ok": true,
+    "solves": 8,
+    "promote": true,
+    "improved": true,
+    "note": "solved 8/8"
+  },
+  {
+    "round": 0,
+    "k": 1,
+    "ok": true,
+    "solves": 8,
+    "promote": true,
+    "improved": true,
+    "note": "solved 8/8"
+  },
+  {
+    "round": 0,
+    "k": 2,
+    "ok": true,
+    "solves": 8,
+    "promote": true,
+    "improved": true,
+    "note": "solved 8/8"
+  }
+]

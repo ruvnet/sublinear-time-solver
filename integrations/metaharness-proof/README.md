@@ -228,6 +228,53 @@ is a genuine, validated, self-contained autonomous-improvement loop on the real
 sublinear solver: the system proposes, real execution measures, the gate
 decides, and the result reproduces under independent re-execution.
 
+## Novel discovery — open-ended LLM code synthesis (the frontier, crossed)
+
+`run-novel.mjs` crosses the configuration-search frontier: the proposer is a
+real LLM (`claude -p`) that emits **arbitrary solver code**, not a point in a
+designed grid. The champion is plain **Jacobi** (`novel/genome/champion.mjs`),
+which *diverges* on symmetric-positive-definite systems that are not
+diagonally dominant — so no amount of "more iterations" can win. Only a genuine
+change of numerical **method** can, and the proposer is not told which method.
+
+The loop:
+
+1. the champion genome is run in a **sandboxed subprocess** (hard timeout, no
+   host access) on 8 SPD-non-dominant systems → it solves **0/8**
+2. `claude -p` is asked to improve it; each proposal passes a **static safety
+   gate** (pure numeric ESM only — no imports, I/O, eval, or template literals)
+   before it is allowed to run
+3. each candidate genome is executed the same sandboxed way; `solved := measured
+   ‖A x − b‖ < 1e-6`
+4. the real **ADR-076 gate** selects any candidate that genuinely beats the
+   champion; the winner is sealed with a replayable receipt + lineage
+
+What Claude autonomously discovered (no human authored it):
+
+```
+DISCOVERED (proposed by claude -p, selected by the gate):
+  a preconditioned BiCGSTAB solver  →  solves 8/8  (champion Jacobi: 0/8)
+  It recognised that Jacobi diverges on SPD-non-dominant systems and that
+  iteration count cannot fix divergence, so it changed the METHOD to a
+  Krylov-subspace solver with a Jacobi preconditioner.
+```
+
+**Honest reproducibility boundary.** LLM output is non-deterministic — the
+*proposal* is not reproducible, and the receipt says so plainly. What **is**
+reproducible, and what `verify-novel.mjs` checks by **re-execution**, is the
+discovered *code* and its measured superiority: it re-hashes the sealed genome,
+re-runs both champion and discovered solver in the sandbox, reproduces the
+solve counts (0/8 vs 8/8), reproduces the gate decision bit-for-bit
+(`hashJson(decision) === receipt.discovery.decisionHash`), confirms the
+discovery genuinely solves more, and confirms it passed the static safety gate.
+9/9 checks pass. The claim is narrow and true: *the discovered solver works, by
+re-running it* — regardless of how it was proposed.
+
+```bash
+npm run novel          # claude -p proposes arbitrary solvers → sandbox eval → gate
+npm run verify:novel   # re-execute the sealed genomes and reproduce the discovery
+```
+
 ## What is proven, and the frontier that remains
 
 Proven and independently verifiable (re-execution, not trust):
@@ -237,14 +284,18 @@ Proven and independently verifiable (re-execution, not trust):
 - **real evaluation** — the repo's real solver run on real systems, measured
 - **autonomous discovery** — the system proposes configs, real execution
   measures, the gate selects a genuinely-better one the operator did not author
+- **novel discovery** — a real LLM proposes *arbitrary* solver code; a genuinely
+  new algorithm (preconditioned BiCGSTAB) is discovered, sandboxed, gate-selected,
+  and its superiority reproduced by independent re-execution
 
-The remaining frontier is a narrower, honest one: this is autonomous discovery
-over a **designed configuration space** (AutoML-style). The next step is
-autonomous discovery over **open-ended code changes** — an LLM agent proposing
-and implementing arbitrary edits to the solver, scored by the same real
-`evaluate()` path. That needs an agent runtime and an API budget; every other
-rail (proposal → real eval → gate → validated receipt → immutable lineage) is
-already built and proven here.
+The honest remaining boundary is no longer *what* can be discovered — arbitrary
+code now can be — but *reproducibility of the proposal itself*: because the
+generator is a stochastic LLM, the discovery is validated by re-executing the
+sealed code, not by replaying the generation. Turning single-round novel
+discovery into *compounding* learning (a discovered solver becoming the next
+round's champion, across many rounds, each surviving a frozen anchor suite) is
+the next milestone — the loop harness is built; it needs sustained rounds and an
+API budget to run them.
 
 ## What comes next (not in this package)
 
@@ -263,4 +314,9 @@ already built and proven here.
 - `src/round.mjs` — the synthetic fixture (holdout suite, variant policies, per-task outcomes)
 - `src/score-map.mjs` — the shared raw-outcome → `BenchmarkResult` scoring pipeline (real `scoreBenchmark`)
 - `src/hash.mjs` — deterministic content/JSON hashing
+- `run-novel.mjs` / `verify-novel.mjs` — open-ended LLM discovery engine + re-execution validator
+- `src/llm-proposer.mjs` — `claude -p` proposer + static safety gate (`isSafe`)
+- `src/genome-runner.mjs` — sandboxed subprocess evaluator for one solver genome
+- `novel/genome/champion.mjs` — the modest Jacobi champion the LLM improves on
+- `novel/` — sealed discovery: `RECEIPT.json`, `genome/discovered.mjs`, `proposals/`, `measured/`, `lineage.json`
 - `generation-0/` — the sealed, committed immutable-root fixture
