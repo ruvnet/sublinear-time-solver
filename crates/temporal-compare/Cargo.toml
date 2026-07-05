@@ -32,3 +32,8 @@ simd = []
 package = "ruv-fann"
 version = "0.1.6"
 optional = true
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
