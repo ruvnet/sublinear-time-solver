@@ -11,10 +11,13 @@
     "verify:lineage": "node verify-lineage.mjs",
     "cohort": "node run-cohort.mjs",
     "verify:cohort": "node verify-cohort.mjs",
-    "test": "node verify-lineage.mjs && node verify-cohort.mjs",
+    "plateau": "node run-plateau.mjs",
+    "verify:plateau": "node verify-plateau.mjs",
+    "test": "node verify-lineage.mjs && node verify-cohort.mjs && node verify-plateau.mjs",
     "prove": "node run-proof.mjs && node verify-receipt.mjs",
     "prove:lineage": "node run-proof.mjs && node run-lineage.mjs && node verify-lineage.mjs",
-    "prove:cohort": "node run-cohort.mjs && node verify-cohort.mjs"
+    "prove:cohort": "node run-cohort.mjs && node verify-cohort.mjs",
+    "prove:plateau": "node run-plateau.mjs && node verify-plateau.mjs"
   },
   "dependencies": {
     "@metaharness/darwin": "0.1.0"

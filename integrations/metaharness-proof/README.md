@@ -119,6 +119,35 @@ reviewer        attempts=4 promotions=4 meanΔ=0.094
 planner         attempts=1 promotions=0 meanΔ=-0.606   ← regressed, abandoned
 ```
 
+## Plateau detection (statistical, not intuition)
+
+`run-plateau.mjs` builds a real-gated multi-generation history with diminishing
+returns and applies a rigorous plateau detector (`src/plateau.mjs`, design item
+#2). A plateau is declared only when ALL three hold over a rolling window:
+
+1. median per-generation improvement < ε
+2. promotion rate over the window < max
+3. candidate-score variance shrinking
+
+That separates a **local optimum** (all three) from a **noisy benchmark**
+(flat improvement but non-shrinking variance) or **still-improving**
+(promotions continue) — the classification is emitted, not just a boolean.
+
+`verify-plateau.mjs` re-gates every candidate, rebuilds the per-generation
+stats, and recomputes the detector — asserting the sealed history and verdict
+reproduce. Example run:
+
+```
+gen  bestΔ    promo/att  variance
+0    0.0760   3/3        4.27e-5
+5    0.0008   0/3        1.07e-7
+final verdict: plateau=true  classification=local-optimum  (first declared at gen 4)
+```
+
+```bash
+npm run plateau && npm run verify:plateau
+```
+
 ## The line this does NOT cross (and what would)
 
 Everything here proves *mechanism and structure*. It does **not** prove the
