@@ -9,12 +9,17 @@
  */
 import assert from 'node:assert/strict';
 import { SublinearSolver } from '../src/core/solver.ts';
+import { SimpleSublinearSolver } from '../src/mcp/tools/simple-wasm-solver.ts';
 import { MatrixOperations } from '../src/core/matrix.ts';
 import type { Matrix } from '../src/core/types.ts';
 
 function residual(matrix: Matrix, x: number[], b: number[]): number {
   const Ax = MatrixOperations.multiplyMatrixVector(matrix, x);
   return Math.sqrt(Ax.reduce((s, v, i) => s + (v - b[i]) ** 2, 0));
+}
+
+function denseResidual(A: number[][], x: number[], b: number[]): number {
+  return Math.sqrt(A.map((row, i) => row.reduce((s, a, j) => s + a * x[j], 0) - b[i]).reduce((s, v) => s + v * v, 0));
 }
 
 async function solveResidual(matrix: Matrix, b: number[]): Promise<number> {
@@ -59,4 +64,17 @@ for (const c of cases) {
   passed++;
 }
 
-console.log(`Neumann correctness: ${passed} systems solve to A x = b (residual < 1e-6)`);
+// Guard the second Neumann implementation too (simple-wasm-solver's
+// solveNeumann builds N = I - D^-1 A explicitly). Confirms the sign-bug class
+// found in the core solver is not present here either.
+{
+  const A = [[4, -1, 0], [-1, 4, -1], [0, -1, 4]];
+  const b = [1, 2, 3];
+  const s = new SimpleSublinearSolver(0.1, 200) as unknown as { solveNeumann(m: number[][], v: number[]): number[] };
+  const x = s.solveNeumann(A, b);
+  const r = denseResidual(A, x, b);
+  assert.ok(r < 1e-5, `SimpleSublinearSolver.solveNeumann residual ${r.toExponential(2)} not < 1e-5`);
+  passed++;
+}
+
+console.log(`Neumann correctness: ${passed} solves reach A x = b (both core and simple-wasm implementations)`);
