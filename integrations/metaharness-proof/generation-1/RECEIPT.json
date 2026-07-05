@@ -1,0 +1,29 @@
+{
+  "kind": "generation-receipt",
+  "label": "lineage generation (compounding structure — synthetic evaluation)",
+  "generation": 1,
+  "parent": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+  "frozenAnchorHash": "a6364c14748ac0775b2ee0555f431794c977b23bf1913c20556c968201b75795",
+  "autonomousMutation": {
+    "surface": "toolPolicy",
+    "summary": "appended toolPolicy tracking note (no structural edit available)",
+    "mutator": "DeterministicMutator",
+    "seed": 43
+  },
+  "seed": 43,
+  "engine": {
+    "name": "@metaharness/darwin",
+    "version": "0.1.0"
+  },
+  "artifacts": {
+    "inputHoldoutHash": "a6364c14748ac0775b2ee0555f431794c977b23bf1913c20556c968201b75795",
+    "baselineManifestHash": "08db80ea8f622c7bdb7ec98caf41010afa7708a09373d9047d99c25f93108b35",
+    "candidateManifestHash": "29b90d068164067bccf85fb256231ce174b076d3c23cb417a161c8da21e0d02b",
+    "meetsPromotionRule": "adr-076@0.1.0",
+    "decisionReceiptHash": "d42f1b854beecc1fa985aa135f9f63bc37db35fbd0c5715fc9a31524ceadf137",
+    "shadowRegistrationId": "shadow-cd4380d49057f0f0a3fa8cd1",
+    "costReceiptHash": "b7c504cf2f98b92d1ea3d84f7182e9b1b701430695ed21fe82a53e2ca43a88dc"
+  },
+  "bundleRootHash": "de3c867f13f415a38056cc59f1bee0fa3afaca8c7a274d686893512907ec8a4d",
+  "promote": true
+}

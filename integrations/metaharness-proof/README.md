@@ -60,6 +60,45 @@ npm test          # acceptance test: independently verify the bundle
 npm run prove     # proof + verify in one step
 ```
 
+## Compounding lineage (generation 1)
+
+`run-lineage.mjs` appends **generation-1** onto the immutable generation-0 root,
+making the "version control for operating policies" structure concrete and
+independently verifiable. `verify-lineage.mjs` verifies the whole chain.
+
+What is **real** at gen-1:
+- **autonomous candidate generation** — the candidate is produced by the real
+  `DeterministicMutator` (machine-generated, not hand-authored); the receipt
+  records the mutated surface and summary
+- **frozen anchor suite** — gen-1 is scored against the *same* holdout suite as
+  gen-0; the run aborts unless its hash equals gen-0's `inputHoldoutHash`
+- **hash-chained parent link** — `gen-1.parent === gen-0.bundleRootHash`, and
+  gen-1's own root hash binds that parent in (append-only, tamper-evident)
+- the real ADR-076 gate and full receipt bundle, plus `lineage.json` (the chain index)
+
+What is still **synthetic** — the honest boundary: the per-task **outcomes**.
+gen-1 proves the compounding *structure* and *autonomous mutation*, **not** that
+the improvement is real. See the milestone below.
+
+```bash
+npm run lineage          # append generation-1
+npm run verify:lineage   # verify the full chain (also `npm test`)
+npm run prove:lineage    # proof + lineage + chain verify, end to end
+```
+
+## The line this does NOT cross (and what would)
+
+Everything here proves *mechanism and structure*. It does **not** prove the
+flywheel turns, because every candidate outcome is a synthetic fixture. Crossing
+that line requires **real evaluation**: machine-generated candidates executed
+against real tasks by a real agent, scored by the real sandbox — not hand-set
+outcomes. That needs an agent runtime, an API budget, and a real frozen task
+suite. The meaningful milestone (per the design notes) is the system
+autonomously discovering a **second independently-verified improvement that
+survives the frozen anchor suite and joins the immutable lineage without human
+intervention** — with *real* outcomes. This package builds and verifies the
+rails that milestone rides on; it is deliberately not that milestone.
+
 ## What comes next (not in this package)
 
 - **F-P1 / F-P2** consume `generation-0/` as a frozen fixture.

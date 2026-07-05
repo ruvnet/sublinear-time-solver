@@ -1,0 +1,9 @@
+{
+  "kind": "shadow-registration",
+  "shadowId": "shadow-cd4380d49057f0f0a3fa8cd1",
+  "variant": "candidate",
+  "candidateManifestHash": "29b90d068164067bccf85fb256231ce174b076d3c23cb417a161c8da21e0d02b",
+  "status": "SHADOW",
+  "promotedInLineage": true,
+  "servable": false
+}

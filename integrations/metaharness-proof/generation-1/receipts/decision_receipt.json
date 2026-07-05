@@ -1,0 +1,34 @@
+{
+  "kind": "decision-receipt",
+  "rule": "adr-076",
+  "seed": 43,
+  "cleanReplay": true,
+  "inputs": {
+    "inputHoldoutHash": "a6364c14748ac0775b2ee0555f431794c977b23bf1913c20556c968201b75795",
+    "baselineManifestHash": "08db80ea8f622c7bdb7ec98caf41010afa7708a09373d9047d99c25f93108b35",
+    "candidateManifestHash": "29b90d068164067bccf85fb256231ce174b076d3c23cb417a161c8da21e0d02b",
+    "parentResultsHash": "0b687d46f38e80418885f3a6bf9410647206f881cf55018ff8418829782dfd25",
+    "childResultsHash": "373be0ac3d0d1a395edac1494626313ab9622e23b49bc58f0d96f3866c4cfcf0"
+  },
+  "decision": {
+    "promote": true,
+    "reasons": [
+      "mean score win: child 0.984000 > parent 0.836000 + 0.05",
+      "statistically real: lower95 0.148 > 0",
+      "verified-solve rate held: child 1.000000 >= parent 1.000000",
+      "zero child safety violations",
+      "regression rate not worse: child 0.000000 <= parent 0.000000",
+      "clean replay reproduced the result"
+    ],
+    "meanDelta": 0.148,
+    "lower95": 0.148,
+    "childMeanScore": 0.984,
+    "parentMeanScore": 0.836,
+    "childVerifiedSolveRate": 1,
+    "parentVerifiedSolveRate": 1,
+    "childRegressionRate": 0,
+    "parentRegressionRate": 0,
+    "childSafetyViolations": 0,
+    "cleanReplay": true
+  }
+}

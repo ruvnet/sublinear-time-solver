@@ -7,8 +7,11 @@
   "scripts": {
     "proof": "node run-proof.mjs",
     "verify": "node verify-receipt.mjs",
-    "test": "node verify-receipt.mjs",
-    "prove": "node run-proof.mjs && node verify-receipt.mjs"
+    "lineage": "node run-lineage.mjs",
+    "verify:lineage": "node verify-lineage.mjs",
+    "test": "node verify-lineage.mjs",
+    "prove": "node run-proof.mjs && node verify-receipt.mjs",
+    "prove:lineage": "node run-proof.mjs && node run-lineage.mjs && node verify-lineage.mjs"
   },
   "dependencies": {
     "@metaharness/darwin": "0.1.0"
