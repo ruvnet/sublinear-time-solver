@@ -150,3 +150,7 @@ coordination/orchestration/*
 claude-flow
 # Removed Windows wrapper files per user request
 hive-mind-prompt-*.txt
+
+# ruflo signed retrieval config champion (auto-written by `ruflo guidance`; captured under integrations/ruflo-flywheel/proven-config/)
+.claude/proven-config.json
+.claude/.proven-config-version

@@ -30,6 +30,30 @@ lives inside `@claude-flow/guidance` (a transitive dependency of `ruflo`'s
 
 This package drives the **real** `EvolutionPipeline` — no reimplementation.
 
+### Part #1 — the signed champion, captured live
+
+The gist describes *two* shipped things. Part #2 (the opt-in flywheel) is what
+this package drives. Part #1 — *"a signed retrieval config champion that auto
+applies on upgrade when authenticity and compatibility pass"* — manifested on
+its own: running `ruflo guidance` against this repo auto-wrote a signed champion
+to `.claude/proven-config.json`. The exact artifact ruflo adopted is captured
+verbatim under [`proven-config/`](./proven-config/) as evidence (I did **not**
+author its numbers — ruflo did):
+
+```json
+{ "schema": "ruflo.proven-config/v1",
+  "policy": { "alpha": 0.3, "subjectWeight": 1, "mmrLambda": 0.5, "bodyWeight": 1.5, "typePenaltyFactor": 0.5 },
+  "compatibility": { "ruflo": ">=3.24.0" },
+  "receipt": { "heldOutDelta": 0.0738, "redblue": "PASS", "drift": 0,
+               "canary": { "rollbackRate": 0, "costPerTask": 0 }, "receiptCoverage": 1 } }
+```
+
+That receipt is exactly the gate the gist lists — held-out delta, red/blue
+significance, drift, canary safety, full receipt coverage — for the champion
+ruflo signed and adopted. The live `.claude/` copies are gitignored (they are
+ruflo's runtime state, left in place for it); the captured copy here is the
+committed record.
+
 ## What evolves
 
 The **bounded retrieval policy**: given a task, which guidance shards does the
