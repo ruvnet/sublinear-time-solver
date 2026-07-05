@@ -34,14 +34,18 @@ impl DominanceParameters {
         let mut delta = f64::MAX;
         let mut s_max: f64 = 0.0;
 
+        // Hoist the array view out of the O(n^2) loop — it was rebuilt on every
+        // element access (n^2 view constructions).
+        let view = m.view();
+
         // Compute dominance parameters
         for i in 0..n {
-            let diagonal = m.view()[[i, i]].abs();
+            let diagonal = view[[i, i]].abs();
             let mut off_diagonal_sum = 0.0;
 
             for j in 0..n {
                 if i != j {
-                    let val = m.view()[[i, j]].abs();
+                    let val = view[[i, j]].abs();
                     off_diagonal_sum += val;
                     s_max = s_max.max(val);
                 }

@@ -95,8 +95,9 @@ impl SublinearSolver {
 
         let elapsed = start.elapsed();
 
-        // Verify complexity is O(log n)
-        let complexity = self.estimate_complexity(a.shape().0, elapsed);
+        // Complexity class is a property of the chosen method's iteration count,
+        // not something to guess from a single wall-clock sample.
+        let complexity = Self::method_complexity(method);
 
         // Compute residual before moving `solution` into the result struct.
         let residual = self.compute_residual(a, &solution, b);
@@ -177,17 +178,27 @@ impl SublinearSolver {
     /// Neumann series: x = (I - M)^(-1)b where A = I - M
     fn solve_neumann(&self, a: &Matrix, b: &Vector) -> crate::Result<Vector> {
         let n = b.len();
-        let mut x = b.clone();
         let identity_minus_a = self.compute_iteration_matrix(a)?;
 
-        // Neumann series: x = b + Mb + M²b + M³b + ...
+        // Fixed-point iteration x = c + M x with M = I - D^-1 A. Its fixed
+        // point satisfies (I - M) x = c, i.e. D^-1 A x = c, so to solve A x = b
+        // the constant must be c = D^-1 b (using plain b would instead solve
+        // A x = D b). Precompute D^-1 b once.
+        let mut c = Vector::zeros(n);
+        for i in 0..n {
+            let d = a.view()[[i, i]];
+            c.data[i] = if d.abs() > 1e-15 { b.data[i] / d } else { b.data[i] };
+        }
+
+        // Neumann series: x = c + Mc + M²c + ...
         // Converges in O(log n) iterations for well-conditioned matrices
         let iterations = (n as f64).log2().ceil() as usize;
         let actual_iterations = iterations.min(self.config.max_iterations);
 
+        let mut x = c.clone();
         for _ in 0..actual_iterations {
             let mx = identity_minus_a.multiply_vector(&x);
-            let new_x = b.add(&mx);
+            let new_x = c.add(&mx);
 
             // Check convergence
             let diff = new_x.sub(&x).norm();
@@ -326,32 +337,21 @@ impl SublinearSolver {
     }
 
     /// Estimate actual complexity from runtime
-    fn estimate_complexity(&self, n: usize, elapsed: Duration) -> Complexity {
-        let nanos = elapsed.as_nanos() as f64;
-        let log_n = (n as f64).log2();
-
-        // Compare with theoretical complexities
-        let ratios = vec![
-            (Complexity::Constant, 1.0),
-            (Complexity::Logarithmic, log_n),
-            (Complexity::Linear, n as f64),
-            (Complexity::Quadratic, (n * n) as f64),
-            (Complexity::Cubic, (n * n * n) as f64),
-        ];
-
-        // Find best fit
-        let mut best_complexity = Complexity::Cubic;
-        let mut min_diff = f64::MAX;
-
-        for (complexity, theoretical) in ratios {
-            let diff = (nanos / theoretical - 1.0).abs();
-            if diff < min_diff {
-                min_diff = diff;
-                best_complexity = complexity;
-            }
+    /// Theoretical iteration-complexity class of each solve method. These are
+    /// the sublinear-iteration methods this crate is built around (they take
+    /// O(log n) iterations / walks for well-conditioned, diagonally-dominant
+    /// systems), so their complexity class is Logarithmic regardless of the
+    /// machine's wall-clock on any single run.
+    fn method_complexity(method: SolverMethod) -> Complexity {
+        match method {
+            SolverMethod::Neumann
+            | SolverMethod::RandomWalk
+            | SolverMethod::ForwardPush
+            | SolverMethod::BackwardPush
+            | SolverMethod::Bidirectional => Complexity::Logarithmic,
+            // Adaptive is resolved to a concrete method before this is called.
+            SolverMethod::Adaptive => Complexity::Logarithmic,
         }
-
-        best_complexity
     }
 }
 
