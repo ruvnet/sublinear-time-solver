@@ -1,0 +1,146 @@
+[
+  {
+    "index": 0,
+    "config": {
+      "method": "neumann",
+      "maxIterations": 3,
+      "epsilon": 1.0000000000000001e-11
+    },
+    "solves": 0,
+    "promote": false,
+    "meanDelta": 0,
+    "lower95": 0
+  },
+  {
+    "index": 1,
+    "config": {
+      "method": "neumann",
+      "maxIterations": 75,
+      "epsilon": 1e-9
+    },
+    "solves": 8,
+    "promote": true,
+    "meanDelta": 0.7,
+    "lower95": 0.7
+  },
+  {
+    "index": 2,
+    "config": {
+      "method": "forward-push",
+      "maxIterations": 3,
+      "epsilon": 1e-9
+    },
+    "solves": 0,
+    "promote": false,
+    "meanDelta": 0,
+    "lower95": 0
+  },
+  {
+    "index": 3,
+    "config": {
+      "method": "neumann",
+      "maxIterations": 3,
+      "epsilon": 1.0000000000000002e-10
+    },
+    "solves": 0,
+    "promote": false,
+    "meanDelta": 0,
+    "lower95": 0
+  },
+  {
+    "index": 4,
+    "config": {
+      "method": "bidirectional",
+      "maxIterations": 3,
+      "epsilon": 1e-9
+    },
+    "solves": 0,
+    "promote": false,
+    "meanDelta": 0,
+    "lower95": 0
+  },
+  {
+    "index": 5,
+    "config": {
+      "method": "random-walk",
+      "maxIterations": 3,
+      "epsilon": 1e-9
+    },
+    "solves": 0,
+    "promote": false,
+    "meanDelta": 0,
+    "lower95": 0
+  },
+  {
+    "index": 6,
+    "config": {
+      "method": "neumann",
+      "maxIterations": 3,
+      "epsilon": 1e-8
+    },
+    "solves": 0,
+    "promote": false,
+    "meanDelta": 0,
+    "lower95": 0
+  },
+  {
+    "index": 7,
+    "config": {
+      "method": "neumann",
+      "maxIterations": 2,
+      "epsilon": 1e-9
+    },
+    "solves": 0,
+    "promote": false,
+    "meanDelta": 0,
+    "lower95": 0
+  },
+  {
+    "index": 8,
+    "config": {
+      "method": "neumann",
+      "maxIterations": 3,
+      "epsilon": 1.0000000000000002e-12
+    },
+    "solves": 0,
+    "promote": false,
+    "meanDelta": 0,
+    "lower95": 0
+  },
+  {
+    "index": 9,
+    "config": {
+      "method": "neumann",
+      "maxIterations": 6,
+      "epsilon": 1e-9
+    },
+    "solves": 0,
+    "promote": false,
+    "meanDelta": 0,
+    "lower95": 0
+  },
+  {
+    "index": 10,
+    "config": {
+      "method": "neumann",
+      "maxIterations": 30,
+      "epsilon": 1e-9
+    },
+    "solves": 8,
+    "promote": true,
+    "meanDelta": 0.7,
+    "lower95": 0.7
+  },
+  {
+    "index": 11,
+    "config": {
+      "method": "neumann",
+      "maxIterations": 12,
+      "epsilon": 1e-9
+    },
+    "solves": 4,
+    "promote": false,
+    "meanDelta": 0.35014,
+    "lower95": 0
+  }
+]

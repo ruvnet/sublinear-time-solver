@@ -1,0 +1,5 @@
+{
+  "method": "neumann",
+  "maxIterations": 3,
+  "epsilon": 1e-9
+}

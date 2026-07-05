@@ -1,0 +1,65 @@
+{
+  "proposeSeed": 20240705,
+  "configs": [
+    {
+      "method": "neumann",
+      "maxIterations": 3,
+      "epsilon": 1.0000000000000001e-11
+    },
+    {
+      "method": "neumann",
+      "maxIterations": 75,
+      "epsilon": 1e-9
+    },
+    {
+      "method": "forward-push",
+      "maxIterations": 3,
+      "epsilon": 1e-9
+    },
+    {
+      "method": "neumann",
+      "maxIterations": 3,
+      "epsilon": 1.0000000000000002e-10
+    },
+    {
+      "method": "bidirectional",
+      "maxIterations": 3,
+      "epsilon": 1e-9
+    },
+    {
+      "method": "random-walk",
+      "maxIterations": 3,
+      "epsilon": 1e-9
+    },
+    {
+      "method": "neumann",
+      "maxIterations": 3,
+      "epsilon": 1e-8
+    },
+    {
+      "method": "neumann",
+      "maxIterations": 2,
+      "epsilon": 1e-9
+    },
+    {
+      "method": "neumann",
+      "maxIterations": 3,
+      "epsilon": 1.0000000000000002e-12
+    },
+    {
+      "method": "neumann",
+      "maxIterations": 6,
+      "epsilon": 1e-9
+    },
+    {
+      "method": "neumann",
+      "maxIterations": 30,
+      "epsilon": 1e-9
+    },
+    {
+      "method": "neumann",
+      "maxIterations": 12,
+      "epsilon": 1e-9
+    }
+  ]
+}
