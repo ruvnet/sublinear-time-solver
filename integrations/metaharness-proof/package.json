@@ -9,9 +9,12 @@
     "verify": "node verify-receipt.mjs",
     "lineage": "node run-lineage.mjs",
     "verify:lineage": "node verify-lineage.mjs",
-    "test": "node verify-lineage.mjs",
+    "cohort": "node run-cohort.mjs",
+    "verify:cohort": "node verify-cohort.mjs",
+    "test": "node verify-lineage.mjs && node verify-cohort.mjs",
     "prove": "node run-proof.mjs && node verify-receipt.mjs",
-    "prove:lineage": "node run-proof.mjs && node run-lineage.mjs && node verify-lineage.mjs"
+    "prove:lineage": "node run-proof.mjs && node run-lineage.mjs && node verify-lineage.mjs",
+    "prove:cohort": "node run-cohort.mjs && node verify-cohort.mjs"
   },
   "dependencies": {
     "@metaharness/darwin": "0.1.0"

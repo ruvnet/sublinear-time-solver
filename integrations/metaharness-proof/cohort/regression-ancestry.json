@@ -1,0 +1,16 @@
+{
+  "kind": "regression-ancestry",
+  "rejected": [
+    {
+      "id": "g1_v4",
+      "surface": "planner",
+      "failedClauses": [
+        "mean score win failed: child 0.230000 <= parent 0.836000 + 0.05",
+        "not statistically real: lower95 -0.606 <= 0",
+        "verified-solve rate dropped: child 0.000000 < parent 1.000000",
+        "regression rate worse: child 1.000000 > parent 0.000000"
+      ],
+      "ancestor": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "kind": "mutation-effectiveness",
+  "bySurface": [
+    {
+      "surface": "retryPolicy",
+      "attempts": 1,
+      "promotions": 1,
+      "meanDelta": 0.148
+    },
+    {
+      "surface": "toolPolicy",
+      "attempts": 1,
+      "promotions": 1,
+      "meanDelta": 0.14
+    },
+    {
+      "surface": "contextBuilder",
+      "attempts": 1,
+      "promotions": 1,
+      "meanDelta": 0.132
+    },
+    {
+      "surface": "reviewer",
+      "attempts": 4,
+      "promotions": 4,
+      "meanDelta": 0.094
+    },
+    {
+      "surface": "planner",
+      "attempts": 1,
+      "promotions": 0,
+      "meanDelta": -0.606
+    }
+  ],
+  "note": "Evidence for biasing future mutation toward high-payoff surfaces."
+}

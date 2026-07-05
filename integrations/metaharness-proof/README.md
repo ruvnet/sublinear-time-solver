@@ -86,6 +86,39 @@ npm run verify:lineage   # verify the full chain (also `npm test`)
 npm run prove:lineage    # proof + lineage + chain verify, end to end
 ```
 
+## Knowledge base — mutation effectiveness & regression ancestry (cohort)
+
+`run-cohort.mjs` turns the lineage from an audit trail into a **knowledge base**.
+From the immutable gen-0 root it autonomously generates a cohort of
+machine-mutated candidates (real `DeterministicMutator`, one per seed), gates
+each against the frozen anchor suite, and derives two analytics:
+
+- **mutation-effectiveness** — per mutation *surface*: `{attempts, promotions,
+  meanDelta}`, sorted by payoff. This is the evidence a future optimizer would
+  use to bias mutation toward high-payoff classes (meta-learning grounded in
+  evidence, not intuition).
+- **regression-ancestry** — every *rejected* candidate mapped to the gate clause
+  it failed and its ancestor: why a design direction was abandoned.
+
+`verify-cohort.mjs` re-runs every node's gate from sealed inputs and
+**recomputes both analytics from the node receipts**, asserting they match — so
+the knowledge base is itself verifiable, not a trusted summary. Deterministic.
+
+```bash
+npm run cohort           # generate + gate the machine-mutated cohort
+npm run verify:cohort    # recompute analytics from node receipts and verify
+```
+
+Example (synthetic outcomes keyed by surface, so payoff differs by class):
+
+```
+retryPolicy     attempts=1 promotions=1 meanΔ=0.148
+toolPolicy      attempts=1 promotions=1 meanΔ=0.140
+contextBuilder  attempts=1 promotions=1 meanΔ=0.132
+reviewer        attempts=4 promotions=4 meanΔ=0.094
+planner         attempts=1 promotions=0 meanΔ=-0.606   ← regressed, abandoned
+```
+
 ## The line this does NOT cross (and what would)
 
 Everything here proves *mechanism and structure*. It does **not** prove the

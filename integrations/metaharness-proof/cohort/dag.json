@@ -1,0 +1,97 @@
+{
+  "kind": "dag",
+  "root": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+  "anchorHash": "a6364c14748ac0775b2ee0555f431794c977b23bf1913c20556c968201b75795",
+  "nodes": [
+    {
+      "id": "g1_v0",
+      "parent": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+      "surface": "toolPolicy",
+      "promote": true,
+      "manifest": "b6a63dfb850dc60a86233849e5ef5f99f80e1e2e13cf3b265b97a626079a754f"
+    },
+    {
+      "id": "g1_v1",
+      "parent": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+      "surface": "contextBuilder",
+      "promote": true,
+      "manifest": "551983159e7586d69f2190e9d87803bf4ae25721c2017de7257ad1f9f73325b8"
+    },
+    {
+      "id": "g1_v2",
+      "parent": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+      "surface": "retryPolicy",
+      "promote": true,
+      "manifest": "3d44eb168ba0de4eceb9a4ff5575a52abe6b8aae3fe102b1d83a8fd542e1a1ba"
+    },
+    {
+      "id": "g1_v3",
+      "parent": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+      "surface": "reviewer",
+      "promote": true,
+      "manifest": "96a1e3064d4788b5682d1f1000b8abd230e7ccc437b25e3c2acb4cb0dd9ea765"
+    },
+    {
+      "id": "g1_v4",
+      "parent": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+      "surface": "planner",
+      "promote": false,
+      "manifest": "2952ffaab2681ae735cfca6e0a524e3f33937a217ad8840c6581c8a525278bf4"
+    },
+    {
+      "id": "g1_v5",
+      "parent": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+      "surface": "reviewer",
+      "promote": true,
+      "manifest": "96a1e3064d4788b5682d1f1000b8abd230e7ccc437b25e3c2acb4cb0dd9ea765"
+    },
+    {
+      "id": "g1_v6",
+      "parent": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+      "surface": "reviewer",
+      "promote": true,
+      "manifest": "96a1e3064d4788b5682d1f1000b8abd230e7ccc437b25e3c2acb4cb0dd9ea765"
+    },
+    {
+      "id": "g1_v7",
+      "parent": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+      "surface": "reviewer",
+      "promote": true,
+      "manifest": "96a1e3064d4788b5682d1f1000b8abd230e7ccc437b25e3c2acb4cb0dd9ea765"
+    }
+  ],
+  "edges": [
+    {
+      "from": "root",
+      "to": "g1_v0"
+    },
+    {
+      "from": "root",
+      "to": "g1_v1"
+    },
+    {
+      "from": "root",
+      "to": "g1_v2"
+    },
+    {
+      "from": "root",
+      "to": "g1_v3"
+    },
+    {
+      "from": "root",
+      "to": "g1_v4"
+    },
+    {
+      "from": "root",
+      "to": "g1_v5"
+    },
+    {
+      "from": "root",
+      "to": "g1_v6"
+    },
+    {
+      "from": "root",
+      "to": "g1_v7"
+    }
+  ]
+}
