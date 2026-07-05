@@ -164,7 +164,6 @@ export class SublinearSolver {
       solution,
       converged: false,
       elapsedTime: 0,
-      series: [seriesTerm],
       convergenceRate: 1.0
     };
 
@@ -175,10 +174,12 @@ export class SublinearSolver {
     for (let k = 1; k <= this.config.maxIterations; k++) {
       this.timeoutController?.checkTimeout();
 
-      // Compute (D^(-1)R)^k D^(-1) b iteratively
-      // seriesTerm = D^(-1) * (R * seriesTerm)
+      // Next Neumann term: c_{k+1} = M c_k with the Jacobi iteration matrix
+      // M = I - D^(-1) A = -D^(-1) * offdiag(A). computeOffDiagonalMultiply
+      // returns +offdiag(A)*c_k, so the term must be negated — without the
+      // minus sign the series sums (-M)^k and converges to the wrong vector.
       const Rterm = this.computeOffDiagonalMultiply(matrix, seriesTerm);
-      seriesTerm = VectorOperations.elementwiseMultiply(invD, Rterm);
+      seriesTerm = VectorOperations.scale(VectorOperations.elementwiseMultiply(invD, Rterm), -1);
 
       // Add to solution
       solution = VectorOperations.add(solution, seriesTerm);
@@ -198,7 +199,9 @@ export class SublinearSolver {
       state.iteration = k;
       state.solution = [...solution];
       state.elapsedTime = this.performanceMonitor.getElapsedTime();
-      state.series.push([...seriesTerm]);
+      // (Previously retained a copy of every series term in state.series here.
+      // It was never read and grew as O(iterations * n) — multi-GB for large
+      // systems. Dropped; the running `solution` already accumulates the sum.)
 
       // Check convergence
       const convergenceInfo = this.convergenceChecker.checkConvergence(state.residual, this.config.epsilon);
