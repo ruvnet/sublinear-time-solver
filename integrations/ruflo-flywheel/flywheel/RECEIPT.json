@@ -1,0 +1,99 @@
+{
+  "kind": "ruflo-guidance-flywheel-receipt",
+  "target": "ruvnet/sublinear-time-solver",
+  "flywheel": "real @claude-flow/guidance EvolutionPipeline shipped by ruflo 3.24.0 (propose→simulate→compare→stage→promote)",
+  "correction": "the flywheel machinery IS shipped in npm — inside @claude-flow/guidance (ruflo's transitive dep): EvolutionPipeline, ProofChain, ArtifactLedger, EnforcementGates, TrustAccumulator, ContinueGate. It is not a top-level `ruflo flywheel` command; it is the guidance control plane + evolution module.",
+  "defaults": {
+    "costUsd": 0,
+    "network": "none (local HashEmbeddingProvider)",
+    "failClosed": true,
+    "mutation": "explicit (this run opted in)"
+  },
+  "bundleDigest": "6bc8db9df6cd1818fd3edf8031800d58dc35c28a462f148589c375567c2c49bb",
+  "policy": {
+    "knob": "intent routing",
+    "baseline": "intent-blind (intent=general)",
+    "candidate": "intent-routed (intent=task)"
+  },
+  "heldOut": {
+    "k": 2,
+    "tasks": 8,
+    "baselineIntentPrecision": 0.25,
+    "candidateIntentPrecision": 1,
+    "improvement": 0.75,
+    "noRegression": true
+  },
+  "proposal": {
+    "proposalId": "fa1dca64-9682-4b34-bef7-873b6b4d8b16",
+    "kind": "policy-update",
+    "title": "intent-routed retrieval",
+    "description": "Supply the task intent to the shard retriever so its intent boost activates, instead of intent-blind retrieval.",
+    "author": "ruflo-flywheel",
+    "targetPath": "retrieval.policy",
+    "diff": {
+      "before": {
+        "intentRouting": false
+      },
+      "after": {
+        "intentRouting": true
+      }
+    },
+    "rationale": "Held-out intent-precision@2 rises 0.250 -> 1.000 with no regression.",
+    "riskAssessment": {
+      "level": "low",
+      "factors": [
+        "retrieval-only",
+        "no code path change",
+        "reversible"
+      ]
+    },
+    "createdAt": 1783269630519,
+    "status": "promoted",
+    "signature": "d39d45acad3a15e1f6b1d52202efefc7300deee9e95a717e9deeae8790108a42",
+    "signingKeyRef": "DEMO_SIGNING_KEY (committed non-secret; see src/flywheel-core.mjs)"
+  },
+  "simulation": {
+    "baselineTraceHash": "139958e3f3f91b33b6104f3d8127cf8e202cfbbdf4fb960c24c8a57d3a6ac276",
+    "candidateTraceHash": "2e6c3ca79950d0ab50f7596d9a778c6c5bf72bf34ba908f0d58eaa5ed6ddc81b",
+    "divergenceScore": 0.037500000000000006,
+    "decisionDiffs": 15
+  },
+  "decision": {
+    "approved": true,
+    "reason": "Divergence 0.038 within threshold, no metric regressions",
+    "divergenceScore": 0.037500000000000006,
+    "maxDivergence": 0.2,
+    "metrics": {
+      "baseline": {
+        "intentPrecision": 0.25
+      },
+      "candidate": {
+        "intentPrecision": 1
+      }
+    },
+    "promoted": true,
+    "rolloutStatus": "completed"
+  },
+  "decisionHash": "4de0a0303afdcfc0ef5a021020c67bac3e04b8414742b0e59533203216c678a3",
+  "stageLog": [
+    {
+      "stage": "canary",
+      "advanced": true,
+      "rolledBack": false,
+      "reason": "Advanced to stage \"partial\""
+    },
+    {
+      "stage": "partial",
+      "advanced": true,
+      "rolledBack": false,
+      "reason": "Advanced to stage \"full\""
+    },
+    {
+      "stage": "full",
+      "advanced": true,
+      "rolledBack": false,
+      "reason": "All stages completed successfully; proposal promoted"
+    }
+  ],
+  "reproducible": "bundle digest, held-out precision, divergence, gate verdict, promotion, and the proposal signature are reproduced by verify-flywheel.mjs. proposalId + createdAt are non-deterministic (UUID/clock) and are excluded from the reproducible decision."
+}

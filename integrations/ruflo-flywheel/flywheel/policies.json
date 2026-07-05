@@ -1,0 +1,180 @@
+{
+  "baseline": {
+    "policy": "baseline",
+    "k": 2,
+    "intentPrecision": 0.25,
+    "hits": 4,
+    "total": 16,
+    "perTask": [
+      {
+        "id": "t1",
+        "intent": "security",
+        "selectedRuleIds": [
+          "AUTO-010",
+          "AUTO-007"
+        ],
+        "matched": 0,
+        "of": 2
+      },
+      {
+        "id": "t2",
+        "intent": "security",
+        "selectedRuleIds": [
+          "AUTO-010",
+          "AUTO-009"
+        ],
+        "matched": 0,
+        "of": 2
+      },
+      {
+        "id": "t3",
+        "intent": "performance",
+        "selectedRuleIds": [
+          "AUTO-010",
+          "AUTO-006"
+        ],
+        "matched": 1,
+        "of": 2
+      },
+      {
+        "id": "t4",
+        "intent": "performance",
+        "selectedRuleIds": [
+          "AUTO-008",
+          "AUTO-010"
+        ],
+        "matched": 0,
+        "of": 2
+      },
+      {
+        "id": "t5",
+        "intent": "testing",
+        "selectedRuleIds": [
+          "AUTO-010",
+          "AUTO-009"
+        ],
+        "matched": 0,
+        "of": 2
+      },
+      {
+        "id": "t6",
+        "intent": "testing",
+        "selectedRuleIds": [
+          "AUTO-010",
+          "AUTO-007"
+        ],
+        "matched": 1,
+        "of": 2
+      },
+      {
+        "id": "t7",
+        "intent": "architecture",
+        "selectedRuleIds": [
+          "AUTO-010",
+          "AUTO-005"
+        ],
+        "matched": 1,
+        "of": 2
+      },
+      {
+        "id": "t8",
+        "intent": "architecture",
+        "selectedRuleIds": [
+          "AUTO-003",
+          "AUTO-010"
+        ],
+        "matched": 1,
+        "of": 2
+      }
+    ]
+  },
+  "candidate": {
+    "policy": "candidate",
+    "k": 2,
+    "intentPrecision": 1,
+    "hits": 16,
+    "total": 16,
+    "perTask": [
+      {
+        "id": "t1",
+        "intent": "security",
+        "selectedRuleIds": [
+          "AUTO-003",
+          "AUTO-004"
+        ],
+        "matched": 2,
+        "of": 2
+      },
+      {
+        "id": "t2",
+        "intent": "security",
+        "selectedRuleIds": [
+          "AUTO-003",
+          "AUTO-004"
+        ],
+        "matched": 2,
+        "of": 2
+      },
+      {
+        "id": "t3",
+        "intent": "performance",
+        "selectedRuleIds": [
+          "AUTO-006",
+          "AUTO-005"
+        ],
+        "matched": 2,
+        "of": 2
+      },
+      {
+        "id": "t4",
+        "intent": "performance",
+        "selectedRuleIds": [
+          "AUTO-005",
+          "AUTO-006"
+        ],
+        "matched": 2,
+        "of": 2
+      },
+      {
+        "id": "t5",
+        "intent": "testing",
+        "selectedRuleIds": [
+          "AUTO-008",
+          "AUTO-007"
+        ],
+        "matched": 2,
+        "of": 2
+      },
+      {
+        "id": "t6",
+        "intent": "testing",
+        "selectedRuleIds": [
+          "AUTO-007",
+          "AUTO-008"
+        ],
+        "matched": 2,
+        "of": 2
+      },
+      {
+        "id": "t7",
+        "intent": "architecture",
+        "selectedRuleIds": [
+          "AUTO-010",
+          "AUTO-009"
+        ],
+        "matched": 2,
+        "of": 2
+      },
+      {
+        "id": "t8",
+        "intent": "architecture",
+        "selectedRuleIds": [
+          "AUTO-010",
+          "AUTO-009"
+        ],
+        "matched": 2,
+        "of": 2
+      }
+    ]
+  }
+}
