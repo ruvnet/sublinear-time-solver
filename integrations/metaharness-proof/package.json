@@ -1,0 +1,16 @@
+{
+  "name": "metaharness-proof-of-mechanism",
+  "version": "1.0.0",
+  "private": true,
+  "description": "single-round proof-of-mechanism: seal and independently verify a generation-0 receipt bundle over the real @metaharness/darwin promotion gate",
+  "type": "module",
+  "scripts": {
+    "proof": "node run-proof.mjs",
+    "verify": "node verify-receipt.mjs",
+    "test": "node verify-receipt.mjs",
+    "prove": "node run-proof.mjs && node verify-receipt.mjs"
+  },
+  "dependencies": {
+    "@metaharness/darwin": "0.1.0"
+  }
+}

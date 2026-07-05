@@ -1,0 +1,11 @@
+{
+  "kind": "cost-receipt",
+  "currency": "USD",
+  "metered": true,
+  "source": "per-task cost proxy (RunnerOptions.costUsdPerTask); never self-reported",
+  "perVariant": {
+    "baseline": 0.225,
+    "candidate": 0.02
+  },
+  "total": 0.245
+}

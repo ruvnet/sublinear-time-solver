@@ -1,0 +1,23 @@
+{
+  "kind": "generation-0-receipt",
+  "label": "single-round proof-of-mechanism",
+  "disclaimer": "SYNTHETIC candidate/outcomes. Proves gate wiring, receipt persistence, SHADOW registration, and no-auto-serve — NOT learning, NOT compounding, NOT production.",
+  "immutableRoot": true,
+  "generation": 0,
+  "seed": 42,
+  "engine": {
+    "name": "@metaharness/darwin",
+    "version": "0.1.0"
+  },
+  "artifacts": {
+    "inputHoldoutHash": "a6364c14748ac0775b2ee0555f431794c977b23bf1913c20556c968201b75795",
+    "baselineManifestHash": "3357292368ea0199060ea1a4aaaf5992be1dd7cad8a24e11244b881c50422383",
+    "candidateManifestHash": "260e2f4e4998b61bda6ac5af3d4805f41f20d22757daa6b1073205b24345b427",
+    "meetsPromotionRule": "adr-076@0.1.0",
+    "decisionReceiptHash": "e653dc56ed6d7f48500491a2791b49aebd1928d52ecdef6df2064b71e329cf31",
+    "shadowRegistrationId": "shadow-af585335636db8228dbd8213",
+    "costReceiptHash": "f682d6a31f3e8c7e33a9cfc609d76da1e7307b9487ac386067b7d06a1b7a5e93"
+  },
+  "bundleRootHash": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+  "promote": true
+}
