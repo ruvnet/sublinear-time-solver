@@ -7,7 +7,8 @@
   "scripts": {
     "flywheel": "node run-flywheel.mjs",
     "verify:flywheel": "node verify-flywheel.mjs",
-    "prove:flywheel": "node run-flywheel.mjs && node verify-flywheel.mjs"
+    "verify:embedder": "node verify-embedder.mjs",
+    "prove:flywheel": "node run-flywheel.mjs && node verify-flywheel.mjs && node verify-embedder.mjs"
   },
   "dependencies": {
     "@claude-flow/guidance": "3.0.0-alpha.3"

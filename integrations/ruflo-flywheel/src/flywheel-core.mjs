@@ -8,6 +8,7 @@ import { createCompiler, createRetriever, createEvolutionPipeline } from '@claud
 import { scorePolicy, HELD_OUT_TASKS } from './policy.mjs';
 import { digestBundle } from './bundle.mjs';
 import { hashJson } from './hash.mjs';
+import { makeEmbeddingProvider } from './embedder.mjs';
 
 export const K = 2;
 export const MAX_DIVERGENCE = 0.2; // drift limit; also the strictest (canary) stage gate
@@ -15,15 +16,18 @@ export const MAX_DIVERGENCE = 0.2; // drift limit; also the strictest (canary) s
 // verifier can recompute the proposal signature and prove authenticity.
 export const DEMO_SIGNING_KEY = 'ruflo-flywheel-demo-key-not-a-secret';
 
-/** Compile GUIDANCE.md, run both bounded policies, return bundle + measurements. */
-export async function compileAndMeasure(src) {
+/** Compile GUIDANCE.md, run both bounded policies, return bundle + measurements.
+ *  Retrieval runs through the ruflo 3.25.0 Lattice embedder tier, which is
+ *  fail-closed: absent package => HashEmbeddingProvider, exactly as before. */
+export async function compileAndMeasure(src, env = process.env) {
   const bundle = await createCompiler({ autoGenerateIds: true }).compile(src);
-  const retriever = createRetriever();
+  const embedder = await makeEmbeddingProvider(env);
+  const retriever = createRetriever(embedder.provider);
   await retriever.loadBundle(bundle);
   await retriever.indexShards();
   const base = await scorePolicy(retriever, 'baseline', K);
   const cand = await scorePolicy(retriever, 'candidate', K);
-  return { bundle, bundleDigest: digestBundle(bundle), base, cand };
+  return { bundle, bundleDigest: digestBundle(bundle), base, cand, embedder: { tier: embedder.tier, model: embedder.model, reason: embedder.reason } };
 }
 
 /** Deterministic golden-trace evaluator cache (async retrieval precomputed). */

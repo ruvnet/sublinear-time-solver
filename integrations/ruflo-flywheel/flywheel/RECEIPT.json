@@ -5,9 +5,15 @@
   "correction": "the flywheel machinery IS shipped in npm — inside @claude-flow/guidance (ruflo's transitive dep): EvolutionPipeline, ProofChain, ArtifactLedger, EnforcementGates, TrustAccumulator, ContinueGate. It is not a top-level `ruflo flywheel` command; it is the guidance control plane + evolution module.",
   "defaults": {
     "costUsd": 0,
-    "network": "none (local HashEmbeddingProvider)",
+    "network": "none (local embeddings)",
     "failClosed": true,
     "mutation": "explicit (this run opted in)"
+  },
+  "embedder": {
+    "tier": "fallback:hash",
+    "model": null,
+    "reason": "package \"@ruvector/lattice-wasm\" not loadable (ERR_MODULE_NOT_FOUND) — resolving as before",
+    "note": "ruflo 3.25.0 Lattice WASM embedder tier (fail-closed). @ruvector/lattice-wasm 404s on npm today, so this run resolves to the hash fallback exactly as before — zero regression. Set RUFLO_LATTICE_WASM_PKG to activate a real/stub provider."
   },
   "bundleDigest": "6bc8db9df6cd1818fd3edf8031800d58dc35c28a462f148589c375567c2c49bb",
   "policy": {
@@ -24,7 +30,7 @@
     "noRegression": true
   },
   "proposal": {
-    "proposalId": "fa1dca64-9682-4b34-bef7-873b6b4d8b16",
+    "proposalId": "0f80b164-89a0-4b1b-bf12-f7f16fd5d138",
     "kind": "policy-update",
     "title": "intent-routed retrieval",
     "description": "Supply the task intent to the shard retriever so its intent boost activates, instead of intent-blind retrieval.",
@@ -47,9 +53,9 @@
         "reversible"
       ]
     },
-    "createdAt": 1783269630519,
+    "createdAt": 1783279341823,
     "status": "promoted",
-    "signature": "d39d45acad3a15e1f6b1d52202efefc7300deee9e95a717e9deeae8790108a42",
+    "signature": "d1eab6459ae5664bcfc803129ec5756e5d6cc8974618ae1c59d9268ba963d08f",
     "signingKeyRef": "DEMO_SIGNING_KEY (committed non-secret; see src/flywheel-core.mjs)"
   },
   "simulation": {

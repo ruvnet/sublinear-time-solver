@@ -36,8 +36,9 @@ const OUT = join(HERE, 'flywheel');
 const write = (rel, v) => { const p = join(OUT, rel); mkdirSync(dirname(p), { recursive: true }); writeFileSync(p, typeof v === 'string' ? v : JSON.stringify(v, null, 2) + '\n'); };
 
 const src = readFileSync(join(HERE, 'GUIDANCE.md'), 'utf8');
-const { bundle, bundleDigest, base, cand } = await compileAndMeasure(src);
+const { bundle, bundleDigest, base, cand, embedder } = await compileAndMeasure(src);
 console.log(`compiled: ${bundle.shards.length} shards, ${bundle.manifest.constitutionRules} constitution rules  (digest ${bundleDigest.slice(0, 12)}…)`);
+console.log(`embedder tier: ${embedder.tier} — ${embedder.reason}`);
 console.log(`held-out intent-precision@${K}: baseline ${base.intentPrecision.toFixed(3)} -> candidate ${cand.intentPrecision.toFixed(3)}`);
 
 const { proposal, sim, cmp, stageLog, promoted, decision, decisionHash } = driveFlywheel(base, cand);
@@ -49,7 +50,11 @@ const receipt = {
   target: 'ruvnet/sublinear-time-solver',
   flywheel: 'real @claude-flow/guidance EvolutionPipeline shipped by ruflo 3.24.0 (propose→simulate→compare→stage→promote)',
   correction: "the flywheel machinery IS shipped in npm — inside @claude-flow/guidance (ruflo's transitive dep): EvolutionPipeline, ProofChain, ArtifactLedger, EnforcementGates, TrustAccumulator, ContinueGate. It is not a top-level `ruflo flywheel` command; it is the guidance control plane + evolution module.",
-  defaults: { costUsd: 0, network: 'none (local HashEmbeddingProvider)', failClosed: true, mutation: 'explicit (this run opted in)' },
+  defaults: { costUsd: 0, network: 'none (local embeddings)', failClosed: true, mutation: 'explicit (this run opted in)' },
+  embedder: {
+    ...embedder,
+    note: 'ruflo 3.25.0 Lattice WASM embedder tier (fail-closed). @ruvector/lattice-wasm 404s on npm today, so this run resolves to the hash fallback exactly as before — zero regression. Set RUFLO_LATTICE_WASM_PKG to activate a real/stub provider.',
+  },
   bundleDigest,
   policy: { knob: 'intent routing', baseline: 'intent-blind (intent=general)', candidate: 'intent-routed (intent=task)' },
   heldOut: {

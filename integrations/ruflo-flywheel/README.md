@@ -112,11 +112,41 @@ npm run prove:flywheel   # both
   stage whose divergence exceeds its threshold auto-rolls-back.
 - **mutation explicit** — nothing evolves unless you run the flywheel.
 
+## Lattice WASM embedder tier (ruflo 3.25.0)
+
+ruflo 3.25.0 adds a real multi-model WASM embedder (miniLM, bge,
+paraphrase-miniLM, GPU qwen3-0.6b) as the **primary** embedding tier, ahead of
+the ONNX/hash path — *optional, fail-closed, zero-regression*. Retrieval here
+runs through that tier via `src/embedder.mjs`, wired to the retriever's real
+`IEmbeddingProvider` seam (`createRetriever(provider)`).
+
+**Honest status.** Per ruvnet's own gist, this is currently *"a fail-closed,
+optional adapter seam that is dormant"* — `@ruvector/lattice-wasm` **404s on npm
+today** (verified: `npm view … → E404`). So this integration implements the
+seam, not a live model:
+
+- **absent package (today)** → the seam fails closed to `HashEmbeddingProvider`,
+  and every number above is produced on that path — *zero regression*.
+- **package present (future)** → retrieval upgrades to real embeddings with no
+  code change; set `RUFLO_LATTICE_WASM_PKG` / `RUFLO_EMBED_MODEL` to point at it.
+
+`verify-embedder.mjs` proves the seam without fabricating the package: default →
+hash fallback; a bad specifier → fails closed (never throws); a **labeled local
+stub** (`src/lattice-stub.mjs`, explicitly *not* a real model) → the activation
+path fires and the whole flywheel runs end-to-end on it; and the sealed receipt
+(fallback path) reproduces bit-for-bit, proving zero regression. 11/11 pass.
+
+```bash
+npm run verify:embedder                                    # fallback + activation + zero-regression
+RUFLO_LATTICE_WASM_PKG=./src/lattice-stub.mjs npm run flywheel   # exercise the activation path
+```
+
 ## Honest scope
 
-- The `HashEmbeddingProvider` is test-only, so the *baseline* ranking is
+- The default embedding tier resolves to the test-only `HashEmbeddingProvider`
+  (the Lattice package is not yet published), so the *baseline* ranking is
   deliberately weak; the win is attributable to the real intent-boost mechanism,
-  not to semantic embeddings (which would need a model-backed provider).
+  not to semantic embeddings. When the Lattice tier ships, the seam is ready.
 - Ground-truth intents are author-assigned per task (a deterministic oracle),
   not human relevance judgments — stated plainly so the metric isn't oversold.
 - This proves one promotion end-to-end on the real pipeline. Turning it into a
@@ -131,6 +161,10 @@ npm run prove:flywheel   # both
 - `src/flywheel-core.mjs` — shared compile/measure/drive logic (run & verify share it)
 - `src/bundle.mjs` — timestamp-free deterministic bundle digest
 - `src/hash.mjs` — canonical JSON hashing
+- `src/embedder.mjs` — ruflo 3.25.0 Lattice WASM embedder tier (fail-closed seam)
+- `src/lattice-stub.mjs` — labeled activation test double (not a real model)
+- `verify-embedder.mjs` — proves fail-closed fallback, activation, zero regression
+- `proven-config/` — ruflo's signed retrieval config champion, captured live (gist part #1)
 - `run-flywheel.mjs` — drives the real pipeline, seals `flywheel/`
 - `verify-flywheel.mjs` — independent re-execution (the acceptance test)
 - `flywheel/` — sealed receipt, policies, bundle projection, lineage
