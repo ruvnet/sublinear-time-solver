@@ -33,6 +33,11 @@ impl DominanceParameters {
         let (n, _) = m.shape();
         let mut delta = f64::MAX;
         let mut s_max: f64 = 0.0;
+        // Gershgorin bound on the spectral radius: rho(A) <= max_i sum_j |a_ij|.
+        let mut gershgorin_radius: f64 = 0.0;
+        // Count nonzeros inline (same 1e-10 threshold to_sparse used) so density
+        // needs no throwaway sparse copy.
+        let mut nnz: usize = 0;
 
         // Hoist the array view out of the O(n^2) loop — it was rebuilt on every
         // element access (n^2 view constructions).
@@ -41,6 +46,9 @@ impl DominanceParameters {
         // Compute dominance parameters
         for i in 0..n {
             let diagonal = view[[i, i]].abs();
+            if diagonal > 1e-10 {
+                nnz += 1;
+            }
             let mut off_diagonal_sum = 0.0;
 
             for j in 0..n {
@@ -48,25 +56,31 @@ impl DominanceParameters {
                     let val = view[[i, j]].abs();
                     off_diagonal_sum += val;
                     s_max = s_max.max(val);
+                    if val > 1e-10 {
+                        nnz += 1;
+                    }
                 }
             }
 
             if diagonal > off_diagonal_sum {
                 delta = delta.min(diagonal - off_diagonal_sum);
             }
+            gershgorin_radius = gershgorin_radius.max(diagonal + off_diagonal_sum);
         }
 
-        // Estimate condition number (simplified)
-        let spectral_radius = m.spectral_radius();
+        // Bound the condition number using the Gershgorin spectral-radius bound
+        // computed above, instead of a 100-iteration O(n^2) power method — the
+        // power iteration made this "sublinear analysis" superlinear. The bound
+        // reuses the row sums already accumulated, adding no extra passes.
+        let spectral_radius = gershgorin_radius;
         let condition = if delta > 0.0 {
             spectral_radius / delta
         } else {
             f64::INFINITY
         };
 
-        // Compute sparsity
-        let sparse = m.to_sparse();
-        let sparsity = 1.0 - sparse.sparsity();
+        // Density (fraction of nonzeros) from the inline count above.
+        let sparsity = if n > 0 { nnz as f64 / (n * n) as f64 } else { 0.0 };
 
         Self {
             delta,
