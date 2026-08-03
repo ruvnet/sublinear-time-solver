@@ -1,0 +1,5 @@
+{
+  "kind": "serving-manifest",
+  "served": [],
+  "note": "no candidate is serving production traffic"
+}

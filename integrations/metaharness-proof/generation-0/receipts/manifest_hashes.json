@@ -1,0 +1,21 @@
+{
+  "kind": "manifest-hashes",
+  "baseline": {
+    "files": [
+      {
+        "path": "retry_policy.ts",
+        "sha256": "ba02c558366a01c002165051a9e63ce1698c168b73276c42c92387b6048b86a6"
+      }
+    ],
+    "manifestHash": "3357292368ea0199060ea1a4aaaf5992be1dd7cad8a24e11244b881c50422383"
+  },
+  "candidate": {
+    "files": [
+      {
+        "path": "retry_policy.ts",
+        "sha256": "b450eb8c43b457f43255c97bfe13fc1d4254f3d070a812f398d3072ee60646eb"
+      }
+    ],
+    "manifestHash": "260e2f4e4998b61bda6ac5af3d4805f41f20d22757daa6b1073205b24345b427"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "kind": "lineage",
+  "anchorHash": "a6364c14748ac0775b2ee0555f431794c977b23bf1913c20556c968201b75795",
+  "immutableRoot": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+  "chain": [
+    {
+      "generation": 0,
+      "bundleRootHash": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+      "parent": null,
+      "promote": true
+    },
+    {
+      "generation": 1,
+      "bundleRootHash": "de3c867f13f415a38056cc59f1bee0fa3afaca8c7a274d686893512907ec8a4d",
+      "parent": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+      "promote": true
+    }
+  ]
+}

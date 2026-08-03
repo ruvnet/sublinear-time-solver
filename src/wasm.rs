@@ -7,6 +7,14 @@ use crate::sublinear::{SublinearConfig, SublinearNeumannSolver, SublinearSolver}
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
+/// Upper bound on any matrix dimension derived from untrusted WASM input.
+/// Caps `n*n` allocations well below OOM and below `usize` overflow on wasm32.
+const MAX_WASM_DIM: usize = 100_000;
+
+/// Upper bound on the square-matrix size the self-generating benchmark helpers
+/// will allocate (`size*size` dense). Keeps them under ~134 MB (f64).
+const MAX_BENCH_DIM: usize = 4096;
+
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct WasmSolver {
@@ -40,6 +48,13 @@ impl WasmSolver {
     ) -> Result<Vec<f64>, JsValue> {
         if rows != cols || rows != b.len() {
             return Err(JsValue::from_str("Invalid dimensions"));
+        }
+        // Guard the flat-buffer indexing `matrix_data[i * cols + j]` below:
+        // reject any buffer that does not hold exactly rows*cols elements.
+        // `checked_mul` also rejects a rows*cols overflow on wasm32.
+        match rows.checked_mul(cols) {
+            Some(expected) if expected == matrix_data.len() => {}
+            _ => return Err(JsValue::from_str("matrix_data length must equal rows * cols")),
         }
 
         // Simple Jacobi iteration for demonstration
@@ -87,6 +102,12 @@ impl WasmSolver {
         if rows != cols || rows != b.len() {
             return Err(JsValue::from_str("Invalid dimensions"));
         }
+        // Guard flat-buffer indexing in matrix_vector_multiply against a short
+        // buffer or a rows*cols overflow (wasm32).
+        match rows.checked_mul(cols) {
+            Some(expected) if expected == matrix_data.len() => {}
+            _ => return Err(JsValue::from_str("matrix_data length must equal rows * cols")),
+        }
 
         let n = rows;
         let mut x = vec![0.0; n];
@@ -129,7 +150,22 @@ impl WasmSolver {
 
     /// Compute PageRank for a graph.
     #[wasm_bindgen(js_name = computePageRank)]
-    pub fn compute_pagerank(&self, adjacency: Vec<f64>, n: usize, damping: f64) -> Vec<f64> {
+    pub fn compute_pagerank(
+        &self,
+        adjacency: Vec<f64>,
+        n: usize,
+        damping: f64,
+    ) -> Result<Vec<f64>, JsValue> {
+        if n == 0 {
+            return Err(JsValue::from_str("n must be greater than zero"));
+        }
+        // `adjacency` is indexed as an n*n dense matrix; require exactly that
+        // many elements and reject an n*n overflow before allocating.
+        match n.checked_mul(n) {
+            Some(expected) if expected == adjacency.len() => {}
+            _ => return Err(JsValue::from_str("adjacency length must equal n * n")),
+        }
+
         let mut rank = vec![1.0 / n as f64; n];
         let mut new_rank = vec![0.0; n];
 
@@ -162,12 +198,17 @@ impl WasmSolver {
             }
         }
 
-        rank
+        Ok(rank)
     }
 
     /// Benchmark the solver performance.
     #[wasm_bindgen(js_name = benchmark)]
     pub fn benchmark(&self, size: usize) -> String {
+        // Bound the self-generated dense matrix: size==0 would underflow
+        // `size - 1` (usize) and size*size can overflow/OOM.
+        if size == 0 || size > MAX_BENCH_DIM {
+            return format!("Invalid size: must be in 1..={}", MAX_BENCH_DIM);
+        }
         let start = web_sys::window().unwrap().performance().unwrap().now();
 
         // Generate test matrix (diagonally dominant)
@@ -221,6 +262,9 @@ impl PerformanceMetrics {
     /// Validate that WASM provides performance improvements
     #[wasm_bindgen(js_name = validatePerformance)]
     pub fn validate_performance(size: usize) -> Self {
+        // Clamp the self-generated problem size to a safe range (size==0 would
+        // underflow `size - 1`; large size*size overflows/OOMs).
+        let size = size.clamp(1, MAX_BENCH_DIM);
         let solver = WasmSolver::new(1e-6, 1000);
 
         // Generate test problem
@@ -309,6 +353,9 @@ impl WasmSublinearSolver {
         let max_col = triplets.iter().map(|(_, j, _)| *j).max().unwrap_or(0);
         let n = (max_row + 1).max(max_col + 1);
 
+        if n > MAX_WASM_DIM {
+            return Err(JsValue::from_str("Matrix dimension exceeds limit"));
+        }
         if b.len() != n {
             return Err(JsValue::from_str(
                 "Vector b size must match matrix dimension",
@@ -351,6 +398,10 @@ impl WasmSublinearSolver {
         let max_row = triplets.iter().map(|(i, _, _)| *i).max().unwrap_or(0);
         let max_col = triplets.iter().map(|(_, j, _)| *j).max().unwrap_or(0);
         let n = (max_row + 1).max(max_col + 1);
+
+        if n > MAX_WASM_DIM {
+            return Err(JsValue::from_str("Matrix dimension exceeds limit"));
+        }
 
         let matrix = SparseMatrix::from_triplets(triplets, n, n)
             .map_err(|e| JsValue::from_str(&format!("Matrix creation failed: {:?}", e)))?;

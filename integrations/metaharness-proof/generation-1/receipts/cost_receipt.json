@@ -1,0 +1,11 @@
+{
+  "kind": "cost-receipt",
+  "currency": "USD",
+  "metered": true,
+  "source": "per-task cost proxy; never self-reported",
+  "perVariant": {
+    "baseline": 0.2,
+    "candidate": 0.03
+  },
+  "total": 0.23
+}

@@ -6,6 +6,41 @@ import { Matrix, SparseMatrix, DenseMatrix, Vector, MatrixAnalysis, SolverError,
 
 export class MatrixOperations {
   /**
+   * Matrices that have already passed validateMatrix, so per-entry accessors
+   * don't re-run an O(nnz) validation on every call. Assumes matrices are
+   * treated as immutable after first use (true for the analysis/solve paths).
+   */
+  private static validatedMatrices = new WeakSet<Matrix>();
+
+  /**
+   * Lazily-built O(1) entry lookup for COO matrices, keyed per matrix object.
+   * Key is `row * cols + col`; value is the FIRST value seen for that
+   * coordinate, matching the original linear-scan first-match-wins semantics.
+   */
+  private static cooIndexCache = new WeakMap<Matrix, Map<number, number>>();
+
+  private static ensureValidated(matrix: Matrix): void {
+    if (!this.validatedMatrices.has(matrix)) {
+      this.validateMatrix(matrix);
+    }
+  }
+
+  private static getCooIndex(matrix: SparseMatrix): Map<number, number> {
+    let index = this.cooIndexCache.get(matrix);
+    if (!index) {
+      index = new Map<number, number>();
+      const { values, rowIndices, colIndices, cols } = matrix;
+      for (let k = 0; k < values.length; k++) {
+        const key = rowIndices[k] * cols + colIndices[k];
+        // Keep the first occurrence to preserve legacy first-match-wins.
+        if (!index.has(key)) index.set(key, values[k]);
+      }
+      this.cooIndexCache.set(matrix, index);
+    }
+    return index;
+  }
+
+  /**
    * Validates matrix format and properties
    */
   static validateMatrix(matrix: Matrix): void {
@@ -52,6 +87,8 @@ export class MatrixOperations {
     } else {
       throw new SolverError(`Unsupported matrix format: ${matrix.format}`, ErrorCodes.INVALID_MATRIX);
     }
+
+    this.validatedMatrices.add(matrix);
   }
 
   /**
@@ -93,7 +130,7 @@ export class MatrixOperations {
    * Get matrix entry at (row, col)
    */
   static getEntry(matrix: Matrix, row: number, col: number): number {
-    this.validateMatrix(matrix);
+    this.ensureValidated(matrix);
 
     if (row < 0 || row >= matrix.rows || col < 0 || col >= matrix.cols) {
       throw new SolverError(`Index (${row}, ${col}) out of bounds`, ErrorCodes.INVALID_DIMENSIONS);
@@ -104,12 +141,8 @@ export class MatrixOperations {
       return dense.data[row][col];
     } else if (matrix.format === 'coo') {
       const sparse = matrix as SparseMatrix;
-      for (let k = 0; k < sparse.values.length; k++) {
-        if (sparse.rowIndices[k] === row && sparse.colIndices[k] === col) {
-          return sparse.values[k];
-        }
-      }
-      return 0; // Implicit zero
+      // O(1) lookup via the per-matrix index instead of an O(nnz) scan.
+      return this.getCooIndex(sparse).get(row * matrix.cols + col) ?? 0;
     }
 
     return 0;
@@ -206,6 +239,48 @@ export class MatrixOperations {
   }
 
   /**
+   * Compute, in a single pass, the diagonal and off-diagonal absolute row/col
+   * sums used for diagonal-dominance. O(nnz) for COO (vs O(rows*nnz) when each
+   * row/col sum re-scanned all entries). Semantics match getDiagonal (first
+   * stored value at (i,i)) and getRowSum/getColumnSum (sum of |value| over all
+   * stored off-diagonal entries, duplicates included).
+   */
+  private static computeDominanceComponents(matrix: Matrix): { diag: Float64Array; rowOff: Float64Array; colOff: Float64Array } {
+    const n = matrix.rows;
+    const diag = new Float64Array(n);
+    const rowOff = new Float64Array(n);
+    const colOff = new Float64Array(n);
+
+    if (matrix.format === 'dense') {
+      const dense = matrix as DenseMatrix;
+      for (let i = 0; i < n; i++) {
+        const rowData = dense.data[i];
+        for (let j = 0; j < matrix.cols; j++) {
+          const v = rowData[j];
+          if (i === j) diag[i] = v;
+          else { rowOff[i] += Math.abs(v); colOff[j] += Math.abs(v); }
+        }
+      }
+    } else {
+      const sparse = matrix as SparseMatrix;
+      const diagSet = new Uint8Array(n);
+      for (let k = 0; k < sparse.values.length; k++) {
+        const i = sparse.rowIndices[k];
+        const j = sparse.colIndices[k];
+        const v = sparse.values[k];
+        if (i === j) {
+          if (!diagSet[i]) { diag[i] = v; diagSet[i] = 1; } // first-match wins
+        } else {
+          rowOff[i] += Math.abs(v);
+          colOff[j] += Math.abs(v);
+        }
+      }
+    }
+
+    return { diag, rowOff, colOff };
+  }
+
+  /**
    * Check if matrix is diagonally dominant
    */
   static checkDiagonalDominance(matrix: Matrix): { isRowDD: boolean; isColDD: boolean; strength: number } {
@@ -215,15 +290,17 @@ export class MatrixOperations {
       return { isRowDD: false, isColDD: false, strength: 0 };
     }
 
+    const { diag, rowOff, colOff } = this.computeDominanceComponents(matrix);
+
     let isRowDD = true;
     let isColDD = true;
     let minRowStrength = Infinity;
     let minColStrength = Infinity;
 
     for (let i = 0; i < matrix.rows; i++) {
-      const diagonal = Math.abs(this.getDiagonal(matrix, i));
-      const rowOffDiagonalSum = this.getRowSum(matrix, i, true);
-      const colOffDiagonalSum = this.getColumnSum(matrix, i, true);
+      const diagonal = Math.abs(diag[i]);
+      const rowOffDiagonalSum = rowOff[i];
+      const colOffDiagonalSum = colOff[i];
 
       if (diagonal === 0) {
         isRowDD = false;
@@ -280,14 +357,17 @@ export class MatrixOperations {
       return true;
     }
 
-    // For sparse matrices, check symmetry by comparing entries
-    for (let i = 0; i < matrix.rows; i++) {
-      for (let j = i + 1; j < matrix.cols; j++) {
-        const entry_ij = this.getEntry(matrix, i, j);
-        const entry_ji = this.getEntry(matrix, j, i);
-        if (Math.abs(entry_ij - entry_ji) > tolerance) {
-          return false;
-        }
+    // For sparse matrices, only stored off-diagonal coordinates can break
+    // symmetry: a pair where both sides are absent is 0 == 0. Iterating the
+    // stored entries (O(nnz)) and comparing each against its mirror via the
+    // O(1) index catches every asymmetric pair, matching the O(V^2) probe.
+    const sparse = matrix as SparseMatrix;
+    for (let k = 0; k < sparse.values.length; k++) {
+      const i = sparse.rowIndices[k];
+      const j = sparse.colIndices[k];
+      if (i === j) continue;
+      if (Math.abs(this.getEntry(matrix, i, j) - this.getEntry(matrix, j, i)) > tolerance) {
+        return false;
       }
     }
 

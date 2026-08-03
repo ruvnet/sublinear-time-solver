@@ -1,0 +1,34 @@
+{
+  "name": "metaharness-proof-of-mechanism",
+  "version": "1.0.0",
+  "private": true,
+  "description": "single-round proof-of-mechanism: seal and independently verify a generation-0 receipt bundle over the real @metaharness/darwin promotion gate",
+  "type": "module",
+  "scripts": {
+    "proof": "node run-proof.mjs",
+    "verify": "node verify-receipt.mjs",
+    "lineage": "node run-lineage.mjs",
+    "verify:lineage": "node verify-lineage.mjs",
+    "cohort": "node run-cohort.mjs",
+    "verify:cohort": "node verify-cohort.mjs",
+    "plateau": "node run-plateau.mjs",
+    "verify:plateau": "node verify-plateau.mjs",
+    "real-eval": "npx tsx run-real-eval.mts",
+    "verify:real-eval": "npx tsx verify-real-eval.mts",
+    "prove:real": "npx tsx run-real-eval.mts && npx tsx verify-real-eval.mts",
+    "autonomous": "npx tsx run-autonomous.mts",
+    "verify:autonomous": "npx tsx verify-autonomous.mts",
+    "prove:autonomous": "npx tsx run-autonomous.mts && npx tsx verify-autonomous.mts",
+    "novel": "node run-novel.mjs",
+    "verify:novel": "node verify-novel.mjs",
+    "prove:novel": "node run-novel.mjs && node verify-novel.mjs",
+    "test": "node verify-lineage.mjs && node verify-cohort.mjs && node verify-plateau.mjs && node verify-novel.mjs",
+    "prove": "node run-proof.mjs && node verify-receipt.mjs",
+    "prove:lineage": "node run-proof.mjs && node run-lineage.mjs && node verify-lineage.mjs",
+    "prove:cohort": "node run-cohort.mjs && node verify-cohort.mjs",
+    "prove:plateau": "node run-plateau.mjs && node verify-plateau.mjs"
+  },
+  "dependencies": {
+    "@metaharness/darwin": "0.1.0"
+  }
+}

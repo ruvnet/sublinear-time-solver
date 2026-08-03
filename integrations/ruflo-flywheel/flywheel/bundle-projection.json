@@ -1,0 +1,61 @@
+{
+  "digest": "6bc8db9df6cd1818fd3edf8031800d58dc35c28a462f148589c375567c2c49bb",
+  "shards": [
+    {
+      "id": "AUTO-003",
+      "intents": [
+        "security"
+      ],
+      "text": "MUST run all five supply-chain gates (cargo-audit, cargo-deny, npm-audit, dependency-review, lockfile-integrity) before merging a pull request."
+    },
+    {
+      "id": "AUTO-004",
+      "intents": [
+        "security"
+      ],
+      "text": "ALWAYS reject a dependency whose license or source is outside the cargo-deny al policy."
+    },
+    {
+      "id": "AUTO-005",
+      "intents": [
+        "performance"
+      ],
+      "text": "MUST NOT regress the WASM benchmark numbers recorded in BENCHMARK.md."
+    },
+    {
+      "id": "AUTO-006",
+      "intents": [
+        "performance"
+      ],
+      "text": "Always profile a hot path with the nanosecond scheduler before optimizing it."
+    },
+    {
+      "id": "AUTO-007",
+      "intents": [
+        "testing"
+      ],
+      "text": "MUST run the numerical regression suite on every change to a solver kernel."
+    },
+    {
+      "id": "AUTO-008",
+      "intents": [
+        "testing"
+      ],
+      "text": "Always assert the measured residual is be tolerance before reporting a system solved."
+    },
+    {
+      "id": "AUTO-009",
+      "intents": [
+        "architecture"
+      ],
+      "text": "Use a Krylov method (Conjugate Gradient or BiCGSTAB) for symmetric-positive-definite systems that are not diagonally dominant."
+    },
+    {
+      "id": "AUTO-010",
+      "intents": [
+        "architecture"
+      ],
+      "text": "NEVER rely on plain Jacobi iteration for a system that is not diagonally dominant."
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "kind": "autonomous-discovery-receipt",
+  "target": "ruvnet/sublinear-time-solver",
+  "immutableRoot": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+  "method": "seeded config mutation → real-solver evaluation → real ADR-076 gate selection",
+  "authored": "NO human authored the winning config; it emerged from measured evaluation",
+  "proposeSeed": 20240705,
+  "champion": {
+    "config": {
+      "method": "neumann",
+      "maxIterations": 3,
+      "epsilon": 1e-9
+    },
+    "verifiedSolves": 0,
+    "of": 8
+  },
+  "proposedCount": 12,
+  "promotedCount": 2,
+  "discovery": {
+    "config": {
+      "method": "neumann",
+      "maxIterations": 75,
+      "epsilon": 1e-9
+    },
+    "verifiedSolves": 8,
+    "of": 8,
+    "meanDelta": 0.7,
+    "lower95": 0.7,
+    "reasons": [
+      "mean score win: child 0.996000 > parent 0.296000 + 0.05",
+      "statistically real: lower95 0.7 > 0",
+      "verified-solve rate held: child 1.000000 >= parent 0.000000",
+      "zero child safety violations",
+      "regression rate not worse: child 0.000000 <= parent 0.000000",
+      "clean replay reproduced the result"
+    ],
+    "decisionHash": "26e0edfc6309d21f7a6abab5ba1f7c6e1fa5d25ccaf179f476b3b8ad7cf302ca"
+  },
+  "systemsHash": "f85c845de06ce4d7263aa8544f1a8ea2089c942e883b2ce2c0f4e1327937eb26",
+  "promote": true
+}

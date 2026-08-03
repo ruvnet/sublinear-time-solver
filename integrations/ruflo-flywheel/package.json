@@ -1,0 +1,16 @@
+{
+  "name": "ruflo-guidance-flywheel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "evolve a bounded retrieval policy through the real @claude-flow/guidance EvolutionPipeline that ruflo 3.24.0 ships, and seal a replayable, independently-verifiable receipt for the promotion",
+  "scripts": {
+    "flywheel": "node run-flywheel.mjs",
+    "verify:flywheel": "node verify-flywheel.mjs",
+    "verify:embedder": "node verify-embedder.mjs",
+    "prove:flywheel": "node run-flywheel.mjs && node verify-flywheel.mjs && node verify-embedder.mjs"
+  },
+  "dependencies": {
+    "@claude-flow/guidance": "3.0.0-alpha.3"
+  }
+}

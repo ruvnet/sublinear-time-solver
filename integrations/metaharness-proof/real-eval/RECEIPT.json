@@ -1,0 +1,43 @@
+{
+  "kind": "real-evaluation-receipt",
+  "target": "ruvnet/sublinear-time-solver",
+  "evaluation": "REAL — measured by executing the repo solver on real systems (not fixtures)",
+  "agent": "human/AI-in-the-loop; variants authored by the operator. Autonomous discovery is the next step.",
+  "task": "solve 8 real diagonally-dominant systems A x = b to residual < 1e-6",
+  "baseline": {
+    "id": "baseline-buggy-neumann",
+    "verifiedSolves": 0,
+    "of": 8,
+    "medianResidual": 14.562510601792358
+  },
+  "candidate": {
+    "id": "candidate-repo-solver",
+    "verifiedSolves": 8,
+    "of": 8,
+    "medianResidual": 6.686510504914603e-13
+  },
+  "systemsHash": "f8093df035cec20e4228c216b7b3ed3c21690b4650a94de3c1c9c2459efee33d",
+  "decision": {
+    "promote": true,
+    "reasons": [
+      "mean score win: child 0.996000 > parent 0.296000 + 0.05",
+      "statistically real: lower95 0.7 > 0",
+      "verified-solve rate held: child 1.000000 >= parent 0.000000",
+      "zero child safety violations",
+      "regression rate not worse: child 0.000000 <= parent 0.000000",
+      "clean replay reproduced the result"
+    ],
+    "meanDelta": 0.7,
+    "lower95": 0.7,
+    "childMeanScore": 0.9960000000000002,
+    "parentMeanScore": 0.296,
+    "childVerifiedSolveRate": 1,
+    "parentVerifiedSolveRate": 0,
+    "childRegressionRate": 0,
+    "parentRegressionRate": 0,
+    "childSafetyViolations": 0,
+    "cleanReplay": true
+  },
+  "decisionReceiptHash": "26e0edfc6309d21f7a6abab5ba1f7c6e1fa5d25ccaf179f476b3b8ad7cf302ca",
+  "promote": true
+}

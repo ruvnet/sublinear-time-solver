@@ -1,0 +1,124 @@
+{
+  "kind": "plateau-verdict",
+  "config": {
+    "window": 3,
+    "epsilon": 0.02,
+    "maxPromotionRate": 0.34
+  },
+  "verdict": {
+    "plateau": true,
+    "classification": "local-optimum",
+    "window": 3,
+    "medianImprovement": 0.0038,
+    "promotionRate": 0,
+    "varianceShrinking": true,
+    "clauses": {
+      "medianImprovementBelowEpsilon": true,
+      "promotionRateBelowMax": true,
+      "varianceShrinking": true
+    },
+    "config": {
+      "window": 3,
+      "epsilon": 0.02,
+      "maxPromotionRate": 0.34
+    }
+  },
+  "trace": [
+    {
+      "upToGeneration": 0,
+      "plateau": false,
+      "reason": "insufficient history: 1 < window 3",
+      "config": {
+        "window": 3,
+        "epsilon": 0.02,
+        "maxPromotionRate": 0.34
+      }
+    },
+    {
+      "upToGeneration": 1,
+      "plateau": false,
+      "reason": "insufficient history: 2 < window 3",
+      "config": {
+        "window": 3,
+        "epsilon": 0.02,
+        "maxPromotionRate": 0.34
+      }
+    },
+    {
+      "upToGeneration": 2,
+      "plateau": false,
+      "classification": "still-improving",
+      "window": 3,
+      "medianImprovement": 0.062,
+      "promotionRate": 0.555556,
+      "varianceShrinking": true,
+      "clauses": {
+        "medianImprovementBelowEpsilon": false,
+        "promotionRateBelowMax": false,
+        "varianceShrinking": true
+      },
+      "config": {
+        "window": 3,
+        "epsilon": 0.02,
+        "maxPromotionRate": 0.34
+      }
+    },
+    {
+      "upToGeneration": 3,
+      "plateau": false,
+      "classification": "inconclusive",
+      "window": 3,
+      "medianImprovement": 0.04,
+      "promotionRate": 0.222222,
+      "varianceShrinking": true,
+      "clauses": {
+        "medianImprovementBelowEpsilon": false,
+        "promotionRateBelowMax": true,
+        "varianceShrinking": true
+      },
+      "config": {
+        "window": 3,
+        "epsilon": 0.02,
+        "maxPromotionRate": 0.34
+      }
+    },
+    {
+      "upToGeneration": 4,
+      "plateau": true,
+      "classification": "local-optimum",
+      "window": 3,
+      "medianImprovement": 0.018,
+      "promotionRate": 0,
+      "varianceShrinking": true,
+      "clauses": {
+        "medianImprovementBelowEpsilon": true,
+        "promotionRateBelowMax": true,
+        "varianceShrinking": true
+      },
+      "config": {
+        "window": 3,
+        "epsilon": 0.02,
+        "maxPromotionRate": 0.34
+      }
+    },
+    {
+      "upToGeneration": 5,
+      "plateau": true,
+      "classification": "local-optimum",
+      "window": 3,
+      "medianImprovement": 0.0038,
+      "promotionRate": 0,
+      "varianceShrinking": true,
+      "clauses": {
+        "medianImprovementBelowEpsilon": true,
+        "promotionRateBelowMax": true,
+        "varianceShrinking": true
+      },
+      "config": {
+        "window": 3,
+        "epsilon": 0.02,
+        "maxPromotionRate": 0.34
+      }
+    }
+  ]
+}

@@ -365,16 +365,26 @@ export class GraphTools {
 
   private static computeModularity(adjacency: Matrix, assignments: number[]): number {
     const n = adjacency.rows;
-    const m = this.countEdges(adjacency);
-    let modularity = 0;
 
+    // Precompute node degrees once instead of recomputing ki/kj (each O(V))
+    // inside the O(V^2) pair loop — that made this O(V^3). Total edge weight
+    // m = countEdges = (sum of all entries)/2 = (sum of degrees)/2, so it
+    // comes straight from the degree array (no separate O(V^2) countEdges pass).
+    const degrees = new Array(n);
+    let totalDegree = 0;
+    for (let i = 0; i < n; i++) {
+      const d = this.getNodeDegree(adjacency, i);
+      degrees[i] = d;
+      totalDegree += d;
+    }
+    const m = totalDegree / 2;
+
+    let modularity = 0;
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
         if (assignments[i] === assignments[j]) {
           const aij = MatrixOperations.getEntry(adjacency, i, j);
-          const ki = this.getNodeDegree(adjacency, i);
-          const kj = this.getNodeDegree(adjacency, j);
-          modularity += aij - (ki * kj) / (2 * m);
+          modularity += aij - (degrees[i] * degrees[j]) / (2 * m);
         }
       }
     }

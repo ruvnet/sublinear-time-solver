@@ -1,0 +1,117 @@
+[
+  {
+    "id": "retry-transient-1",
+    "repo": "proof-of-mechanism",
+    "commit": "0000000000000000000000000000000000000000",
+    "title": "Recover from a transient failure",
+    "prompt": "Recover from a transient failure",
+    "publicTestCommand": "true",
+    "hiddenTestCommand": "true",
+    "regressionTestCommand": "true",
+    "timeoutMs": 5000,
+    "maxCostUsd": 0.05,
+    "allowedMutationFiles": [
+      "retry_policy.ts"
+    ],
+    "blockedFiles": [
+      ".env",
+      "package-lock.json"
+    ],
+    "successCriteria": [
+      "solve retry-transient-1"
+    ],
+    "difficulty": 1
+  },
+  {
+    "id": "retry-transient-2",
+    "repo": "proof-of-mechanism",
+    "commit": "0000000000000000000000000000000000000000",
+    "title": "Recover after two transient failures",
+    "prompt": "Recover after two transient failures",
+    "publicTestCommand": "true",
+    "hiddenTestCommand": "true",
+    "regressionTestCommand": "true",
+    "timeoutMs": 5000,
+    "maxCostUsd": 0.05,
+    "allowedMutationFiles": [
+      "retry_policy.ts"
+    ],
+    "blockedFiles": [
+      ".env",
+      "package-lock.json"
+    ],
+    "successCriteria": [
+      "solve retry-transient-2"
+    ],
+    "difficulty": 2
+  },
+  {
+    "id": "ctx-window-1",
+    "repo": "proof-of-mechanism",
+    "commit": "0000000000000000000000000000000000000000",
+    "title": "Assemble enough context to pass",
+    "prompt": "Assemble enough context to pass",
+    "publicTestCommand": "true",
+    "hiddenTestCommand": "true",
+    "regressionTestCommand": "true",
+    "timeoutMs": 5000,
+    "maxCostUsd": 0.05,
+    "allowedMutationFiles": [
+      "retry_policy.ts"
+    ],
+    "blockedFiles": [
+      ".env",
+      "package-lock.json"
+    ],
+    "successCriteria": [
+      "solve ctx-window-1"
+    ],
+    "difficulty": 1
+  },
+  {
+    "id": "verify-loop-1",
+    "repo": "proof-of-mechanism",
+    "commit": "0000000000000000000000000000000000000000",
+    "title": "Fix then re-verify",
+    "prompt": "Fix then re-verify",
+    "publicTestCommand": "true",
+    "hiddenTestCommand": "true",
+    "regressionTestCommand": "true",
+    "timeoutMs": 5000,
+    "maxCostUsd": 0.05,
+    "allowedMutationFiles": [
+      "retry_policy.ts"
+    ],
+    "blockedFiles": [
+      ".env",
+      "package-lock.json"
+    ],
+    "successCriteria": [
+      "solve verify-loop-1"
+    ],
+    "difficulty": 2
+  },
+  {
+    "id": "no-regress-1",
+    "repo": "proof-of-mechanism",
+    "commit": "0000000000000000000000000000000000000000",
+    "title": "Change without breaking the suite",
+    "prompt": "Change without breaking the suite",
+    "publicTestCommand": "true",
+    "hiddenTestCommand": "true",
+    "regressionTestCommand": "true",
+    "timeoutMs": 5000,
+    "maxCostUsd": 0.05,
+    "allowedMutationFiles": [
+      "retry_policy.ts"
+    ],
+    "blockedFiles": [
+      ".env",
+      "package-lock.json"
+    ],
+    "successCriteria": [
+      "solve no-regress-1"
+    ],
+    "difficulty": 1
+  }
+]

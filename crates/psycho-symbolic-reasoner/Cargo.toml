@@ -47,3 +47,8 @@ sysinfo = "0.30"
 fake = "2.9"
 proptest = "1.4"
 
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

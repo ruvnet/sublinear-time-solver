@@ -1,0 +1,69 @@
+{
+  "kind": "manifest-hashes",
+  "baseline": {
+    "files": [
+      {
+        "path": "context_builder.ts",
+        "sha256": "7efc283a182f4c7705f30bc5e4b98433e76e16a09f38ff2a6d88ff7762698a0a"
+      },
+      {
+        "path": "memory_policy.ts",
+        "sha256": "eb9d62db3673da0702d42688f04ba961d00d54aeaba24cf7a96f7d3ae082671d"
+      },
+      {
+        "path": "planner.ts",
+        "sha256": "8191a0e078a1066acaf0317b7769a07852a68aa150787815bf821b64b63edcb6"
+      },
+      {
+        "path": "retry_policy.ts",
+        "sha256": "07e2ed220f465935a777a4b920d34cab34d78291e5ce71cbe010d65981a9d135"
+      },
+      {
+        "path": "reviewer.ts",
+        "sha256": "a57f7057ecb7b7036be330f1fb5809137c8e72a62088f4dd98b848aae7fa4bc5"
+      },
+      {
+        "path": "score_policy.ts",
+        "sha256": "0ecfd57c542ec531f5b0a0919b72482db0c7a5fa3f5228816316fb830bff7d78"
+      },
+      {
+        "path": "tool_policy.ts",
+        "sha256": "2e7e700b27a92cd1504a634982032576af3ac252697237e03ee099df58e9e100"
+      }
+    ],
+    "manifestHash": "08db80ea8f622c7bdb7ec98caf41010afa7708a09373d9047d99c25f93108b35"
+  },
+  "candidate": {
+    "files": [
+      {
+        "path": "context_builder.ts",
+        "sha256": "7efc283a182f4c7705f30bc5e4b98433e76e16a09f38ff2a6d88ff7762698a0a"
+      },
+      {
+        "path": "memory_policy.ts",
+        "sha256": "eb9d62db3673da0702d42688f04ba961d00d54aeaba24cf7a96f7d3ae082671d"
+      },
+      {
+        "path": "planner.ts",
+        "sha256": "8191a0e078a1066acaf0317b7769a07852a68aa150787815bf821b64b63edcb6"
+      },
+      {
+        "path": "retry_policy.ts",
+        "sha256": "07e2ed220f465935a777a4b920d34cab34d78291e5ce71cbe010d65981a9d135"
+      },
+      {
+        "path": "reviewer.ts",
+        "sha256": "a57f7057ecb7b7036be330f1fb5809137c8e72a62088f4dd98b848aae7fa4bc5"
+      },
+      {
+        "path": "score_policy.ts",
+        "sha256": "0ecfd57c542ec531f5b0a0919b72482db0c7a5fa3f5228816316fb830bff7d78"
+      },
+      {
+        "path": "tool_policy.ts",
+        "sha256": "ccb497eb12c125b014006f4c9416d7331e49e323804fd461c38f10a6b34c3ed2"
+      }
+    ],
+    "manifestHash": "29b90d068164067bccf85fb256231ce174b076d3c23cb417a161c8da21e0d02b"
+  }
+}

@@ -30,11 +30,10 @@ export class PerplexityClient {
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
+    // Do not log any portion of the API key (length/prefix fragments leak
+    // secret material into stdout/CI logs).
     console.log('[DEBUG] PerplexityClient constructor:', {
-      hasApiKey: !!apiKey,
-      keyLength: apiKey?.length || 0,
-      keyPrefix: apiKey ? `${apiKey.substring(0, 8)}...` : 'none',
-      keyEndsWithExpected: apiKey ? apiKey.startsWith('pplx-') : false
+      hasApiKey: !!apiKey
     });
   }
 
@@ -104,8 +103,6 @@ export class PerplexityClient {
       console.log(`[DEBUG] Perplexity API chat request:`, {
         url: `${this.baseURL}/chat/completions`,
         hasApiKey: !!this.apiKey,
-        keyPrefix: this.apiKey ? `${this.apiKey.substring(0, 8)}...` : 'none',
-        authHeaderPrefix: authHeader ? `${authHeader.substring(0, 15)}...` : 'none',
         model: requestData.model,
         messageCount: requestData.messages.length
       });
@@ -131,8 +128,6 @@ export class PerplexityClient {
       }
       if (response.status === 401) {
         console.log(`[DEBUG] 401 Unauthorized - API key issue:`, {
-          keyLength: this.apiKey?.length,
-          keyPrefix: this.apiKey ? `${this.apiKey.substring(0, 8)}...` : 'none',
           responseData: response.data
         });
         throw new Error('Invalid API key - please check your Perplexity API key');

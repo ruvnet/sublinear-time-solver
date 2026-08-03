@@ -3,6 +3,7 @@
  */
 
 import * as fs from 'fs/promises';
+import { realpathSync, existsSync } from 'fs';
 import * as path from 'path';
 import { SearchResult } from '../core/types.js';
 
@@ -26,7 +27,7 @@ export class OutputManager {
    * Get output directory based on options
    */
   private getOutputDirectory(query: string, options?: { outputPath?: string; useQuerySubfolder?: boolean }): string {
-    let baseDir = options?.outputPath || this.defaultResultsDir;
+    let baseDir = this.resolveBaseDir(options?.outputPath);
 
     // Add query-based subfolder if requested
     if (options?.useQuerySubfolder) {
@@ -35,6 +36,38 @@ export class OutputManager {
     }
 
     return baseDir;
+  }
+
+  /**
+   * Resolve a caller-supplied output path, containing it within the current
+   * working directory. Absolute paths and `..` escapes are rejected so a tool
+   * call cannot write research files to arbitrary filesystem locations (CWE-73).
+   */
+  private resolveBaseDir(outputPath?: string): string {
+    if (!outputPath) {
+      return this.defaultResultsDir;
+    }
+    if (path.isAbsolute(outputPath)) {
+      throw new Error(`outputPath must be a relative path within the project, got absolute path: ${outputPath}`);
+    }
+    const root = process.cwd();
+    const resolved = path.resolve(root, outputPath);
+    const rel = path.relative(root, resolved);
+    if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) {
+      throw new Error(`outputPath escapes the project directory: ${outputPath}`);
+    }
+    // Lexical checks above don't dereference symlinks. Realpath the deepest
+    // existing ancestor of the target and confirm it is still inside the
+    // (realpath'd) project root, defeating a symlink that points outside.
+    const realRoot = realpathSync(root);
+    let probe = resolved;
+    while (!existsSync(probe)) probe = path.dirname(probe);
+    const realProbe = realpathSync(probe);
+    const realRel = path.relative(realRoot, realProbe);
+    if (realRel !== '' && (realRel.startsWith('..') || path.isAbsolute(realRel))) {
+      throw new Error(`outputPath escapes the project directory via a symlink: ${outputPath}`);
+    }
+    return outputPath;
   }
 
   async ensureResultsDirectory(query: string, options?: { outputPath?: string; useQuerySubfolder?: boolean }): Promise<string> {

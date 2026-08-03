@@ -1,0 +1,51 @@
+{
+  "kind": "evolution-history",
+  "anchorHash": "a6364c14748ac0775b2ee0555f431794c977b23bf1913c20556c968201b75795",
+  "champion": {
+    "costUsd": 0.04
+  },
+  "generations": [
+    {
+      "generation": 0,
+      "attempts": 3,
+      "promotions": 3,
+      "bestDelta": 0.076,
+      "scoreVariance": 0.000042667
+    },
+    {
+      "generation": 1,
+      "attempts": 3,
+      "promotions": 2,
+      "bestDelta": 0.062,
+      "scoreVariance": 0.000024
+    },
+    {
+      "generation": 2,
+      "attempts": 3,
+      "promotions": 0,
+      "bestDelta": 0.04,
+      "scoreVariance": 0.000010667
+    },
+    {
+      "generation": 3,
+      "attempts": 3,
+      "promotions": 0,
+      "bestDelta": 0.018,
+      "scoreVariance": 0.000002667
+    },
+    {
+      "generation": 4,
+      "attempts": 3,
+      "promotions": 0,
+      "bestDelta": 0.0038,
+      "scoreVariance": 4.27e-7
+    },
+    {
+      "generation": 5,
+      "attempts": 3,
+      "promotions": 0,
+      "bestDelta": 0.0008,
+      "scoreVariance": 1.07e-7
+    }
+  ]
+}

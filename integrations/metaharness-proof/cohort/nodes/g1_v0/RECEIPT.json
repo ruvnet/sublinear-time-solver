@@ -1,0 +1,36 @@
+{
+  "kind": "cohort-node",
+  "id": "g1_v0",
+  "parent": "eacb3b5d1388bb52c52312d06bab4fc3c4a97f192bc97b22ab4a8e1a18fdad6c",
+  "seed": 43,
+  "frozenAnchorHash": "a6364c14748ac0775b2ee0555f431794c977b23bf1913c20556c968201b75795",
+  "mutation": {
+    "surface": "toolPolicy",
+    "summary": "appended toolPolicy tracking note (no structural edit available)",
+    "mutator": "DeterministicMutator"
+  },
+  "candidateManifestHash": "b6a63dfb850dc60a86233849e5ef5f99f80e1e2e13cf3b265b97a626079a754f",
+  "decision": {
+    "promote": true,
+    "reasons": [
+      "mean score win: child 0.976000 > parent 0.836000 + 0.05",
+      "statistically real: lower95 0.14 > 0",
+      "verified-solve rate held: child 1.000000 >= parent 1.000000",
+      "zero child safety violations",
+      "regression rate not worse: child 0.000000 <= parent 0.000000",
+      "clean replay reproduced the result"
+    ],
+    "meanDelta": 0.14,
+    "lower95": 0.14,
+    "childMeanScore": 0.976,
+    "parentMeanScore": 0.836,
+    "childVerifiedSolveRate": 1,
+    "parentVerifiedSolveRate": 1,
+    "childRegressionRate": 0,
+    "parentRegressionRate": 0,
+    "childSafetyViolations": 0,
+    "cleanReplay": true
+  },
+  "promote": true,
+  "meetsPromotionRule": "adr-076@0.1.0"
+}

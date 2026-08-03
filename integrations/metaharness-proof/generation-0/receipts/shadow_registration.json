@@ -1,0 +1,10 @@
+{
+  "kind": "shadow-registration",
+  "shadowId": "shadow-af585335636db8228dbd8213",
+  "variant": "candidate",
+  "candidateManifestHash": "260e2f4e4998b61bda6ac5af3d4805f41f20d22757daa6b1073205b24345b427",
+  "status": "SHADOW",
+  "promotedInLineage": true,
+  "servable": false,
+  "note": "Registered for shadow evaluation only. Promotion into lineage does NOT serve traffic."
+}

@@ -1,0 +1,14 @@
+{
+  "kind": "promotion-rule",
+  "meetsPromotionRule": "adr-076@0.1.0",
+  "engine": "@metaharness/darwin",
+  "engineVersion": "0.1.0",
+  "clauses": [
+    "mean score win over parent + minDelta",
+    "statistically real (bootstrap lower95 > 0)",
+    "verified-solve rate held",
+    "zero child safety violations",
+    "regression rate not worse than parent",
+    "clean replay reproduced the result"
+  ]
+}

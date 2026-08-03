@@ -1,0 +1,32 @@
+{
+  "kind": "novel-discovery-receipt",
+  "target": "ruvnet/sublinear-time-solver",
+  "proposer": "claude -p (open-ended LLM code proposal — arbitrary algorithms, not a config grid)",
+  "authored": "NO human authored the discovered solver; Claude proposed it, real execution validated it",
+  "nonReproducibleGeneration": "LLM output is non-deterministic; the discovered CODE and its measured superiority are reproducible by re-execution (verify-novel.mjs)",
+  "systemsHash": "5f3b85ae4b5586221501ba3e64ff338faf313260cfe6f7761c66735eec306a15",
+  "suite": "8 systems (mixed dominant + SPD-non-dominant)",
+  "champion": {
+    "solves": 0,
+    "of": 8
+  },
+  "llmCalls": 3,
+  "rejectedProposals": 0,
+  "discovery": {
+    "solves": 8,
+    "of": 8,
+    "genomeSha256": "4de2cb547c1d367e2f605e2e93c86765823783a263f48ddb37b2588534dd25b3",
+    "meanDelta": 0.7,
+    "lower95": 0.7,
+    "reasons": [
+      "mean score win: child 0.996000 > parent 0.296000 + 0.05",
+      "statistically real: lower95 0.7 > 0",
+      "verified-solve rate held: child 1.000000 >= parent 0.000000",
+      "zero child safety violations",
+      "regression rate not worse: child 0.000000 <= parent 0.000000",
+      "clean replay reproduced the result"
+    ],
+    "decisionHash": "26e0edfc6309d21f7a6abab5ba1f7c6e1fa5d25ccaf179f476b3b8ad7cf302ca"
+  },
+  "promote": true
+}

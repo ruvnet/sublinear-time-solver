@@ -169,7 +169,6 @@ export interface AlgorithmState {
 
 // Neumann series state
 export interface NeumannState extends AlgorithmState {
-  series: Vector[];
   convergenceRate: number;
 }
 

@@ -1,0 +1,18 @@
+{
+  "kind": "guidance-policy-lineage",
+  "chain": [
+    {
+      "id": "baseline",
+      "policy": "intent-blind",
+      "intentPrecision": 0.25
+    },
+    {
+      "id": "candidate",
+      "parent": "baseline",
+      "policy": "intent-routed",
+      "intentPrecision": 1,
+      "promotedBy": "EvolutionPipeline",
+      "decisionHash": "4de0a0303afdcfc0ef5a021020c67bac3e04b8414742b0e59533203216c678a3"
+    }
+  ]
+}

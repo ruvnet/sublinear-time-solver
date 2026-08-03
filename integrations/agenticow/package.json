@@ -1,0 +1,13 @@
+{
+  "name": "agenticow-swarm-memory",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Copy-on-write collective memory for multi-agent/hive-mind coordination, backed by agenticow (Git for Agent Memory)",
+  "type": "module",
+  "scripts": {
+    "test": "node --test ."
+  },
+  "dependencies": {
+    "agenticow": "^0.2.4"
+  }
+}
