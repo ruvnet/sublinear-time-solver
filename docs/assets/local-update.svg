@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="250" viewBox="0 0 960 250" role="img" aria-labelledby="title desc">
+  <title id="title">How a local update works</title>
+  <desc id="desc">One changed input marks a starting row. The solver follows a small set of connected rows and returns updated values for those rows.</desc>
+  <defs>
+    <style>
+      .change, .neighbors, .output { animation: highlight 5s ease-in-out infinite; }
+      .neighbors { animation-delay: .9s; }
+      .output { animation-delay: 1.8s; }
+      @keyframes highlight {
+        0%, 45%, 100% { opacity: .45; }
+        20% { opacity: 1; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .change, .neighbors, .output { animation: none; opacity: .7; }
+      }
+    </style>
+  </defs>
+  <rect x="1" y="1" width="958" height="248" rx="22" fill="#0c1323" stroke="#354764" stroke-width="2"/>
+  <g fill="#141f33" stroke="#354764">
+    <rect x="24" y="24" width="278" height="202" rx="14"/>
+    <rect x="341" y="24" width="278" height="202" rx="14"/>
+    <rect x="658" y="24" width="278" height="202" rx="14"/>
+  </g>
+  <path d="m316 119 10 6-10 6m317-12 10 6-10 6" fill="none" stroke="#8ba6c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <g font-family="system-ui, sans-serif">
+    <g fill="#81f0ce" font-size="16" font-weight="700" letter-spacing="2" text-anchor="middle">
+      <text x="163" y="56">01</text>
+      <text x="480" y="56">02</text>
+      <text x="797" y="56">03</text>
+    </g>
+    <g fill="#f2f7ff" font-size="24" font-weight="700" text-anchor="middle">
+      <text x="163" y="87">Input changes</text>
+      <text x="480" y="87">Trace nearby rows</text>
+      <text x="797" y="87">Return updates</text>
+    </g>
+    <g fill="#b8cbe4" font-size="18" text-anchor="middle">
+      <text x="163" y="203">Start with one row</text>
+      <text x="480" y="203">Follow local dependencies</text>
+      <text x="797" y="203">Return affected entries</text>
+    </g>
+  </g>
+  <g fill="none" stroke="#4c6486" stroke-width="2">
+    <path d="M97 139h132"/>
+    <path d="M480 139l-28-25m28 25 28-25m-28 25-28 25m28-25 28 25m-56-50-31 16m87 34 31-16"/>
+  </g>
+  <g fill="#547096">
+    <circle cx="97" cy="139" r="7"/>
+    <circle cx="130" cy="139" r="7"/>
+    <circle cx="196" cy="139" r="7"/>
+    <circle cx="229" cy="139" r="7"/>
+    <circle cx="421" cy="130" r="5"/>
+    <circle cx="539" cy="148" r="5"/>
+  </g>
+  <g fill="#8af4d3">
+    <circle cx="163" cy="139" r="9"/>
+    <circle cx="480" cy="139" r="8"/>
+    <circle cx="452" cy="114" r="6"/>
+    <circle cx="508" cy="114" r="6"/>
+    <circle cx="452" cy="164" r="6"/>
+    <circle cx="508" cy="164" r="6"/>
+    <rect x="762" y="117" width="64" height="7" rx="3"/>
+    <rect x="762" y="136" width="44" height="7" rx="3"/>
+    <rect x="762" y="155" width="54" height="7" rx="3"/>
+  </g>
+  <g fill="none" stroke="#8af4d3" stroke-width="1.5">
+    <circle class="change" cx="163" cy="139" r="18" opacity=".7"/>
+    <rect class="neighbors" x="439" y="101" width="82" height="76" rx="12" opacity=".7"/>
+    <rect class="output" x="751" y="106" width="92" height="67" rx="12" opacity=".7"/>
+  </g>
+</svg>
