@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="272" viewBox="0 0 960 272" role="img" aria-labelledby="title desc">
+  <title id="title">Full solve and local update time</title>
+  <desc id="desc">At 256 rows, the full solve took 66.7 microseconds and the local update took 2.28 milliseconds. At 1,024 rows, the full solve took 258 microseconds and the local update took 2.32 milliseconds.</desc>
+  <rect x="1" y="1" width="958" height="270" rx="22" fill="#0c1323" stroke="#354764" stroke-width="2"/>
+  <g stroke="#32435e" fill="none">
+    <path d="M187 75v139h650M317 75v139M447 75v139M577 75v139M707 75v139M837 75v139"/>
+  </g>
+  <g font-family="system-ui, sans-serif">
+    <text x="32" y="47" font-size="26" font-weight="700" fill="#f2f7ff">Time per update</text>
+    <g fill="#c4d3e8" font-size="18" font-weight="600">
+      <text x="32" y="117">256 rows</text>
+      <text x="32" y="182">1,024 rows</text>
+    </g>
+    <g fill="#afc5e1" font-size="15" text-anchor="middle">
+      <text x="187" y="237">0</text>
+      <text x="317" y="237">0.5</text>
+      <text x="447" y="237">1.0</text>
+      <text x="577" y="237">1.5</text>
+      <text x="707" y="237">2.0</text>
+      <text x="837" y="237">2.5 ms</text>
+    </g>
+    <g fill="#9eafff">
+      <rect x="187" y="86" width="17.34" height="15" rx="3"/>
+      <rect x="187" y="151" width="67.08" height="15" rx="3"/>
+      <rect x="545" y="33" width="15" height="15" rx="3"/>
+    </g>
+    <g fill="#81f0ce">
+      <rect x="187" y="113" width="592.8" height="15" rx="3"/>
+      <rect x="187" y="178" width="603.2" height="15" rx="3"/>
+      <rect x="680" y="33" width="15" height="15" rx="3"/>
+    </g>
+    <g fill="#dce8f9" font-size="17">
+      <text x="570" y="47">Full solve</text>
+      <text x="705" y="47">Local update</text>
+      <text x="213" y="100">66.7 µs</text>
+      <text x="263" y="165">258 µs</text>
+      <text x="790" y="127">2.28 ms</text>
+      <text x="801" y="192">2.32 ms</text>
+    </g>
+  </g>
+</svg>
