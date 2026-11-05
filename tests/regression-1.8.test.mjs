@@ -69,6 +69,23 @@ test('SublinearSolver neumann (default) matches the dense solve', async () => {
   }
 });
 
+test('typed-array vectors are accepted as in 1.7.x', async () => {
+  const s = system(40, 6);
+  const r = await new SublinearSolver({ method: 'neumann', epsilon: 1e-9, maxIterations: 1000 }).solve(s.coo, Float64Array.from(s.b));
+  assert.ok(r.converged && maxErr(r.solution, s.exact) < 1e-8);
+  const pr = await new SublinearSolver({ method: 'neumann', epsilon: 1e-9, maxIterations: 100 })
+    .computePageRank({ rows: 2, cols: 2, format: 'dense', data: [[0, 1], [1, 0]] }, { damping: 0.85, epsilon: 1e-12, maxIterations: 1000, personalized: new Float64Array([1, 0]) });
+  assert.ok(Math.abs(pr[0] + pr[1] - 1) < 1e-9);
+});
+
+test('temporal-lead-solver TemporalPredictor solves to its tolerance', async () => {
+  const { TemporalPredictor } = await import('temporal-lead-solver');
+  const s = system(30, 8);
+  const r = new TemporalPredictor(1e-10, 5000).predictWithTemporalAdvantage(s.dense.data, s.b, 1000);
+  assert.ok(r.converged);
+  assert.ok(maxErr(r.solution, s.exact) < 1e-8, `error ${maxErr(r.solution, s.exact)}`);
+});
+
 test('random-walk returns a statistically accurate solution instead of throwing', async () => {
   const s = system(60, 4);
   const r = await new SublinearSolver({ method: 'random-walk', epsilon: 1e-3, maxIterations: 1000, seed: 7 }).solve(s.coo, s.b);

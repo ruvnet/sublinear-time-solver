@@ -89,6 +89,8 @@ export function toCoreMatrix(matrix: Matrix): CsrMatrix {
   throw new SolverError(`Unsupported matrix format: ${(matrix as { format?: unknown }).format}`, ErrorCodes.INVALID_MATRIX);
 }
 
+const isVectorLike = (v: unknown): v is ArrayLike<number> => Array.isArray(v) || ArrayBuffer.isView(v);
+
 function norm2(v: ArrayLike<number>): number {
   let s = 0;
   for (let i = 0; i < v.length; i++) s += v[i] * v[i];
@@ -111,9 +113,9 @@ export class SublinearSolver {
     if (A.rows !== A.cols) {
       throw new SolverError('Matrix must be square', ErrorCodes.INVALID_DIMENSIONS);
     }
-    if (!Array.isArray(vector) || vector.length !== A.rows) {
+    if (!isVectorLike(vector) || vector.length !== A.rows) {
       throw new SolverError(
-        `Vector length ${Array.isArray(vector) ? vector.length : 'n/a'} does not match matrix dimension ${A.rows}`,
+        `Vector length ${isVectorLike(vector) ? vector.length : 'n/a'} does not match matrix dimension ${A.rows}`,
         ErrorCodes.INVALID_DIMENSIONS,
       );
     }
@@ -197,7 +199,7 @@ export class SublinearSolver {
     if (!Number.isInteger(config.column) || config.column < 0 || config.column >= A.cols) {
       throw new SolverError(`Column index ${config.column} out of bounds (0-${A.cols - 1})`, ErrorCodes.INVALID_PARAMETERS);
     }
-    if (!Array.isArray(vector) || vector.length !== A.rows) {
+    if (!isVectorLike(vector) || vector.length !== A.rows) {
       throw new SolverError(`Vector length does not match matrix rows ${A.rows}`, ErrorCodes.INVALID_DIMENSIONS);
     }
     ValidationUtils.validatePositiveNumber(config.epsilon, 'epsilon');
@@ -236,11 +238,12 @@ export class SublinearSolver {
     try {
       const g = graphFromCsr(A);
       if (config.personalized) {
-        if (!Array.isArray(config.personalized) || config.personalized.length !== A.rows) {
+        const p = config.personalized as ArrayLike<number>;
+        if (!isVectorLike(p) || p.length !== A.rows) {
           throw new SolverError('personalized must be a vector of length n', ErrorCodes.INVALID_DIMENSIONS);
         }
         const seeds = new Map<number, number>();
-        config.personalized.forEach((w, i) => { if (w !== 0) seeds.set(i, w); });
+        for (let i = 0; i < p.length; i++) if (p[i] !== 0) seeds.set(i, p[i]);
         return Array.from(corePersonalizedPageRank(g, seeds, opts).scores);
       }
       return Array.from(corePageRank(g, opts).scores);

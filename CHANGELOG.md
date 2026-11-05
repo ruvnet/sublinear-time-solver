@@ -53,7 +53,10 @@ Releases: `sublinear-time-solver` 1.8.0 (npm), `@ruvnet/sublinear-core` 1.0.0 (n
   - Removed unused `nalgebra`, `fnv`, `log` and `num-traits`.
   - `approx` is now a dev-dependency.
   - `nanosecond-scheduler` and `parking_lot` are pulled in only by the `cli` feature, which now compiles. Scheduler iterations are capped.
-- `temporal-lead-solver` 0.1.1: the npm package drops its unused `chalk`, `commander` and `ora` dependencies. The crate builds again, and its Neumann iteration now solves A x = b instead of A x = D b.
+- `temporal-lead-solver` 0.1.1:
+  - The npm package drops its unused `chalk`, `commander` and `ora` dependencies.
+  - `TemporalPredictor.solveSublinear` now iterates to its tolerance. 0.1.0 stopped after log2(n) + 1 damped terms: for `[[4,-1],[-1,4]] x = [3,3]` it returned 0.61 where the answer is 1. It also reports `residual`, `iterations` and `converged`, and `queryCount` counts the matrix entries actually read.
+  - The crate builds again, and its Neumann iteration now solves A x = b instead of A x = D b.
 
 ## [1.7.2] / sublinear 0.3.3 — 2026-05-23 (ADR-001 phase-2/3)
 

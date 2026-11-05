@@ -173,8 +173,10 @@ export class TemporalTools {
       lightTravelTimeMs: result.lightTravelTimeMs,
       temporalAdvantageMs: result.temporalAdvantageMs,
       effectiveVelocity: `${result.effectiveVelocityRatio.toFixed(0)}× speed of light`,
+      residual: result.residual,
+      converged: result.converged,
       queryCount: result.queryCount,
-      sublinear: result.queryCount < vector.length / 2,
+      sublinear: result.queryCount < vector.length * vector.length,
       summary: `Computed solution ${result.temporalAdvantageMs.toFixed(1)}ms before light could travel ${distanceKm}km`
     };
   }
@@ -289,9 +291,9 @@ export class TemporalTools {
       computationTime: `${result.computeTimeMs.toFixed(3)} ms`,
       temporalAdvantage: `${result.temporalAdvantageMs.toFixed(1)} ms`,
       effectiveVelocity: `${result.effectiveVelocityRatio.toFixed(0)}× speed of light`,
-      queryComplexity: `O(√n) = ${result.queryCount} queries for n=${size}`,
+      matrixEntriesRead: result.queryCount,
       practicalApplication: this.getPracticalApplication(scenario, result.temporalAdvantageMs),
-      scientificValidity: 'Based on sublinear-time algorithms (Kwok-Wei-Yang 2025)',
+      scientificValidity: 'Illustrative: compares local compute time with light travel time over the same distance. Information still cannot arrive before the input data does.',
       disclaimer: 'This is computational lead via prediction, not faster-than-light communication'
     };
   }
