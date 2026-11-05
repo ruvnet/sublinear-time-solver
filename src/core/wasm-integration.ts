@@ -76,7 +76,7 @@ export class GraphReasonerWASM {
         this.reasoner = new instance.exports.GraphReasoner();
       }
 
-      console.log('✅ GraphReasoner WASM loaded successfully');
+      console.error('✅ GraphReasoner WASM loaded successfully');
       return true;
     } catch (error) {
       console.error('Failed to load GraphReasoner:', error);
@@ -204,7 +204,7 @@ export class TemporalNeuralWASM {
         this.solver = new instance.exports.TemporalNeuralSolver();
       }
 
-      console.log('✅ TemporalNeuralSolver WASM loaded successfully');
+      console.error('✅ TemporalNeuralSolver WASM loaded successfully');
       return true;
     } catch (error) {
       console.error('Failed to load TemporalNeuralSolver:', error);
@@ -358,9 +358,9 @@ export class WASMAccelerator {
     this.initialized = graphOk || neuralOk;
 
     if (this.initialized) {
-      console.log('🚀 WASM Acceleration enabled with real Rust components');
+      console.error('🚀 WASM Acceleration enabled with real Rust components');
     } else {
-      console.log('⚠️ Running in JavaScript mode');
+      console.error('⚠️ Running in JavaScript mode');
     }
 
     return this.initialized;

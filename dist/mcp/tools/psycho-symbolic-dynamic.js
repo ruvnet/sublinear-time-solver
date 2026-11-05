@@ -343,7 +343,7 @@ export class DynamicPsychoSymbolicTools extends PsychoSymbolicTools {
     updateDomainEngine() {
         // Update the parent class's domain engine with dynamic domains
         // This would integrate with the existing DomainAdaptationEngine
-        console.log('Updating domain engine with dynamic domains...');
+        console.error('Updating domain engine with dynamic domains...');
     }
     getDynamicDomainsCount() {
         return this.domainRegistry.getAllDomains().filter(d => !this.domainRegistry.isBuiltinDomain(d.config.name)).length;

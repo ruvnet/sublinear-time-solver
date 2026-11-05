@@ -5,6 +5,7 @@
 
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { TemporalPredictor } from 'temporal-lead-solver';
+import { assertDenseAllocation } from '../../core/matrix.js';
 
 export class TemporalTools {
   private predictor: TemporalPredictor;
@@ -300,6 +301,7 @@ export class TemporalTools {
    */
   private convertToDenseMatrix(matrix: any): number[][] {
     const { rows, cols, data } = matrix;
+    assertDenseAllocation(rows, cols);
 
     if (Array.isArray(data)) {
       // Already dense
@@ -314,7 +316,12 @@ export class TemporalTools {
 
     if (data.values && data.rowIndices && data.colIndices) {
       for (let k = 0; k < data.values.length; k++) {
-        dense[data.rowIndices[k]][data.colIndices[k]] = data.values[k];
+        const r = data.rowIndices[k];
+        const c = data.colIndices[k];
+        if (!Number.isInteger(r) || r < 0 || r >= rows || !Number.isInteger(c) || c < 0 || c >= cols) {
+          throw new Error(`Invalid matrix index (${String(r)}, ${String(c)})`);
+        }
+        dense[r][c] = data.values[k];
       }
     }
 

@@ -3,12 +3,11 @@
 use ndarray::{Array2, Array1, ArrayView2, ArrayView1};
 use sprs::{CsMat, TriMat};
 use serde::{Deserialize, Serialize};
-use std::ops::{Add, Mul, Sub};
 
 /// Dense matrix representation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Matrix {
-    data: Array2<f64>,
+    pub data: Array2<f64>,
 }
 
 impl Matrix {
@@ -25,11 +24,16 @@ impl Matrix {
         Self { data }
     }
 
+    /// Create a zero-filled matrix.
+    pub fn zeros(rows: usize, cols: usize) -> Self {
+        Self { data: Array2::zeros((rows, cols)) }
+    }
+
     /// Create a diagonally dominant matrix (guaranteed solvable)
     pub fn diagonally_dominant(size: usize, dominance_factor: f64) -> Self {
         use rand::Rng;
         let mut rng = rand::thread_rng();
-        let mut data = Array2::zeros((size, size));
+        let mut data: Array2<f64> = Array2::zeros((size, size));
 
         for i in 0..size {
             let mut row_sum = 0.0;
@@ -116,7 +120,7 @@ impl Matrix {
 /// Dense vector representation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Vector {
-    data: Array1<f64>,
+    pub data: Array1<f64>,
 }
 
 impl Vector {
@@ -218,8 +222,14 @@ impl SparseMatrix {
 
     /// Multiply by vector
     pub fn multiply_vector(&self, v: &Vector) -> Vector {
-        let result = &self.data * v.view();
-        Vector::new(result.to_owned())
+        // Explicit O(nnz) sparse matvec — avoids depending on a specific sprs
+        // `Mul` impl for dense vectors. `iter()` yields (value, (row, col)).
+        let (rows, _) = self.shape();
+        let mut result: Array1<f64> = Array1::zeros(rows);
+        for (val, (r, c)) in self.data.iter() {
+            result[r] += *val * v.data[c];
+        }
+        Vector::new(result)
     }
 
     /// Get sparsity (percentage of zeros)

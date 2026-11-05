@@ -118,7 +118,7 @@ export class EmergenceSystem {
     this.setupInterComponentConnections();
     this.isInitialized = true;
 
-    console.log('Emergence System initialized with all components');
+    console.error('Emergence System initialized with all components');
   }
 
   /**
@@ -467,27 +467,27 @@ export class EmergenceSystem {
 
   private connectLearningToModification(): void {
     // Set up connection for learning system to inform modification engine
-    console.log('Connected learning system to modification engine');
+    console.error('Connected learning system to modification engine');
   }
 
   private connectExplorationToLearning(): void {
     // Set up connection for exploration results to inform learning
-    console.log('Connected exploration to learning system');
+    console.error('Connected exploration to learning system');
   }
 
   private connectSharingToCapabilityDetection(): void {
     // Set up connection for sharing system to inform capability detection
-    console.log('Connected sharing system to capability detection');
+    console.error('Connected sharing system to capability detection');
   }
 
   private connectFeedbackToAllSystems(): void {
     // Set up feedback connections to all systems
-    console.log('Connected feedback loops to all systems');
+    console.error('Connected feedback loops to all systems');
   }
 
   private connectCapabilityDetectionToExploration(): void {
     // Set up connection for capability detection to trigger exploration
-    console.log('Connected capability detection to exploration');
+    console.error('Connected capability detection to exploration');
   }
 
   private async shareExplorationInsights(exploration: ExplorationResult): Promise<void> {
@@ -573,7 +573,7 @@ export class EmergenceSystem {
 
       await this.crossToolSharingSystem.shareInformation(sharedInfo);
 
-      console.log(`New emergent capability shared: ${capability.name}`);
+      console.error(`New emergent capability shared: ${capability.name}`);
     }
   }
 

@@ -1,0 +1,74 @@
+{
+  "name": "@ruvnet/sublinear-core",
+  "version": "1.0.0",
+  "description": "Zero-dependency sparse linear solvers (Jacobi, Gauss-Seidel, conjugate gradient, Neumann), PageRank, personalized PageRank and local push (forward/backward) for JavaScript and TypeScript. The embeddable core of sublinear-time-solver.",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/esm/*.js",
+    "dist/esm/*.d.ts",
+    "dist/cjs/*.js",
+    "dist/cjs/*.d.ts",
+    "dist/cjs/package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc -p tsconfig.json && tsc -p tsconfig.cjs.json && node scripts/cjs-package.mjs",
+    "test": "npm run build && node --test test/solve.test.mjs test/pagerank.test.mjs test/cjs.test.cjs",
+    "bench": "npm run build && node bench/bench.mjs",
+    "prepublishOnly": "npm test"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "keywords": [
+    "pagerank",
+    "personalized-pagerank",
+    "sparse-matrix",
+    "linear-solver",
+    "csr",
+    "conjugate-gradient",
+    "gauss-seidel",
+    "jacobi",
+    "neumann-series",
+    "forward-push",
+    "backward-push",
+    "random-walk",
+    "diagonally-dominant",
+    "graph-algorithms",
+    "zero-dependency",
+    "sublinear"
+  ],
+  "author": "rUv <github.com/ruvnet>",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ruvnet/sublinear-time-solver.git",
+    "directory": "packages/sublinear-core"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/sublinear-time-solver/issues"
+  },
+  "homepage": "https://github.com/ruvnet/sublinear-time-solver/tree/main/packages/sublinear-core#readme"
+}

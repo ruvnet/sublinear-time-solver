@@ -69,7 +69,7 @@ export class EmergenceSystem {
         this.emergentCapabilityDetector = new EmergentCapabilityDetector();
         this.setupInterComponentConnections();
         this.isInitialized = true;
-        console.log('Emergence System initialized with all components');
+        console.error('Emergence System initialized with all components');
     }
     /**
      * Setup connections between components for emergent interactions
@@ -364,23 +364,23 @@ export class EmergenceSystem {
     // Private helper methods
     connectLearningToModification() {
         // Set up connection for learning system to inform modification engine
-        console.log('Connected learning system to modification engine');
+        console.error('Connected learning system to modification engine');
     }
     connectExplorationToLearning() {
         // Set up connection for exploration results to inform learning
-        console.log('Connected exploration to learning system');
+        console.error('Connected exploration to learning system');
     }
     connectSharingToCapabilityDetection() {
         // Set up connection for sharing system to inform capability detection
-        console.log('Connected sharing system to capability detection');
+        console.error('Connected sharing system to capability detection');
     }
     connectFeedbackToAllSystems() {
         // Set up feedback connections to all systems
-        console.log('Connected feedback loops to all systems');
+        console.error('Connected feedback loops to all systems');
     }
     connectCapabilityDetectionToExploration() {
         // Set up connection for capability detection to trigger exploration
-        console.log('Connected capability detection to exploration');
+        console.error('Connected capability detection to exploration');
     }
     async shareExplorationInsights(exploration) {
         const sharedInfo = {
@@ -455,7 +455,7 @@ export class EmergenceSystem {
                 metadata: { emergent_capability: true }
             };
             await this.crossToolSharingSystem.shareInformation(sharedInfo);
-            console.log(`New emergent capability shared: ${capability.name}`);
+            console.error(`New emergent capability shared: ${capability.name}`);
         }
     }
     analyzeSessionPerformance(session) {

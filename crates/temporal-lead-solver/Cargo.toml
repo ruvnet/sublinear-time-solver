@@ -1,6 +1,6 @@
 [package]
 name = "temporal-lead-solver"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["rUv <github.com/ruvnet>"]
 description = "Temporal computational lead via sublinear local solvers for diagonally dominant systems"

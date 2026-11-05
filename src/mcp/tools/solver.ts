@@ -71,34 +71,18 @@ export class SolverTools {
    * This fixes the 190x slowdown issue (7700ms -> 2.45ms for 1000x1000)
    */
   static async solve(params: SolveParams) {
-    // Priority 1: Try O(log n) WASM solver for true sublinear complexity
-    try {
-      const wasmSolver = new WasmSublinearSolverTools();
-      if (wasmSolver.isEnhancedWasmAvailable()) {
-        console.log('🚀 Using O(log n) WASM solver with Johnson-Lindenstrauss embedding');
-
-        // Convert matrix format if needed
-        let matrix: number[][];
-        if (params.matrix.format === 'dense' && Array.isArray(params.matrix.data)) {
-          matrix = params.matrix.data as number[][];
-        } else if (Array.isArray(params.matrix) && Array.isArray(params.matrix[0])) {
-          matrix = params.matrix as number[][];
-        } else {
-          throw new Error('Matrix format not supported for WASM solver');
-        }
-
-        return await wasmSolver.solveSublinear(matrix, params.vector);
+    // 1.8.0: always use the verified core-backed solver. The WASM and
+    // "optimized" fast paths previously tried here returned unconverged or
+    // zero vectors for dense input (0 iterations, residual ~= ||b||).
+    if (params && params.matrix && typeof params.matrix === 'object' && !(params.matrix as any).format) {
+      const m: any = params.matrix;
+      if (Array.isArray(m) && Array.isArray(m[0])) {
+        params = { ...params, matrix: { rows: m.length, cols: m[0].length, format: 'dense', data: m } as any };
+      } else if (Array.isArray(m.data)) {
+        params = { ...params, matrix: { ...m, format: 'dense' } };
+      } else if (Array.isArray(m.rowIndices)) {
+        params = { ...params, matrix: { ...m, format: 'coo' } };
       }
-    } catch (error) {
-      console.warn('⚠️  O(log n) WASM solver failed, falling back:', error.message);
-    }
-
-    // Priority 2: Check if this is a dense matrix that needs optimization
-    const needsOptimization = this.shouldUseOptimizedSolver(params);
-
-    if (needsOptimization) {
-      // Use optimized solver that's 3000x+ faster
-      return OptimizedSolverTools.solve(params);
     }
 
     // Original implementation for other cases

@@ -2,6 +2,12 @@
  * MCP Server for Sublinear-Time Solver
  * Provides MCP interface to the core solver algorithms
  */
+/**
+ * stdout carries JSON-RPC frames when serving over stdio. Route every console
+ * diagnostic (ours and any dependency's) to stderr so a stray log line cannot
+ * corrupt the stream. Call before constructing the server.
+ */
+export declare function routeConsoleToStderr(): void;
 export declare class SublinearSolverMCPServer {
     private server;
     private solvers;

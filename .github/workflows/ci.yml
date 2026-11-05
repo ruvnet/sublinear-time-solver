@@ -60,6 +60,24 @@ jobs:
       - name: node --test tests/consciousness/safe-path.test.mjs
         run: node --test tests/consciousness/safe-path.test.mjs
 
+  # npm side: builds @ruvnet/sublinear-core and the package, then runs the
+  # 1.8 regression suite (results checked against dense solves), the MCP wire
+  # tests and the core unit tests on the supported Node lines.
+  npm-test:
+    name: npm test (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm ci
+      - run: npm test
+
   bench-smoke:
     name: cargo bench --quick (smoke)
     runs-on: ubuntu-latest

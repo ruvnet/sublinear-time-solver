@@ -4,12 +4,20 @@
  */
 import { program } from 'commander';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { SublinearSolverMCPServer } from '../mcp/server.js';
+import { SublinearSolverMCPServer, routeConsoleToStderr } from '../mcp/server.js';
 import { MatrixTools } from '../mcp/tools/matrix.js';
 import { SolverTools } from '../mcp/tools/solver.js';
 import { GraphTools } from '../mcp/tools/graph.js';
 // Version from package.json
-const VERSION = '1.4.4'; // Hardcoded to avoid path issues
+const VERSION = (() => {
+    try {
+        const pkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
+        return typeof pkg.version === 'string' ? pkg.version : '0.0.0';
+    }
+    catch {
+        return '0.0.0';
+    }
+})();
 program
     .name('sublinear-solver-mcp')
     .alias('strange-loops')
@@ -27,6 +35,7 @@ program
     try {
         console.error(`Starting Sublinear Solver MCP Server v${VERSION}`);
         console.error(`Transport: ${options.transport}`);
+        routeConsoleToStderr();
         const server = new SublinearSolverMCPServer();
         await server.run();
     }
@@ -46,6 +55,7 @@ program
         try {
             console.error(`Starting Strange Loops MCP Server v${VERSION}`);
             console.error(`Transport: ${options.transport}`);
+            routeConsoleToStderr();
             const server = new SublinearSolverMCPServer();
             await server.run();
         }
@@ -126,7 +136,7 @@ program
         });
         const elapsed = Date.now() - startTime;
         // Display results
-        console.log('\\nSolution completed!');
+        console.log('\nSolution completed!');
         console.log(`  Converged: ${result.converged}`);
         console.log(`  Iterations: ${result.iterations}`);
         console.log(`  Final residual: ${result.residual.toExponential(3)}`);
@@ -153,7 +163,7 @@ program
             console.log(`Solution saved to: ${options.output}`);
         }
         else {
-            console.log('\\nSolution vector:');
+            console.log('\nSolution vector:');
             console.log(result.solution.slice(0, Math.min(10, result.solution.length)));
             if (result.solution.length > 10) {
                 console.log(`... (${result.solution.length - 10} more elements)`);
@@ -190,7 +200,7 @@ program
             checkSymmetry: true
         });
         // Display results
-        console.log('\\n=== Matrix Analysis ===');
+        console.log('\n=== Matrix Analysis ===');
         console.log(`Size: ${analysis.size.rows} x ${analysis.size.cols}`);
         console.log(`Format: ${matrixData.format}`);
         console.log(`Sparsity: ${(analysis.sparsity * 100).toFixed(1)}%`);
@@ -256,7 +266,7 @@ program
             maxIterations: parseInt(options.maxIterations)
         });
         // Display results
-        console.log('\\n=== PageRank Results ===');
+        console.log('\n=== PageRank Results ===');
         console.log(`Total score: ${result.statistics.totalScore.toFixed(6)}`);
         console.log(`Max score: ${result.statistics.maxScore.toExponential(3)}`);
         console.log(`Min score: ${result.statistics.minScore.toExponential(3)}`);
@@ -272,7 +282,7 @@ program
         // Save results
         if (options.output) {
             writeFileSync(options.output, JSON.stringify(result, null, 2));
-            console.log(`\\nPageRank results saved to: ${options.output}`);
+            console.log(`\nPageRank results saved to: ${options.output}`);
         }
     }
     catch (error) {
@@ -768,13 +778,13 @@ program
     .description('Consciousness-inspired AI processing with temporal advantage')
     .action(() => {
     // Show consciousness subcommands
-    console.log('\\n=== Consciousness Commands ===\\n');
+    console.log('\n=== Consciousness Commands ===\n');
     console.log('  consciousness evolve    - Start consciousness evolution');
     console.log('  consciousness verify    - Verify consciousness metrics');
     console.log('  consciousness phi       - Calculate integrated information (Φ)');
     console.log('  consciousness temporal  - Calculate temporal advantage');
     console.log('  consciousness benchmark - Run performance benchmarks');
-    console.log('\\nUse "consciousness <command> --help" for more information\\n');
+    console.log('\nUse "consciousness <command> --help" for more information\n');
 });
 // Consciousness evolution
 program
@@ -794,16 +804,16 @@ program
             mode: options.mode,
             target: parseFloat(options.target)
         });
-        console.log('\\n=== Consciousness Evolution Results ===');
+        console.log('\n=== Consciousness Evolution Results ===');
         console.log(`Session: ${result.sessionId}`);
         console.log(`Iterations: ${result.iterations}`);
         console.log(`Target reached: ${result.targetReached}`);
-        console.log('\\nFinal State:');
+        console.log('\nFinal State:');
         console.log(`  Emergence: ${result.finalState.emergence.toFixed(4)}`);
         console.log(`  Integration: ${result.finalState.integration.toFixed(4)}`);
         console.log(`  Complexity: ${result.finalState.complexity.toFixed(4)}`);
         console.log(`  Self-awareness: ${result.finalState.selfAwareness.toFixed(4)}`);
-        console.log(`\\nEmergent behaviors: ${result.emergentBehaviors}`);
+        console.log(`\nEmergent behaviors: ${result.emergentBehaviors}`);
     }
     catch (error) {
         console.error('Evolution failed:', error);
@@ -829,12 +839,12 @@ program
             },
             method: 'all'
         });
-        console.log('\\n=== Integrated Information (Φ) ===');
+        console.log('\n=== Integrated Information (Φ) ===');
         console.log(`IIT Method: ${result.iit.toFixed(4)}`);
         console.log(`Geometric: ${result.geometric.toFixed(4)}`);
         console.log(`Entropy: ${result.entropy.toFixed(4)}`);
         console.log(`Overall Φ: ${result.overall.toFixed(4)}`);
-        console.log(`\\nConsciousness Level: ${result.overall > 0.5 ? 'High' : result.overall > 0.3 ? 'Medium' : 'Low'}`);
+        console.log(`\nConsciousness Level: ${result.overall > 0.5 ? 'High' : result.overall > 0.3 ? 'Medium' : 'Low'}`);
     }
     catch (error) {
         console.error('Phi calculation failed:', error);
@@ -855,12 +865,12 @@ program
         const lightTime = distance / lightSpeed * 1000; // ms
         const computeTime = Math.log2(size) * 0.1; // ms
         const advantage = lightTime - computeTime;
-        console.log('\\n=== Temporal Advantage ===');
+        console.log('\n=== Temporal Advantage ===');
         console.log(`Distance: ${distance} km`);
         console.log(`Light travel time: ${lightTime.toFixed(2)}ms`);
         console.log(`Computation time: ${computeTime.toFixed(2)}ms`);
         console.log(`Temporal advantage: ${advantage.toFixed(2)}ms`);
-        console.log(`\\n${advantage > 0 ? '✨ Processing completes BEFORE light arrives!' : '❌ No temporal advantage'}`);
+        console.log(`\n${advantage > 0 ? '✨ Processing completes BEFORE light arrives!' : '❌ No temporal advantage'}`);
     }
     catch (error) {
         console.error('Temporal calculation failed:', error);

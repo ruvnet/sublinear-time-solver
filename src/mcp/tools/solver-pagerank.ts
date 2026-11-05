@@ -29,7 +29,7 @@ export class PageRankTools {
     try {
       const wasmSolver = this.getWasmSolver();
       if (wasmSolver.isEnhancedWasmAvailable()) {
-        console.log('🚀 Using O(log n) WASM PageRank with Johnson-Lindenstrauss embedding');
+        console.error('🚀 Using O(log n) WASM PageRank with Johnson-Lindenstrauss embedding');
 
         // Convert adjacency matrix format if needed
         let adjacency: number[][];

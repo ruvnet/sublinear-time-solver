@@ -165,11 +165,11 @@ export class SimpleSublinearSolver {
     const startTime = Date.now();
     const n = matrix.length;
 
-    console.log(`🧮 Solving ${n}x${n} system with TRUE O(log n) complexity...`);
+    console.error(`🧮 Solving ${n}x${n} system with TRUE O(log n) complexity...`);
 
     // Step 1: Create Johnson-Lindenstrauss embedding
     const embedding = this.createJLEmbedding(n);
-    console.log(`📐 JL embedding: ${n} → ${embedding.targetDim} (compression: ${embedding.compressionRatio.toFixed(3)})`);
+    console.error(`📐 JL embedding: ${n} → ${embedding.targetDim} (compression: ${embedding.compressionRatio.toFixed(3)})`);
 
     // Step 2: Project to lower dimension
     const projectedMatrix = this.projectMatrix(matrix, embedding);
@@ -199,8 +199,8 @@ export class SimpleSublinearSolver {
     const finalResidual = this.computeResidual(matrix, solution, b);
     const residualNorm = Math.sqrt(finalResidual.reduce((sum, val) => sum + val * val, 0));
 
-    console.log(`✅ O(log n) solver completed in ${solveTime}ms`);
-    console.log(`📏 Final residual norm: ${residualNorm.toExponential(3)}`);
+    console.error(`✅ O(log n) solver completed in ${solveTime}ms`);
+    console.error(`📏 Final residual norm: ${residualNorm.toExponential(3)}`);
 
     return {
       solution,

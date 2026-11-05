@@ -53,7 +53,7 @@ export class EmergentCapabilityDetector {
    */
   initializeBaseline(capabilities: string[]): void {
     this.baselineCapabilities = new Set(capabilities);
-    console.log(`Initialized baseline with ${capabilities.length} capabilities`);
+    console.error(`Initialized baseline with ${capabilities.length} capabilities`);
   }
 
   /**
@@ -565,7 +565,7 @@ export class EmergentCapabilityDetector {
       strength: capability.strength
     });
 
-    console.log(`New emergent capability detected: ${capability.name}`);
+    console.error(`New emergent capability detected: ${capability.name}`);
   }
 
   private analyzeTrends(): any {

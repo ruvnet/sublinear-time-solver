@@ -1,58 +1,38 @@
 /**
- * Core solver algorithms for asymmetric diagonally dominant systems
- * Implements Neumann series, random walks, and push methods
+ * SublinearSolver: the 1.x class API, now a thin adapter over the
+ * dependency-free @ruvnet/sublinear-core package.
+ *
+ * Behavioural notes (1.8.0):
+ * - Every method returns a solution whose `residual` is the true
+ *   ||A x - b||_2 recomputed from the returned x.
+ * - Non-convergence is reported with `converged: false` instead of a throw.
+ * - 'forward-push', 'backward-push' and 'bidirectional' run Gauss-Seidel for
+ *   full linear solves (the earlier implementations reported convergence at
+ *   several percent error). For local PageRank push use forwardPush /
+ *   backwardPush from the core API.
+ * - Nothing is written to stdout; set SUBLINEAR_DEBUG=1 for stderr diagnostics.
  */
+import { type CsrMatrix } from '@ruvnet/sublinear-core';
 import { Matrix, Vector, SolverConfig, SolverResult, EstimationConfig, PageRankConfig, ProgressCallback } from './types.js';
+/** Convert a legacy dense/COO matrix into a validated core CSR matrix. */
+export declare function toCoreMatrix(matrix: Matrix): CsrMatrix;
 export declare class SublinearSolver {
     private config;
-    private performanceMonitor;
-    private convergenceChecker;
-    private timeoutController?;
-    private wasmAccelerated;
-    private wasmModules;
     constructor(config: SolverConfig);
-    private initializeWasm;
-    private validateConfig;
     /**
-     * Solve ADD system Mx = b using specified method
+     * Solve A x = b. `epsilon` bounds the absolute residual ||A x - b||_2.
      */
     solve(matrix: Matrix, vector: Vector, progressCallback?: ProgressCallback): Promise<SolverResult>;
     /**
-     * Solve using Neumann series expansion
-     * x* = (I - D^(-1)R)^(-1) D^(-1) b = sum_{k=0}^∞ (D^(-1)R)^k D^(-1) b
+     * Monte Carlo solve: every entry is estimated independently by random walks.
+     * Accuracy is statistical (standard error ~ 1/sqrt(walks)); use 'neumann'
+     * when you need the full vector to high precision.
      */
-    private solveNeumann;
+    private randomWalkSolve;
     /**
-     * Compute off-diagonal matrix-vector multiplication: (M - D) * v
-     * This computes R*v where R = M - D (off-diagonal part of matrix)
-     */
-    private computeOffDiagonalMultiply;
-    /**
-     * Solve using random walk sampling
-     */
-    private solveRandomWalk;
-    /**
-     * Create transition matrix for random walks
-     */
-    private createTransitionMatrix;
-    /**
-     * Perform a single random walk
-     */
-    private performRandomWalk;
-    /**
-     * Solve using forward push method
-     */
-    private solveForwardPush;
-    /**
-     * Solve using backward push method
-     */
-    private solveBackwardPush;
-    /**
-     * Solve using bidirectional approach (combine forward and backward)
-     */
-    private solveBidirectional;
-    /**
-     * Estimate a single entry of the solution M^(-1)b
+     * Estimate one entry. method 'random-walk' / 'monte-carlo' estimates
+     * x[row] of A x = b by random walks; otherwise returns (A^-1)[row][column]
+     * via a solve against the unit vector e_column.
      */
     estimateEntry(matrix: Matrix, vector: Vector, config: EstimationConfig): Promise<{
         estimate: number;
@@ -60,7 +40,10 @@ export declare class SublinearSolver {
         confidence: number;
     }>;
     /**
-     * Compute PageRank using the solver
+     * PageRank of a weighted adjacency matrix (entry [i][j] = weight of edge i -> j).
+     * Scores sum to 1: the mass of dangling nodes is redistributed by the
+     * teleport vector. `personalized` (non-negative, any scale) selects
+     * personalized PageRank; it is normalized internally.
      */
     computePageRank(adjacency: Matrix, config: PageRankConfig): Promise<Vector>;
 }

@@ -12,6 +12,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { MatrixOperations, assertDenseAllocation } from '../../core/matrix.js';
 
 interface SublinearConfig {
   /** Target dimension after JL reduction */
@@ -763,6 +764,10 @@ export class TrueSublinearSolverTools {
   }
 
   private sparseToDense(matrix: any): number[][] {
+    // Validate before materializing: integer in-range indices (no property-key
+    // injection) and a bounded rows x cols allocation.
+    MatrixOperations.validateMatrix({ ...matrix, format: 'coo' });
+    assertDenseAllocation(matrix.rows, matrix.cols);
     const dense = Array(matrix.rows).fill(0).map(() => Array(matrix.cols).fill(0));
 
     for (let i = 0; i < matrix.values.length; i++) {
