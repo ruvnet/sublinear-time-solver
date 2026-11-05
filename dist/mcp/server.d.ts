@@ -64,6 +64,73 @@ export declare class SublinearSolverMCPServer {
      * a CI guard for this is on the ADR roadmap (phase 2).
      */
     private handleEstimateComplexityClass;
+    /**
+     * ADR-001 open Q#3 / PR #41 (Rust). Wire-callable witness for
+     * SubLinear orchestrator outputs. Computes the closure-restricted
+     * residual `r[i] = b[i] - Σ_j A[i,j]·x_new[j]` for every supplied
+     * `(row, value)` entry. `x_new[j]` uses the entry's value if j
+     * appears in the entries list; otherwise falls back to
+     * `prev_solution[j]` (the closure-boundary contract).
+     *
+     * Pure-TS implementation — does NOT cross into Rust/WASM. The
+     * residual math is straightforward enough that duplicating it
+     * here is cheaper than plumbing a new WASM binding. Matches
+     * Rust's `verify_sparse_solution` semantics exactly.
+     *
+     * Cost: O(|entries| · avg_row_nnz). SubLinear in n for sparse
+     * DD matrices — same complexity class as the orchestrator
+     * whose output it verifies.
+     */
+    private handleVerifySparseSolution;
+    /**
+     * Wire-callable coherence-score primitive. Mirrors Rust's
+     * `coherence::coherence_score(matrix)`:
+     *
+     *   margin(i) = (|A[i,i]| - Σ_{j ≠ i} |A[i,j]|) / |A[i,i]|
+     *   coherence(A) = min_i margin(i)
+     *
+     * Strictly DD matrices score in (0, 1]; the boundary case scores 0;
+     * non-DD scores negative; rows with zero diagonal score -Infinity.
+     *
+     * Pure-TS — no WASM bridge needed. Cost O(nnz(A)).
+     */
+    private handleCoherenceScore;
+    /**
+     * Wire-callable bounded-depth row-graph BFS. Mirrors Rust's
+     * `closure::closure_indices(matrix, seeds, depth)`:
+     *
+     *   closure_0 = seeds
+     *   closure_{d+1} = closure_d ∪ {j : ∃ i ∈ closure_d, A[i,j] ≠ 0}
+     *
+     * Pure-TS — no WASM bridge. Cost O(depth · branch · |closure|).
+     */
+    private handleClosureIndices;
+    /**
+     * Wire-callable SubLinear orchestrator. Mirrors Rust's
+     * `incremental::solve_on_change_sublinear(matrix, prev, b_new,
+     * delta, closure_depth, max_terms, tolerance)`. Pure-TS — no
+     * WASM bridge. Composes:
+     *
+     *   1. closure_indices(matrix, delta.indices, closure_depth)
+     *   2. for each closure entry: per-entry Neumann iteration
+     *      restricted to the closure (matches src/entry.rs math)
+     *   3. return Vec<{row, value}>
+     *
+     * Cost O(|closure| · max_terms · branch). End-to-end SubLinear
+     * in n for sparse DD matrices with bounded depth + max_terms.
+     */
+    private handleSolveOnChangeSublinear;
+    /**
+     * Wire-callable contrastive top-k orchestrator. Mirrors Rust's
+     * `contrastive::contrastive_solve_on_change_sublinear`. Delegates
+     * the SubLinear solve to handleSolveOnChangeSublinear, then ranks
+     * the resulting entries by `|current - prev_solution[row]|` and
+     * returns the top-k.
+     *
+     * Pure-TS — no WASM bridge. Same complexity class as the
+     * underlying orchestrator: end-to-end SubLinear in n.
+     */
+    private handleContrastiveSolveOnChangeSublinear;
     private handleSaveVectorToFile;
     private loadVectorFromFile;
     private saveVectorToFile;
