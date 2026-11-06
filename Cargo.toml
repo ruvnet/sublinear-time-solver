@@ -93,7 +93,7 @@ getrandom = { version = "0.2", features = ["js"] }
 default = ["std", "serde"]
 std = ["env_logger", "lazy_static"]
 serde = ["dep:serde"]
-wasm = ["wasm-bindgen", "web-sys", "js-sys", "serde-wasm-bindgen", "console_error_panic_hook", "getrandom/js", "fastrand", "rand/getrandom"]
+wasm = ["wasm-bindgen", "web-sys", "js-sys", "serde-wasm-bindgen", "serde_json", "console_error_panic_hook", "getrandom/js", "fastrand", "rand/getrandom"]
 # `wee_alloc` feature retired — see comment on the removed dep above.
 cli = ["clap", "tokio", "axum", "serde_json", "uuid", "colored", "nanosecond-scheduler", "parking_lot"]
 dashboard = ["chrono", "csv", "bincode", "base64", "serde_yaml", "rmp-serde", "hostname", "num_cpus", "tokio", "serde_json"]

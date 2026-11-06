@@ -3,7 +3,8 @@
 //! This module provides high-performance WASM exports for browser and Node.js environments.
 
 use crate::matrix::SparseMatrix;
-use crate::sublinear::{SublinearConfig, SublinearNeumannSolver, SublinearSolver};
+use crate::sublinear::sublinear_neumann::SublinearNeumannSolver;
+use crate::sublinear::{SublinearConfig, SublinearSolver};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -314,12 +315,12 @@ impl PerformanceMetrics {
 
 /// Sublinear solver with O(log n) complexity for WASM
 #[wasm_bindgen]
-pub struct WasmSublinearSolver {
+pub struct SublinearNeumannWasm {
     config: SublinearConfig,
 }
 
 #[wasm_bindgen]
-impl WasmSublinearSolver {
+impl SublinearNeumannWasm {
     /// Create new sublinear solver
     #[wasm_bindgen(constructor)]
     pub fn new(target_dimension: usize, sparsification_eps: f64, jl_distortion: f64) -> Self {
