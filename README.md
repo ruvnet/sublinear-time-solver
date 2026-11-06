@@ -130,52 +130,59 @@ On this benchmark, quadrupling the number of rows took the full solve from **66.
 
 ### JavaScript core
 
-**Setup.** All numbers are measured, and the harness is [`packages/sublinear-core/bench/bench.mjs`](packages/sublinear-core/bench/bench.mjs); reproduce with `npm run bench`. Inputs come from fixed seeds:
-- linear systems: random sparse strictly diagonally dominant matrices with about 9 non-zeros per row
-- graphs: random directed graphs with a skewed in-degree distribution
+**Setup.**
+- **Harness:** [`packages/sublinear-core/bench/bench.mjs`](packages/sublinear-core/bench/bench.mjs). Reproduce with `npm run bench`. Add `LEGACY=<dir>` to time sublinear-time-solver 1.7.2, and `GRAPH_TRANSFORMER=<dir>` to time `@ruvector/graph-transformer`.
+- **Inputs:** generated from fixed seeds. Linear systems are random sparse strictly diagonally dominant matrices with about 9 non-zeros per row.
+- **Machine:** Node v22.23.2 on an AMD Ryzen 9 9950X, single-threaded. The machine was shared (load average about 30), so treat the numbers as indicative.
+- **Timing:** best of 3 runs, except single runs at n = 1,000,000.
 
-**Machine.** Node v22.23.2 on an AMD Ryzen 9 9950X, single-threaded JavaScript. The machine was shared during the runs (load average about 40), so treat the numbers as indicative. Times are the best of 3 runs, except single runs at n = 1,000,000.
-
-**Accuracy vs dense Gaussian elimination (n = 1,000, tolerance 1e-12):**
+**Linear solves: accuracy against dense Gaussian elimination (n = 1,000, tolerance 1e-12).**
 
 | Method | Time | Iterations | Relative residual | Max error vs dense |
-|---|---:|---:|---:|---:|
-| Dense Gaussian elimination (reference) | 119.6 ms | — | — | — |
-| core `gauss-seidel` | 0.99 ms | 13 | 7.0e-13 | 4.0e-13 |
-| core `jacobi` | 2.27 ms | 20 | 2.5e-13 | 7.9e-14 |
-| core `neumann` | 0.77 ms | 20 | 2.5e-13 | 7.9e-14 |
-| 1.7.2 `SublinearSolver` neumann | 54.6 ms | 23 | **5.0e-1** | **1.3e-1** |
+| --- | ---: | ---: | ---: | ---: |
+| Dense Gaussian elimination (reference) | 108.7 ms | — | — | — |
+| core `gauss-seidel` | 0.95 ms | 13 | 7.0e-13 | 4.0e-13 |
+| core `jacobi` | 2.04 ms | 20 | 2.5e-13 | 7.9e-14 |
+| core `neumann` | 0.70 ms | 20 | 2.5e-13 | 7.9e-14 |
+| 1.7.2 `SublinearSolver` neumann | 50.8 ms | 23 | **5.0e-1** | **1.3e-1** |
 
-The 1.7.2 Neumann solver returned a wrong answer here. Its series used the wrong sign for the iteration matrix and reported `converged: false`. That is fixed in 1.8.0.
+The 1.7.2 Neumann solver returned a wrong answer here because its series used the wrong sign. That is fixed in 1.8.0.
 
-**Sparse solve scaling (tolerance 1e-10):**
+**Linear solves: scaling (tolerance 1e-10).**
 
 | n | nnz | Build CSR | Gauss-Seidel | Jacobi | 1.7.2 Neumann |
-|---:|---:|---:|---:|---:|---:|
-| 10,000 | 90 k | 9.5 ms | 2.6 ms (11 it) | 1.4 ms (16 it) | 4,742 ms |
-| 100,000 | 900 k | 104 ms | 34.8 ms | 20.0 ms | — |
-| 1,000,000 | 9.0 M | 991 ms | 532 ms | 387 ms | — |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 10,000 | 90 k | 8.8 ms | 2.3 ms (11 iterations) | 1.5 ms (16 iterations) | 4,402 ms |
+| 100,000 | 900 k | 70 ms | 32 ms | 43 ms | — |
+| 1,000,000 | 9.0 M | 951 ms | 474 ms | 314 ms | — |
 
-These solves are linear in nnz per iteration. Iteration counts stay flat because the matrices are well conditioned, so the full-vector solve is linear time, not sublinear.
+Full-vector solves cost time linear in nnz per iteration; they are not sublinear.
 
-**Where cost really is independent of n.** These two primitives touch only a neighbourhood of the query:
+**Personalized PageRank head to head.**
+- **Graphs:** unweighted, about 10 out-edges per node, no dangling nodes, so every implementation's conventions agree. Restart probability 0.15.
+- **Error:** max absolute error against a power iteration run to 1e-14.
+- **Timing:** core times exclude the one-time graph build. That build took 5.3 ms, 393 ms and 3.4 s at the three sizes. `pprScores` converts its adjacency-list input on every call, and that conversion is included in its time.
 
-| Primitive | n = 1,000 | n = 100,000 | n = 1,000,000 |
-|---|---:|---:|---:|
-| `estimateEntry`, 2,000 walks (walk steps) | 0.77 ms (3,537) | 0.68 ms (3,540) | 0.05 ms (3,533) |
-| `forwardPush` eps = 1e-4 (pushes) | — | 0.26 ms (270) | 0.42 ms (321) |
-| `forwardPush` eps = 1e-6 (pushes) | — | 80.6 ms (50,288) | 50.7 ms (24,185) |
+| n (edges) | core `personalizedPageRank` to 1e-9 | core, fixed 20 iterations | `@ruvector/graph-transformer` `pprScores` (native, 20 iterations) | core `forwardPush` eps 1e-4 | core `forwardPush` eps 1e-7 | 1.7.2 `computePageRank` |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 k (10 k) | 0.34 ms, err 4e-12 | 0.21 ms, err 2.4e-10 | 0.52 ms, err 2.4e-10 | 0.08 ms, err 8.8e-3 | 1.4 ms, err 1.0e-5 | 3,439 ms, err 0.82, scores sum to 0.54 |
+| 100 k (1.0 M) | 46 ms, err 2e-13 | 33 ms, err 9.3e-11 | 85 ms, err 9.3e-11 | 0.20 ms, err 1.6e-3 | 187 ms, err 1.2e-4 | — |
+| 1 M (10 M) | 1,502 ms, err 2e-13 | 783 ms, err 3.6e-10 | 1,506 ms, err 3.6e-10 | 0.16 ms, err 5.0e-4 | 331 ms, err 2.3e-4 | — |
 
-The number of walk steps is constant across n. `estimateEntry` times exclude the one-time O(nnz) validation of each matrix. `forwardPush` work depends on epsilon and on the local graph structure, not on n.
+**Where each tool fits.**
+- **Many queries on one graph:** core power iteration reuses a prebuilt CSR graph. Here it matched `pprScores` exactly at equal iterations and was 1.9 to 2.6 times faster per query.
+- **One query on a fresh graph:** `pprScores` is faster. It needs no separate build step, and the core's graph build costs about as much as 4 to 25 fixed-iteration queries.
+- **Large graphs, top-k only:** `forwardPush` touches only the neighbourhood of the seed. It answered in under 0.4 ms at every size, with per-node error near `epsilon × degree`. The top-ranked nodes stay accurate; small scores do not.
+- **Every score needed precisely:** run power iteration. A small `epsilon` makes push slower than power iteration.
 
-**PageRank (tolerance 1e-9):**
+**Global PageRank on skewed graphs with dangling nodes (tolerance 1e-9).**
 
-| Graph | Build graph | `pageRank` | `personalizedPageRank` | Map-of-arrays PPR baseline, same iterations | `forwardPush` top-10 overlap with exact |
-|---|---:|---:|---:|---:|---|
-| n = 100 k, m = 1 M | 158 ms | 53 ms (18 it) | 34 ms (22 it) | 4,678 ms (same scores to 3e-18) | 8/10 at eps 1e-4, 9/10 at eps 1e-6 |
-| n = 1 M, m = 10 M | 3.2 s | 662 ms (18 it) | 846 ms (23 it) | — | 10/10 at eps 1e-4, 9/10 at eps 1e-6 |
+| Graph | Build | `pageRank` | `personalizedPageRank` | Map-of-arrays PPR baseline (same iterations) | `forwardPush` top-10 overlap |
+| --- | ---: | ---: | ---: | ---: | --- |
+| n = 100 k, m = 1 M | 141 ms | 53 ms (18 iterations) | 35 ms (22 iterations) | 3,475 ms (same scores to 3e-18) | 8/10 at eps 1e-4 (0.27 ms), 9/10 at eps 1e-6 (10.6 ms) |
+| n = 1 M, m = 10 M | 3.1 s | 562 ms (18 iterations) | 1.6 s (23 iterations) | — | 10/10 at eps 1e-4 (0.32 ms), 9/10 at eps 1e-6 (42 ms) |
 
-The baseline is the adjacency-`Map` power-iteration pattern used in several downstream fallbacks.
+**Single-entry estimates.** `estimateEntry` with 2,000 walks took 0.70 ms, 0.65 ms and 0.05 ms at n = 1 k, 100 k and 1 M. The walk-step count stayed at about 3,540 throughout. These times exclude the one-time O(nnz) validation of each matrix.
 
 ## What "sublinear" means here
 

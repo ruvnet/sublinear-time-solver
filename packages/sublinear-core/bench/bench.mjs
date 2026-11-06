@@ -3,6 +3,8 @@
 //   node bench/bench.mjs                 # core only
 //   LEGACY=/path/to/sublinear-time-solver node bench/bench.mjs
 //       # also times the legacy SublinearSolver from that package directory
+//   GRAPH_TRANSFORMER=/path/to/node_modules/@ruvector/graph-transformer node bench/bench.mjs
+//       # adds @ruvector/graph-transformer pprScores (native) as a PPR baseline
 //
 // Inputs are generated from fixed seeds, so every run sees identical systems.
 import { performance } from 'node:perf_hooks';
@@ -10,7 +12,7 @@ import { pathToFileURL } from 'node:url';
 import { join } from 'node:path';
 import {
   solve, csrFromCoo, estimateEntry, pageRank, personalizedPageRank, forwardPush,
-  graphFromEdges, topK, mulberry32, relativeResidual,
+  graphFromEdges, graphFromAdjacency, topK, mulberry32, relativeResidual,
 } from '../dist/esm/index.js';
 
 const rows = [];
@@ -71,9 +73,11 @@ if (process.env.LEGACY) {
 }
 
 console.log(`node ${process.version}  ${process.platform}/${process.arch}`);
+// BENCH_ONLY=ppr runs just the personalized PageRank head-to-head (section 5).
+const only = process.env.BENCH_ONLY;
 
 // 1. Accuracy against dense Gaussian elimination.
-{
+if (!only) {
   const n = 1000;
   const coo = ddCoo(n, 8, 1);
   const b = vec(n, 2);
@@ -95,7 +99,7 @@ console.log(`node ${process.version}  ${process.platform}/${process.arch}`);
 }
 
 // 2. Scaling of the sparse solvers.
-for (const n of [10_000, 100_000, 1_000_000]) {
+if (!only) for (const n of [10_000, 100_000, 1_000_000]) {
   const coo = ddCoo(n, 8, 3);
   const b = vec(n, 4);
   const [tb, A] = time(() => csrFromCoo(coo), 1);
@@ -113,7 +117,7 @@ for (const n of [10_000, 100_000, 1_000_000]) {
 }
 
 // 3. Single-entry estimate: cost should not grow with n.
-for (const n of [1_000, 100_000, 1_000_000]) {
+if (!only) for (const n of [1_000, 100_000, 1_000_000]) {
   const A = csrFromCoo(ddCoo(n, 8, 5, 2));
   const b = vec(n, 6);
   const [t, e] = time(() => estimateEntry(A, b, 0, { walks: 2000, seed: 7 }));
@@ -150,7 +154,7 @@ function naivePageRank(n, edges, seed, damping, iterations) {
   }
   return scores;
 }
-for (const [n, m] of [[100_000, 1_000_000], [1_000_000, 10_000_000]]) {
+if (!only) for (const [n, m] of [[100_000, 1_000_000], [1_000_000, 10_000_000]]) {
   const edges = graphEdges(n, m, 11);
   const [tg, g] = time(() => graphFromEdges(edges, { n }), 1);
   report(`pagerank n=${n}`, `graphFromEdges m=${m}`, tg);
@@ -171,6 +175,63 @@ for (const [n, m] of [[100_000, 1_000_000], [1_000_000, 10_000_000]]) {
     const overlap = exactTop.filter((i) => pushTop.has(i)).length;
     let l1 = 0; for (let i = 0; i < n; i++) l1 += Math.abs((fp.scores.get(i) ?? 0) - ppr.scores[i]);
     report(`pagerank n=${n}`, `core forwardPush eps=${eps}`, tf, `pushes=${fp.pushes} touched=${fp.scores.size} L1=${l1.toExponential(2)} top10=${overlap}/10`);
+  }
+}
+
+// 5. Personalized PageRank head-to-head on unweighted graphs with no dangling
+// nodes (so every implementation's dangling-node convention agrees).
+// Reference: core power iteration to tolerance 1e-14. graph-transformer's
+// pprScores runs a fixed 20 iterations (no convergence check), so its error
+// is bounded by roughly damping^20 = 0.85^20 = 0.039 of the mass.
+{
+  let gt = null;
+  if (process.env.GRAPH_TRANSFORMER) {
+    const req = (await import('node:module')).createRequire(import.meta.url);
+    const { GraphTransformer } = req(process.env.GRAPH_TRANSFORMER);
+    gt = new GraphTransformer();
+  }
+  const noDangling = (n, extra, seed) => {
+    const rand = mulberry32(seed);
+    const adj = Array.from({ length: n }, () => []);
+    for (let u = 0; u < n; u++) {
+      const deg = 1 + Math.floor(rand() * extra);
+      for (let t = 0; t < deg; t++) {
+        let v = Math.floor(Math.pow(rand(), 2) * n);
+        if (v === u) v = (v + 1) % n;
+        if (!adj[u].includes(v)) adj[u].push(v);
+      }
+    }
+    return adj;
+  };
+  const maxDiff = (a, b) => { let m = 0; for (let i = 0; i < a.length; i++) m = Math.max(m, Math.abs(a[i] - (b.get ? (b.get(i) ?? 0) : b[i]))); return m; };
+  for (const n of [1_000, 100_000, 1_000_000]) {
+    const adj = noDangling(n, 19, 21); // average out-degree ~10
+    const m = adj.reduce((a, r) => a + r.length, 0);
+    const [tb, g] = time(() => graphFromAdjacency(adj), 1);
+    const exact = personalizedPageRank(g, 0, { tolerance: 1e-14, maxIterations: 1000 }).scores;
+    const group = `ppr n=${n} m=${m}`;
+    report(group, 'core graphFromAdjacency (one-time build)', tb);
+    const [t1, r1] = time(() => personalizedPageRank(g, 0, { tolerance: 1e-9 }), n >= 1_000_000 ? 1 : 3);
+    report(group, 'core personalizedPageRank tol=1e-9', t1, `iters=${r1.iterations} maxerr=${maxDiff(exact, r1.scores).toExponential(2)}`);
+    const [t2, r2] = time(() => personalizedPageRank(g, 0, { tolerance: 1e-300, maxIterations: 20 }), n >= 1_000_000 ? 1 : 3);
+    report(group, 'core personalizedPageRank 20 iters', t2, `maxerr=${maxDiff(exact, r2.scores).toExponential(2)}`);
+    for (const eps of [1e-4, 1e-7]) {
+      const [t3, r3] = time(() => forwardPush(g, 0, { epsilon: eps }), 3);
+      report(group, `core forwardPush eps=${eps}`, t3, `pushes=${r3.pushes} maxerr=${maxDiff(exact, r3.scores).toExponential(2)}`);
+    }
+    if (gt) {
+      const [t4, r4] = time(() => gt.pprScores(0, adj, 0.15), n >= 1_000_000 ? 1 : 3);
+      report(group, 'graph-transformer pprScores (native, 20 iters)', t4, `maxerr=${maxDiff(exact, r4).toExponential(2)}`);
+    }
+    if (legacy && n <= 1_000) {
+      const dense = Array.from({ length: n }, (_, i) => { const row = new Array(n).fill(0); for (const v of adj[i]) row[v] = 1; return row; });
+      const s = new legacy({ method: 'neumann', epsilon: 1e-9, maxIterations: 1000 });
+      const personalized = new Array(n).fill(0); personalized[0] = 1;
+      const t0 = performance.now();
+      const r5 = await s.computePageRank({ rows: n, cols: n, format: 'dense', data: dense }, { damping: 0.85, epsilon: 1e-9, maxIterations: 1000, personalized });
+      const sum = r5.reduce((a, v) => a + v, 0);
+      report(group, 'legacy 1.7.2 computePageRank (personalized)', performance.now() - t0, `maxerr=${maxDiff(exact, r5).toExponential(2)} sum=${sum.toFixed(3)}`);
+    }
   }
 }
 

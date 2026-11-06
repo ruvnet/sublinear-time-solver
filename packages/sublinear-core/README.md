@@ -98,7 +98,7 @@ try { core = await import('@ruvnet/sublinear-core'); } catch { /* optional */ }
 
 ## Benchmarks
 
-Run `npm run bench` in this package. The harness generates the same inputs from fixed seeds on every run, compares against dense Gaussian elimination, and can also time the legacy 1.7.2 solver (`LEGACY=<path to sublinear-time-solver 1.7.2>`). Results are in the [main README](https://github.com/ruvnet/sublinear-time-solver#benchmarks).
+Run `npm run bench` in this package. The harness generates the same inputs from fixed seeds on every run and compares against dense Gaussian elimination. It can also time the legacy 1.7.2 solver (`LEGACY=<dir>`) and `@ruvector/graph-transformer` `pprScores` (`GRAPH_TRANSFORMER=<dir>`). Results are in the [main README](https://github.com/ruvnet/sublinear-time-solver#benchmarks).
 
 ## License
 

@@ -18,7 +18,10 @@ Releases: `sublinear-time-solver` 1.8.0 (npm), `@ruvnet/sublinear-core` 1.0.0 (n
   - Every input is validated: integer in-range indices, finite values, and caps on dimension, nnz, iterations and pushes.
 - Root and `sublinear-time-solver/core` re-export the core API. `/core` loads no MCP code.
 - Regression tests (`tests/regression-1.8.test.mjs`) check results against a dense solve and measured residuals. They also cover stdout hygiene and hostile MCP arguments.
-- Benchmark and accuracy harness: `npm run bench`. Measured results are in the README.
+- Benchmark and accuracy harness: `npm run bench`.
+  - It includes optional baselines: the 1.7.2 solver (`LEGACY=`) and `@ruvector/graph-transformer` `pprScores` (`GRAPH_TRANSFORMER=`).
+  - Measured results, and guidance on where each tool fits, are in the README.
+  - `forwardPush` starts with sparse maps and switches to dense typed arrays once it has explored n / 8 nodes, which made large explorations 5 to 8 times faster.
 - Ecosystem examples for claude-flow, agentdb and ruvector (`packages/sublinear-core/examples`). Claude Code and Codex skill files (`.claude/skills`, `.agents/skills`).
 
 ### Fixed
