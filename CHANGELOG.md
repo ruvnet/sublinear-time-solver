@@ -4,6 +4,10 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## sublinear 0.3.5 (crates.io) — 2026-11-05
+
+- Fixed: the crate's `include` patterns were unanchored, so 0.3.4 also packaged every `README.md`, `LICENSE` and `CHANGELOG.md` found under `node_modules/`, `.claude/`, `plans/` and similar directories. That made 441 files, 820 kB. The patterns are now anchored to the crate root, giving 99 files. 0.3.4 is yanked. The code is unchanged.
+
 ## [1.8.0] — 2026-11-05
 
 Releases: `sublinear-time-solver` 1.8.0 (npm), `@ruvnet/sublinear-core` 1.0.0 (npm, new),

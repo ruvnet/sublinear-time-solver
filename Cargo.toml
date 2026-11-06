@@ -1,6 +1,6 @@
 [package]
 name = "sublinear"
-version = "0.3.4"
+version = "0.3.5"
 edition = "2021"
 authors = ["rUv <github.com/ruvnet>"]
 license = "MIT OR Apache-2.0"
@@ -11,15 +11,18 @@ categories = ["mathematics", "science", "wasm"]
 # crates.io publish surface. Use `include` (not just `exclude`) so npm/
 # WASM artifacts can never silently push the tarball past the 10 MB cap
 # again. Anything we want on docs.rs / crates.io must appear in this list.
+# Patterns are anchored with a leading "/": unanchored names such as
+# "README.md" match at any depth and pulled every node_modules/*/README.md
+# into the 0.3.4 crate.
 include = [
-    "src/**/*.rs",
-    "benches/*.rs",
-    "Cargo.toml",
-    "README.md",
-    "LICENSE",
-    "CHANGELOG.md",
-    "BENCHMARK.md",
-    "docs/adr/*.md",
+    "/src/**/*.rs",
+    "/benches/*.rs",
+    "/Cargo.toml",
+    "/README.md",
+    "/LICENSE",
+    "/CHANGELOG.md",
+    "/BENCHMARK.md",
+    "/docs/adr/*.md",
 ]
 
 [lib]
