@@ -215,12 +215,17 @@ class SessionManager extends EventEmitter {
       throw new Error('Session not found');
     }
 
-    // Store cost update
+    // Store cost update (bounded ring buffer — an attacker with a valid
+    // session id could otherwise grow this array without limit).
     session.costUpdates = session.costUpdates || [];
     session.costUpdates.push({
       timestamp: new Date().toISOString(),
       ...costUpdate
     });
+    const MAX_COST_UPDATES = 1000;
+    if (session.costUpdates.length > MAX_COST_UPDATES) {
+      session.costUpdates.splice(0, session.costUpdates.length - MAX_COST_UPDATES);
+    }
 
     // Apply cost update to solver (if running)
     if (session.stream && session.status === 'running') {
@@ -238,6 +243,12 @@ class SessionManager extends EventEmitter {
     }
 
     session.swarmNodes = session.swarmNodes || new Set();
+    // Bound swarm membership to prevent unbounded Set growth from repeated
+    // joins with distinct node ids.
+    const MAX_SWARM_NODES = 10000;
+    if (session.swarmNodes.size >= MAX_SWARM_NODES && !session.swarmNodes.has(nodeData.nodeId)) {
+      throw new Error('Swarm node limit reached for this session');
+    }
     session.swarmNodes.add(nodeData.nodeId);
 
     console.log(`Node ${nodeData.nodeId} joined swarm for session ${sessionId}`);

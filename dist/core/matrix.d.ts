@@ -2,7 +2,36 @@
  * Core matrix operations for sublinear-time solvers
  */
 import { Matrix, SparseMatrix, DenseMatrix, Vector, MatrixAnalysis } from './types.js';
+/**
+ * Upper bounds applied to every matrix that crosses an API boundary (MCP tool
+ * arguments, CLI files, library calls). They stop a few bytes of JSON from
+ * declaring a matrix whose dense form or index arrays would exhaust memory.
+ */
+export declare const MATRIX_LIMITS: Readonly<{
+    /** Max rows or cols of any matrix. */
+    maxDimension: 10000000;
+    /** Max stored entries of a sparse matrix. */
+    maxNonZeros: 50000000;
+    /** Max rows * cols for anything materialized densely. */
+    maxDenseElements: 25000000;
+}>;
+/** Throws unless a rows x cols dense allocation is within MATRIX_LIMITS. */
+export declare function assertDenseAllocation(rows: number, cols: number): void;
 export declare class MatrixOperations {
+    /**
+     * Matrices that have already passed validateMatrix, so per-entry accessors
+     * don't re-run an O(nnz) validation on every call. Assumes matrices are
+     * treated as immutable after first use (true for the analysis/solve paths).
+     */
+    private static validatedMatrices;
+    /**
+     * Lazily-built O(1) entry lookup for COO matrices, keyed per matrix object.
+     * Key is `row * cols + col`; value is the FIRST value seen for that
+     * coordinate, matching the original linear-scan first-match-wins semantics.
+     */
+    private static cooIndexCache;
+    private static ensureValidated;
+    private static getCooIndex;
     /**
      * Validates matrix format and properties
      */
@@ -31,6 +60,14 @@ export declare class MatrixOperations {
      * Get column sum for diagonal dominance check
      */
     static getColumnSum(matrix: Matrix, col: number, excludeDiagonal?: boolean): number;
+    /**
+     * Compute, in a single pass, the diagonal and off-diagonal absolute row/col
+     * sums used for diagonal-dominance. O(nnz) for COO (vs O(rows*nnz) when each
+     * row/col sum re-scanned all entries). Semantics match getDiagonal (first
+     * stored value at (i,i)) and getRowSum/getColumnSum (sum of |value| over all
+     * stored off-diagonal entries, duplicates included).
+     */
+    private static computeDominanceComponents;
     /**
      * Check if matrix is diagonally dominant
      */

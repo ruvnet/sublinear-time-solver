@@ -27,7 +27,7 @@ export class WasmLoader {
   static async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    console.log('🚀 Initializing WASM modules...');
+    console.error('🚀 Initializing WASM modules...');
 
     // Load all available WASM modules
     const modules = [
@@ -42,15 +42,15 @@ export class WasmLoader {
     const loadPromises = modules.map(async (mod) => {
       try {
         await this.loadModule(mod.name, mod.file);
-        console.log(`✅ Loaded ${mod.name}`);
+        console.error(`✅ Loaded ${mod.name}`);
       } catch (err) {
-        console.log(`⚠️  ${mod.name} not available (optional)`);
+        console.error(`⚠️  ${mod.name} not available (optional)`);
       }
     });
 
     await Promise.all(loadPromises);
     this.initialized = true;
-    console.log(`✨ WASM initialization complete (${this.modules.size} modules loaded)`);
+    console.error(`✨ WASM initialization complete (${this.modules.size} modules loaded)`);
   }
 
   /**

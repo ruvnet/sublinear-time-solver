@@ -194,8 +194,10 @@ impl SchedulerTool {
             ..Default::default()
         };
 
+        let lipschitz_constant = config.lipschitz_constant;
         let scheduler = Scheduler::new(config);
-        let iterations = params.iterations.unwrap_or(1000);
+        // Bounded so a single tool call cannot pin the process.
+        let iterations = params.iterations.unwrap_or(1000).min(100_000);
 
         // Run strange loop iterations
         for _ in 0..iterations {
@@ -208,7 +210,7 @@ impl SchedulerTool {
 
         Ok(ConsciousnessResponse {
             iterations,
-            lipschitz_constant: config.lipschitz_constant,
+            lipschitz_constant,
             final_state,
             convergence_error,
             temporal_overlap,

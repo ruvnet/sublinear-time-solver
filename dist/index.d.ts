@@ -2,6 +2,7 @@
  * Main entry point for the Sublinear-Time Solver package
  * Provides both MCP server and direct API access
  */
+export * from '@ruvnet/sublinear-core';
 export { SublinearSolver } from './core/solver.js';
 export { MatrixOperations } from './core/matrix.js';
 export { VectorOperations, PerformanceMonitor, ConvergenceChecker, ValidationUtils } from './core/utils.js';

@@ -39,13 +39,13 @@ export class WasmSublinearSolverTools {
       }
       const wasmBinaryPath = path.join(currentDir, '..', '..', 'wasm', 'strange_loop_bg.wasm');
 
-      console.log('🔍 Attempting to load WASM from:', wasmBinaryPath);
+      console.error('🔍 Attempting to load WASM from:', wasmBinaryPath);
 
       if (!fs.existsSync(wasmBinaryPath)) {
         throw new Error('WASM file not found. Expected at: ' + wasmBinaryPath);
       }
 
-      console.log('✅ WASM binary found, initializing...');
+      console.error('✅ WASM binary found, initializing...');
 
       // Simplified WASM initialization - create mock WASM module with O(log n) capabilities
       // This follows the pattern from strange-loops-mcp but with our sublinear algorithms
@@ -60,7 +60,7 @@ export class WasmSublinearSolverTools {
           constructor(jlDistortion = 0.1, seriesTruncation = 10) {
             this.jlDistortion = jlDistortion;
             this.seriesTruncation = seriesTruncation;
-            console.log(`🔧 WASM Solver initialized with ε=${jlDistortion}, truncation=${seriesTruncation}`);
+            console.error(`🔧 WASM Solver initialized with ε=${jlDistortion}, truncation=${seriesTruncation}`);
           }
 
           solve_sublinear(matrixJson: string, bArray: number[]) {
@@ -68,7 +68,7 @@ export class WasmSublinearSolverTools {
             const b = Array.from(bArray);
             const n = matrix.length;
 
-            console.log(`🧮 WASM O(log n) Solver: Processing ${n}x${n} system...`);
+            console.error(`🧮 WASM O(log n) Solver: Processing ${n}x${n} system...`);
 
             // Johnson-Lindenstrauss embedding for O(log n) complexity
             const targetDim = Math.max(
@@ -102,7 +102,7 @@ export class WasmSublinearSolverTools {
               solution[i] = sum;
             }
 
-            console.log(`✅ WASM O(log n) Solver: Completed with dimension reduction ${n} → ${targetDim}`);
+            console.error(`✅ WASM O(log n) Solver: Completed with dimension reduction ${n} → ${targetDim}`);
 
             return {
               solution,
@@ -190,9 +190,9 @@ export class WasmSublinearSolverTools {
         10    // Neumann series truncation
       );
 
-      console.log('✅ WASM O(log n) algorithms initialized successfully');
-      console.log('✅ Johnson-Lindenstrauss embedding enabled');
-      console.log('✅ Sublinear complexity guarantees active');
+      console.error('✅ WASM O(log n) algorithms initialized successfully');
+      console.error('✅ Johnson-Lindenstrauss embedding enabled');
+      console.error('✅ Sublinear complexity guarantees active');
     } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.warn('⚠️  Failed to load WASM:', errorMsg);
@@ -229,7 +229,7 @@ export class WasmSublinearSolverTools {
       const bArray = Array.from(b);
 
       // Call WASM solver with O(log n) complexity
-      console.log('🧮 Solving with O(log n) complexity...');
+      console.error('🧮 Solving with O(log n) complexity...');
       const wasmResult = this.solver.solve_sublinear(matrixJson, bArray);
 
       const solveTime = Date.now() - startTime;

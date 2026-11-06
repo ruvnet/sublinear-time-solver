@@ -18,7 +18,7 @@ export class EmergentCapabilityDetector {
      */
     initializeBaseline(capabilities) {
         this.baselineCapabilities = new Set(capabilities);
-        console.log(`Initialized baseline with ${capabilities.length} capabilities`);
+        console.error(`Initialized baseline with ${capabilities.length} capabilities`);
     }
     /**
      * Monitor system behavior for emergent capabilities
@@ -447,7 +447,7 @@ export class EmergentCapabilityDetector {
             type: capability.type,
             strength: capability.strength
         });
-        console.log(`New emergent capability detected: ${capability.name}`);
+        console.error(`New emergent capability detected: ${capability.name}`);
     }
     analyzeTrends() {
         // Analyze emergence trends

@@ -52,7 +52,15 @@ export class VectorOperations {
      * L-infinity norm of vector
      */
     static normInf(vector) {
-        return Math.max(...vector.map(Math.abs));
+        // Reduce rather than `Math.max(...vector)` — spreading a large vector as
+        // function arguments overflows the call stack (RangeError) for n >~ 100k.
+        let max = 0;
+        for (let i = 0; i < vector.length; i++) {
+            const a = Math.abs(vector[i]);
+            if (a > max)
+                max = a;
+        }
+        return max;
     }
     /**
      * Create zero vector of specified length

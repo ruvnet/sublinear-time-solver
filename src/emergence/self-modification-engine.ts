@@ -280,7 +280,7 @@ export class SelfModificationEngine {
 
   private async rollbackModification(rollbackData: any): Promise<void> {
     // Restore system to previous state
-    console.log(`Rolling back modification to ${rollbackData.target}`);
+    console.error(`Rolling back modification to ${rollbackData.target}`);
   }
 
   /**

@@ -133,8 +133,8 @@ class DomainAdaptationEngine {
         const detectedDomains = [];
         const queryLower = query.toLowerCase();
         const allTerms = [queryLower, ...concepts.map(c => c.toLowerCase())];
-        console.log('DEBUG: Domain detection called with:', { query, concepts, allTerms });
-        console.log('DEBUG: Available domains:', Array.from(this.domainPatterns.keys()));
+        console.error('DEBUG: Domain detection called with:', { query, concepts, allTerms });
+        console.error('DEBUG: Available domains:', Array.from(this.domainPatterns.keys()));
         // Score-based domain detection for better accuracy
         for (const [domain, pattern] of this.domainPatterns) {
             let score = 0;
@@ -178,12 +178,12 @@ class DomainAdaptationEngine {
                 score += 3.0;
                 matches.push(`domain_name:${domain}`);
             }
-            console.log(`DEBUG: Domain ${domain} - Score: ${score}, Matches: ${matches.join(', ')}`);
+            console.error(`DEBUG: Domain ${domain} - Score: ${score}, Matches: ${matches.join(', ')}`);
             if (score > 0) {
                 detectedDomains.push({ domain, score });
             }
         }
-        console.log('DEBUG: Detected domains:', detectedDomains);
+        console.error('DEBUG: Detected domains:', detectedDomains);
         // Sort by score and extract domain names
         const sortedDomains = detectedDomains
             .sort((a, b) => b.score - a.score)
@@ -197,24 +197,24 @@ class DomainAdaptationEngine {
                 // Try to determine specific creative domain
                 if (allTerms.some(term => ['painting', 'visual', 'art', 'aesthetic', 'color', 'canvas'].some(art => term.includes(art)))) {
                     sortedDomains.push('art');
-                    console.log('DEBUG: No specific domains detected but creative visual indicators found, defaulting to art');
+                    console.error('DEBUG: No specific domains detected but creative visual indicators found, defaulting to art');
                 }
                 else if (allTerms.some(term => ['music', 'sound', 'rhythm', 'melody', 'harmony'].some(music => term.includes(music)))) {
                     sortedDomains.push('music');
-                    console.log('DEBUG: No specific domains detected but musical indicators found, defaulting to music');
+                    console.error('DEBUG: No specific domains detected but musical indicators found, defaulting to music');
                 }
                 else if (allTerms.some(term => ['story', 'narrative', 'character', 'plot'].some(narrative => term.includes(narrative)))) {
                     sortedDomains.push('narrative');
-                    console.log('DEBUG: No specific domains detected but narrative indicators found, defaulting to narrative');
+                    console.error('DEBUG: No specific domains detected but narrative indicators found, defaulting to narrative');
                 }
                 else {
                     sortedDomains.push('creative_synthesis');
-                    console.log('DEBUG: Creative indicators found but no specific domain, defaulting to creative_synthesis');
+                    console.error('DEBUG: Creative indicators found but no specific domain, defaulting to creative_synthesis');
                 }
             }
             else {
                 sortedDomains.push('creative_synthesis');
-                console.log('DEBUG: No domains detected and no creative indicators, defaulting to creative_synthesis');
+                console.error('DEBUG: No domains detected and no creative indicators, defaulting to creative_synthesis');
             }
         }
         const primaryDomain = sortedDomains[0];

@@ -63,13 +63,13 @@ export class CompleteWasmSublinearSolverTools {
       }
       const wasmBinaryPath = path.join(currentDir, '..', '..', 'wasm', 'strange_loop_bg.wasm');
 
-      console.log('🔍 Attempting to load Complete WASM from:', wasmBinaryPath);
+      console.error('🔍 Attempting to load Complete WASM from:', wasmBinaryPath);
 
       if (!fs.existsSync(wasmBinaryPath)) {
         throw new Error('WASM file not found. Expected at: ' + wasmBinaryPath);
       }
 
-      console.log('✅ WASM binary found, initializing complete sublinear solver...');
+      console.error('✅ WASM binary found, initializing complete sublinear solver...');
 
       // Complete WASM module with all 4 algorithms from plans
       this.wasmModule = {
@@ -86,7 +86,7 @@ export class CompleteWasmSublinearSolverTools {
               maxIterations: config.maxIterations || 1000,
               precision: config.precision || 'adaptive'
             };
-            console.log(`🔧 Complete Sublinear Solver initialized with method=${this.config.method}, ε=${this.config.epsilon}`);
+            console.error(`🔧 Complete Sublinear Solver initialized with method=${this.config.method}, ε=${this.config.epsilon}`);
           }
 
           solve_complete(matrixJson: string, bArray: number[], queryConfig: any = {}) {
@@ -94,13 +94,13 @@ export class CompleteWasmSublinearSolverTools {
             const b = Array.from(bArray);
             const n = matrix.length;
 
-            console.log(`🧮 Complete Solver: Processing ${n}x${n} system...`);
+            console.error(`🧮 Complete Solver: Processing ${n}x${n} system...`);
 
             // Analyze matrix properties for method selection
             const props = this.analyzeMatrix(matrix);
             const selectedMethod = this.selectMethod(props, queryConfig);
 
-            console.log(`🎯 Selected method: ${selectedMethod} based on matrix analysis`);
+            console.error(`🎯 Selected method: ${selectedMethod} based on matrix analysis`);
 
             const startTime = Date.now();
             let result;
@@ -124,7 +124,7 @@ export class CompleteWasmSublinearSolverTools {
 
             const solveTime = Date.now() - startTime;
 
-            console.log(`✅ Complete Solver: ${selectedMethod} completed in ${solveTime}ms`);
+            console.error(`✅ Complete Solver: ${selectedMethod} completed in ${solveTime}ms`);
 
             return {
               ...result,
@@ -161,7 +161,7 @@ export class CompleteWasmSublinearSolverTools {
             // Check convergence condition: spectral radius of (I-M) should be < 1
             const iMinusM_spectralRadius = this.estimateSpectralRadius(identityMinusM);
             if (iMinusM_spectralRadius >= 1.0) {
-              console.log(`   ⚠️  Neumann: Poor convergence, spectral radius=${iMinusM_spectralRadius.toFixed(4)} >= 1`);
+              console.error(`   ⚠️  Neumann: Poor convergence, spectral radius=${iMinusM_spectralRadius.toFixed(4)} >= 1`);
               // Use more conservative scaling
               const saftyFactor = 0.8 / iMinusM_spectralRadius;
               for (let i = 0; i < n; i++) {
@@ -177,7 +177,7 @@ export class CompleteWasmSublinearSolverTools {
             let iterations = 0;
             const maxIter = Math.min(this.config.maxIterations!, 20); // Limit to prevent instability
 
-            console.log(`   🔢 Neumann: Starting series with max ${maxIter} terms`);
+            console.error(`   🔢 Neumann: Starting series with max ${maxIter} terms`);
 
             for (let k = 1; k <= maxIter; k++) {
               // currentTerm = (I-M) * currentTerm
@@ -188,13 +188,13 @@ export class CompleteWasmSublinearSolverTools {
               const solutionNorm = this.vectorNorm(solution);
 
               if (termNorm < this.config.epsilon! * Math.max(solutionNorm, 1.0)) {
-                console.log(`   ✅ Neumann: Converged at term ${k}, relative term norm=${(termNorm/solutionNorm).toExponential(3)}`);
+                console.error(`   ✅ Neumann: Converged at term ${k}, relative term norm=${(termNorm/solutionNorm).toExponential(3)}`);
                 break;
               }
 
               // Check for divergence
               if (termNorm > solutionNorm * 10) {
-                console.log(`   ⚠️  Neumann: Series diverging, stopping at term ${k}`);
+                console.error(`   ⚠️  Neumann: Series diverging, stopping at term ${k}`);
                 break;
               }
 
@@ -210,7 +210,7 @@ export class CompleteWasmSublinearSolverTools {
             // Numerical stability check
             const maxValue = Math.max(...solution.map(Math.abs));
             if (maxValue > 1e10) {
-              console.log(`   ⚠️  Neumann: Large values detected (max=${maxValue.toExponential(2)}), applying damping`);
+              console.error(`   ⚠️  Neumann: Large values detected (max=${maxValue.toExponential(2)}), applying damping`);
               const dampingFactor = 1e6 / maxValue;
               for (let i = 0; i < n; i++) {
                 solution[i] *= dampingFactor;
@@ -264,7 +264,7 @@ export class CompleteWasmSublinearSolverTools {
             const epsilon = queryConfig.epsilon || this.config.epsilon!;
             const targetIndex = queryConfig.targetIndex || 0;
 
-            console.log(`   🚀 Forward Push: Target=${targetIndex}, ε=${epsilon}, Expected O(${Math.ceil(1/epsilon)}) operations`);
+            console.error(`   🚀 Forward Push: Target=${targetIndex}, ε=${epsilon}, Expected O(${Math.ceil(1/epsilon)}) operations`);
 
             // Initialize residual and estimate vectors
             const estimate = new Array(n).fill(0);
@@ -322,7 +322,7 @@ export class CompleteWasmSublinearSolverTools {
               pushOperations++;
             }
 
-            console.log(`   ✅ Forward Push: Completed ${pushOperations} push operations`);
+            console.error(`   ✅ Forward Push: Completed ${pushOperations} push operations`);
 
             return {
               solution: estimate,
@@ -343,7 +343,7 @@ export class CompleteWasmSublinearSolverTools {
             const epsilon = queryConfig.epsilon || this.config.epsilon!;
             const sourceIndex = queryConfig.sourceIndex || 0;
 
-            console.log(`   ⬅️  Backward Push: Source=${sourceIndex}, ε=${epsilon}`);
+            console.error(`   ⬅️  Backward Push: Source=${sourceIndex}, ε=${epsilon}`);
 
             // Transpose matrix for backward traversal
             const transposedMatrix = this.transposeMatrix(matrix);
@@ -390,7 +390,7 @@ export class CompleteWasmSublinearSolverTools {
               pushOperations++;
             }
 
-            console.log(`   ✅ Backward Push: Completed ${pushOperations} operations`);
+            console.error(`   ✅ Backward Push: Completed ${pushOperations} operations`);
 
             // Combine with original RHS
             const solution = new Array(n);
@@ -416,7 +416,7 @@ export class CompleteWasmSublinearSolverTools {
             const maxWalks = Math.ceil(Math.sqrt(n) / epsilon);
             const maxSteps = Math.ceil(Math.log(n) * 5);
 
-            console.log(`   🎲 Random Walk: ${maxWalks} walks, ${maxSteps} steps each, O(√${n}/ε)=${maxWalks} complexity`);
+            console.error(`   🎲 Random Walk: ${maxWalks} walks, ${maxSteps} steps each, O(√${n}/ε)=${maxWalks} complexity`);
 
             const estimates: number[] = [];
             const solution = new Array(n).fill(0);
@@ -442,7 +442,7 @@ export class CompleteWasmSublinearSolverTools {
             const stdError = Math.sqrt(variance / estimates.length);
             const marginOfError = 1.96 * stdError;
 
-            console.log(`   ✅ Random Walk: ${estimates.length} samples, estimate=${combinedEstimate.toFixed(6)} ± ${marginOfError.toFixed(6)}`);
+            console.error(`   ✅ Random Walk: ${estimates.length} samples, estimate=${combinedEstimate.toFixed(6)} ± ${marginOfError.toFixed(6)}`);
 
             return {
               solution,
@@ -623,9 +623,9 @@ export class CompleteWasmSublinearSolverTools {
         precision: 'adaptive'
       });
 
-      console.log('✅ Complete WASM Sublinear Solver initialized with all 4 algorithms');
-      console.log('✅ Available methods: Neumann Series, Forward Push, Backward Push, Random Walk');
-      console.log('✅ Auto-selection enabled based on matrix properties');
+      console.error('✅ Complete WASM Sublinear Solver initialized with all 4 algorithms');
+      console.error('✅ Available methods: Neumann Series, Forward Push, Backward Push, Random Walk');
+      console.error('✅ Auto-selection enabled based on matrix properties');
 
     } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -660,7 +660,7 @@ export class CompleteWasmSublinearSolverTools {
       const matrixJson = JSON.stringify(matrix);
       const bArray = Array.from(b);
 
-      console.log('🧮 Solving with Complete Sublinear Algorithm Suite...');
+      console.error('🧮 Solving with Complete Sublinear Algorithm Suite...');
       const result = this.solver.solve_complete(matrixJson, bArray, config);
 
       const totalTime = Date.now() - startTime;

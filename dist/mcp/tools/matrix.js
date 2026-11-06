@@ -236,8 +236,8 @@ export class MatrixTools {
             return NaN;
         }
         const diagonals = MatrixOperations.getDiagonalVector(matrix);
-        const maxDiag = Math.max(...diagonals.map(Math.abs));
-        const minDiag = Math.min(...diagonals.map(Math.abs));
+        const maxDiag = diagonals.reduce((a, d) => Math.max(a, Math.abs(d)), 0);
+        const minDiag = diagonals.reduce((a, d) => Math.min(a, Math.abs(d)), Infinity);
         if (minDiag === 0) {
             return Infinity;
         }

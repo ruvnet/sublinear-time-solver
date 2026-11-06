@@ -188,11 +188,11 @@ export async function initializeAllWasm(): Promise<{
   const hasWasm = !!(temporal || graph);
 
   if (hasWasm) {
-    console.log('✅ WASM acceleration enabled');
-    if (temporal) console.log('  - Temporal Neural Solver');
-    if (graph) console.log('  - Graph Reasoner');
+    console.error('✅ WASM acceleration enabled');
+    if (temporal) console.error('  - Temporal Neural Solver');
+    if (graph) console.error('  - Graph Reasoner');
   } else {
-    console.log('⚠️ Running in pure JavaScript mode');
+    console.error('⚠️ Running in pure JavaScript mode');
   }
 
   return { temporal, graph, hasWasm };

@@ -2,7 +2,6 @@
 //!
 //! Implements formal verification of sublinear bounds and causality preservation
 
-use crate::core::{Matrix, Vector};
 use crate::predictor::DominanceParameters;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

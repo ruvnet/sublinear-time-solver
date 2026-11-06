@@ -13,7 +13,9 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 
 import { SublinearSolver } from '../core/solver.js';
+import { readFileSync } from 'fs';
 import { MatrixOperations } from '../core/matrix.js';
+import { csrFromCoo, relativeResidual } from '@ruvnet/sublinear-core';
 import { TemporalTools } from './tools/temporal.js';
 import { PsychoSymbolicTools } from './tools/psycho-symbolic.js';
 import { DynamicPsychoSymbolicTools } from './tools/psycho-symbolic-dynamic.js';
@@ -45,6 +47,68 @@ import {
   SolverError,
   ErrorCodes
 } from '../core/types.js';
+
+const PACKAGE_VERSION: string = (() => {
+  try {
+    return JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version ?? '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+})();
+
+function uniqueByName<T extends { name: string }>(tools: T[]): T[] {
+  const seen = new Set<string>();
+  return tools.filter((t) => (seen.has(t.name) ? false : (seen.add(t.name), true)));
+}
+
+/**
+ * stdout carries JSON-RPC frames when serving over stdio. Route every console
+ * diagnostic (ours and any dependency's) to stderr so a stray log line cannot
+ * corrupt the stream. Call before constructing the server.
+ */
+export function routeConsoleToStderr(): void {
+  const toStderr = (...args: unknown[]) => console.error(...args);
+  console.log = toStderr;
+  console.info = toStderr;
+  console.debug = toStderr;
+  console.warn = toStderr;
+}
+
+/**
+ * Validate every matrix-shaped tool argument (`matrix`, `adjacency`) before
+ * any handler sees it: integer in-range indices, finite values and bounded
+ * dimensions (see MATRIX_LIMITS). Non-matrix arguments are left to handlers.
+ */
+function validateToolMatrixArgs(args: unknown): void {
+  if (!args || typeof args !== 'object') return;
+  for (const key of ['matrix', 'adjacency'] as const) {
+    const m = (args as Record<string, unknown>)[key] as Record<string, unknown> | undefined;
+    if (!m || typeof m !== 'object' || Array.isArray(m)) continue;
+    // Accepted shapes: dense {data: number[][]}, COO with top-level arrays,
+    // and COO with arrays nested under `data` (used by the on-change tools).
+    const nested = m.data && typeof m.data === 'object' && !Array.isArray(m.data) ? (m.data as Record<string, unknown>) : undefined;
+    const coo = Array.isArray(m.rowIndices) ? m : nested && Array.isArray(nested.rowIndices) ? nested : undefined;
+    const format = coo ? 'coo' : Array.isArray(m.data) ? 'dense' : undefined;
+    if (format === undefined) continue;
+    const candidate = coo
+      ? { rows: m.rows, cols: m.cols, format, values: coo.values, rowIndices: coo.rowIndices, colIndices: coo.colIndices }
+      : { ...(m as object), format };
+    try {
+      MatrixOperations.validateMatrix(candidate as any);
+    } catch (e) {
+      throw new McpError(ErrorCode.InvalidParams, `Invalid ${key}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  const v = (args as Record<string, unknown>).vector;
+  if (Array.isArray(v)) {
+    if (v.length > 10_000_000) throw new McpError(ErrorCode.InvalidParams, 'vector is too long');
+    for (let i = 0; i < v.length; i++) {
+      if (typeof v[i] !== 'number' || !Number.isFinite(v[i])) {
+        throw new McpError(ErrorCode.InvalidParams, `vector[${i}] is not a finite number`);
+      }
+    }
+  }
+}
 
 export class SublinearSolverMCPServer {
   private server: Server;
@@ -78,7 +142,7 @@ export class SublinearSolverMCPServer {
     this.server = new Server(
       {
         name: 'sublinear-solver',
-        version: '1.0.0',
+        version: PACKAGE_VERSION,
       },
       {
         capabilities: {
@@ -93,7 +157,8 @@ export class SublinearSolverMCPServer {
 
   private setupToolHandlers(): void {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: [
+      // Several tool groups register the same names; MCP requires unique names, so keep the first.
+      tools: uniqueByName([
         {
           name: 'solve',
           description: 'Solve a diagonally dominant linear system Mx = b',
@@ -724,13 +789,14 @@ export class SublinearSolverMCPServer {
         ...this.emergenceTools.getTools(),
         // Nanosecond scheduler tools
         ...this.schedulerTools.getTools()
-      ]
+      ])
     }));
 
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
 
       try {
+        validateToolMatrixArgs(args);
         switch (name) {
           case 'solve':
             return await this.handleSolve(args as any);
@@ -1016,81 +1082,11 @@ export class SublinearSolverMCPServer {
       const method = (params.method ?? 'neumann').toString();
       this.enforceComplexityBudget(method, params.max_complexity_class);
 
-      // Priority 0: Try TRUE O(log n) sublinear solver first
-      if (params.matrix && params.matrix.values && params.matrix.rowIndices && params.matrix.colIndices) {
-        console.log('🚀 Attempting TRUE O(log n) sublinear solver');
-
-        try {
-          const config = {
-            target_dimension: Math.ceil(Math.log2(params.matrix.rows) * 8),
-            sparsification_eps: 0.1,
-            jl_distortion: 0.5
-          };
-
-          const result = await this.trueSublinearSolver.solveTrueSublinear(params.matrix, params.vector, config);
-
-          return {
-            content: [{
-              type: 'text',
-              text: JSON.stringify({
-                ...result,
-                solver_used: 'TRUE_SUBLINEAR_O_LOG_N',
-                note: 'Used mathematically rigorous O(log n) algorithms with Johnson-Lindenstrauss dimension reduction',
-                complexity_achieved: result.actual_complexity,
-                dimension_reduction: `${params.matrix.rows} → ${config.target_dimension}`,
-                metadata: {
-                  solver_type: 'TRUE_SUBLINEAR',
-                  mathematical_guarantee: result.complexity_bound,
-                  timestamp: new Date().toISOString()
-                }
-              }, null, 2)
-            }]
-          };
-
-        } catch (trueSublinearError) {
-          console.warn('⚠️  TRUE O(log n) solver failed, falling back to WASM:', trueSublinearError.message);
-        }
-      }
-
-      // Priority 1: Try O(log n) WASM solver for true sublinear complexity
-      if (this.wasmSolver.isCompleteWasmAvailable()) {
-        console.log('🚀 Using Complete WASM Solver with auto-selection (Neumann/Push/RandomWalk)');
-
-        try {
-          // Convert matrix format for WASM
-          let matrix: number[][];
-          if (params.matrix.format === 'dense' && Array.isArray(params.matrix.data)) {
-            matrix = params.matrix.data as number[][];
-          } else if (Array.isArray(params.matrix) && Array.isArray(params.matrix[0])) {
-            matrix = params.matrix as number[][];
-          } else {
-            // Try to extract matrix data from various formats
-            if (params.matrix.data && Array.isArray(params.matrix.data) && Array.isArray(params.matrix.data[0])) {
-              matrix = params.matrix.data as number[][];
-            } else {
-              throw new Error('Matrix format not supported for WASM solver');
-            }
-          }
-
-          const wasmResult = await this.wasmSolver.solveComplete(matrix, params.vector, {
-            method: params.method || 'auto',
-            epsilon: params.epsilon || 1e-6,
-            targetIndex: params.targetIndex
-          });
-          return {
-            content: [{
-              type: 'text',
-              text: JSON.stringify(wasmResult, null, 2)
-            }]
-          };
-        } catch (wasmError) {
-          console.warn('⚠️  O(log n) WASM solver failed, falling back to traditional algorithm:', wasmError.message);
-        }
-      } else {
-        console.log('⚠️  Enhanced WASM not available, using traditional algorithm');
-      }
-
-      // Fallback: Traditional solver
+      // The JL-projection ("TRUE_SUBLINEAR") and WASM paths previously tried
+      // first here returned approximate vectors (6% and >100% relative
+      // residual in a 100x100 diagonally dominant test) while reporting
+      // success. `solve` now always uses the verified iterative solvers;
+      // the projection solver remains available as solveTrueSublinear.
       // Enhanced parameter validation
       if (!params.matrix) {
         throw new McpError(ErrorCode.InvalidParams, 'Missing required parameter: matrix');
@@ -1129,8 +1125,11 @@ export class SublinearSolverMCPServer {
         throw new McpError(ErrorCode.InvalidParams, 'Parameter maxIterations must be a positive integer');
       }
 
+      const matrix = (params.matrix && typeof params.matrix === 'object' && !params.matrix.format && Array.isArray(params.matrix.rowIndices))
+        ? { ...params.matrix, format: 'coo' }
+        : params.matrix;
       const solver = new SublinearSolver(config);
-      const result = await solver.solve(params.matrix, params.vector);
+      const result = await solver.solve(matrix, params.vector);
 
       return {
         content: [
@@ -1350,8 +1349,8 @@ export class SublinearSolverMCPServer {
             pageRankVector,
             topNodes: ranked.slice(0, 10),
             totalScore: pageRankVector.reduce((sum, score) => sum + score, 0),
-            maxScore: Math.max(...pageRankVector),
-            minScore: Math.min(...pageRankVector)
+            maxScore: pageRankVector.reduce((a, b) => (b > a ? b : a), -Infinity),
+            minScore: pageRankVector.reduce((a, b) => (b < a ? b : a), Infinity)
           }, null, 2)
         }
       ]
@@ -1397,6 +1396,7 @@ export class SublinearSolverMCPServer {
       if (typeof matrix.rows !== 'number' || typeof matrix.cols !== 'number') {
         throw new McpError(ErrorCode.InvalidParams, 'Matrix must specify rows and cols dimensions');
       }
+      MatrixOperations.validateMatrix({ ...matrix, format: 'coo' });
 
       // Validate vector dimensions
       if (vector.length !== matrix.rows) {
@@ -1416,16 +1416,27 @@ export class SublinearSolverMCPServer {
         base_case_threshold: 100
       };
 
-      console.log(`🚀 Using TRUE O(log n) sublinear solver with dimension reduction ${matrix.rows} → ${config.target_dimension}`);
+      console.error(`🚀 Using TRUE O(log n) sublinear solver with dimension reduction ${matrix.rows} → ${config.target_dimension}`);
 
       // Solve using TRUE sublinear algorithms
       const result = await this.trueSublinearSolver.solveTrueSublinear(matrix, vector, config);
+
+      // Report the measured accuracy of the returned vector alongside the
+      // solver's own claims, so callers can decide whether it is usable.
+      let verified_relative_residual: number | null = null;
+      const sol = (result as any)?.solution;
+      if (Array.isArray(sol) && sol.length === matrix.rows) {
+        const A = csrFromCoo({ rows: matrix.rows, cols: matrix.cols, rowIndices: matrix.rowIndices, colIndices: matrix.colIndices, values: matrix.values });
+        verified_relative_residual = relativeResidual(A, sol, vector);
+      }
 
       return {
         content: [{
           type: 'text',
           text: JSON.stringify({
             ...result,
+            verified_relative_residual,
+            accuracy_note: 'Approximate: this solver works in a randomly projected space. Use the solve tool when an accurate full solution is required.',
             metadata: {
               solver_type: 'TRUE_SUBLINEAR',
               original_dimension: matrix.rows,
@@ -1465,7 +1476,7 @@ export class SublinearSolverMCPServer {
         throw new McpError(ErrorCode.InvalidParams, 'Matrix must specify rows and cols dimensions');
       }
 
-      console.log(`🔍 Analyzing ${matrix.rows}×${matrix.cols} matrix for TRUE sublinear solvability`);
+      console.error(`🔍 Analyzing ${matrix.rows}×${matrix.cols} matrix for TRUE sublinear solvability`);
 
       // Analyze matrix using TRUE sublinear tools
       const analysis = await this.trueSublinearSolver.analyzeMatrix(matrix);
@@ -1508,7 +1519,7 @@ export class SublinearSolverMCPServer {
   private async handleGenerateTestVector(params: any) {
     try {
       // Validate required parameters
-      if (!params.size || typeof params.size !== 'number' || params.size < 1) {
+      if (!params.size || typeof params.size !== 'number' || params.size < 1 || params.size > 10_000_000) {
         throw new McpError(ErrorCode.InvalidParams, 'Missing or invalid required parameter: size (must be positive integer)');
       }
 
@@ -1535,8 +1546,8 @@ export class SublinearSolverMCPServer {
             pattern_used: pattern,
             seed_used: seed,
             statistics: {
-              min: Math.min(...result.vector),
-              max: Math.max(...result.vector),
+              min: result.vector.reduce((a: number, b: number) => (b < a ? b : a), Infinity),
+              max: result.vector.reduce((a: number, b: number) => (b > a ? b : a), -Infinity),
               sum: result.vector.reduce((a, b) => a + b, 0),
               norm: Math.sqrt(result.vector.reduce((sum, x) => sum + x * x, 0)),
               non_zero_count: result.vector.filter(x => Math.abs(x) > 1e-14).length
@@ -2540,7 +2551,7 @@ export class SublinearSolverMCPServer {
         throw new Error('Vector file is empty or contains no valid numbers');
       }
 
-      console.log(`📁 Loaded vector of size ${vector.length} from ${filePath}`);
+      console.error(`📁 Loaded vector of size ${vector.length} from ${filePath}`);
       return vector;
 
     } catch (error) {
@@ -2579,7 +2590,7 @@ export class SublinearSolverMCPServer {
     }
 
     const absolutePath = safeWriteVector(filePath, content);
-    console.log(`💾 Saved vector of size ${vector.length} to ${absolutePath} (${fileFormat} format)`);
+    console.error(`💾 Saved vector of size ${vector.length} to ${absolutePath} (${fileFormat} format)`);
     return absolutePath;
   }
 
@@ -2622,6 +2633,7 @@ export class SublinearSolverMCPServer {
   }
 
   async run(): Promise<void> {
+    routeConsoleToStderr();
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
     console.error('Sublinear Solver MCP server running on stdio');
@@ -2630,6 +2642,7 @@ export class SublinearSolverMCPServer {
 
 // Main execution
 if (import.meta.url === `file://${process.argv[1]}`) {
+  routeConsoleToStderr();
   const server = new SublinearSolverMCPServer();
   server.run().catch(console.error);
 }

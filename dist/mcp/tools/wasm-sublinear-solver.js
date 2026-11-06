@@ -34,12 +34,12 @@ export class WasmSublinearSolverTools {
             const projectRoot = path.resolve(currentDir, '../../..');
             const wasmPath = path.resolve(projectRoot, 'dist/wasm/strange_loop.js');
             const wasmUrl = 'file://' + wasmPath;
-            console.log('🔍 Attempting to load WASM from:', wasmPath);
-            console.log('🔍 File exists:', fs.existsSync(wasmPath));
+            console.error('🔍 Attempting to load WASM from:', wasmPath);
+            console.error('🔍 File exists:', fs.existsSync(wasmPath));
             // Try the Node.js compatible WASM module first (ES module version)
             const nodeCompatiblePath = path.resolve(projectRoot, 'dist/wasm/node-compatible.mjs');
             if (fs.existsSync(nodeCompatiblePath)) {
-                console.log('🚀 Loading Node.js Compatible WASM with O(log n) algorithms...');
+                console.error('🚀 Loading Node.js Compatible WASM with O(log n) algorithms...');
                 // Use dynamic import for ES module compatibility
                 const nodeCompatibleUrl = 'file://' + nodeCompatiblePath;
                 const wasmModule = await import(nodeCompatibleUrl);
@@ -53,12 +53,12 @@ export class WasmSublinearSolverTools {
                 this.solver = new this.wasmModule.WasmSublinearSolver(0.1, // JL distortion parameter (epsilon)
                 10 // Neumann series truncation
                 );
-                console.log('✅ Node.js Compatible WASM loaded successfully');
-                console.log('✅ O(log n) Johnson-Lindenstrauss embedding enabled');
-                console.log('✅ Sublinear complexity algorithms ready');
+                console.error('✅ Node.js Compatible WASM loaded successfully');
+                console.error('✅ O(log n) Johnson-Lindenstrauss embedding enabled');
+                console.error('✅ Sublinear complexity algorithms ready');
             }
             else if (fs.existsSync(wasmPath)) {
-                console.log('🚀 Loading Standard WASM with O(log n) algorithms...');
+                console.error('🚀 Loading Standard WASM with O(log n) algorithms...');
                 // Dynamic import of the WASM module using file URL
                 const wasmModule = await import(wasmUrl);
                 // Load WASM binary for Node.js
@@ -71,9 +71,9 @@ export class WasmSublinearSolverTools {
                 this.solver = new this.wasmModule.WasmSublinearSolver(0.1, // JL distortion parameter (epsilon)
                 10 // Neumann series truncation
                 );
-                console.log('✅ Standard WASM loaded successfully');
-                console.log('✅ O(log n) Johnson-Lindenstrauss embedding enabled');
-                console.log('✅ Sublinear complexity algorithms ready');
+                console.error('✅ Standard WASM loaded successfully');
+                console.error('✅ O(log n) Johnson-Lindenstrauss embedding enabled');
+                console.error('✅ Sublinear complexity algorithms ready');
             }
             else {
                 console.warn('⚠️  Enhanced WASM not found - no O(log n) algorithms available');
@@ -100,11 +100,11 @@ export class WasmSublinearSolverTools {
             // Convert inputs to WASM format
             const matrixJson = JSON.stringify(matrix);
             const bArray = new Float64Array(b);
-            console.log(`🧮 Solving ${matrix.length}x${matrix.length} system with O(log n) complexity...`);
+            console.error(`🧮 Solving ${matrix.length}x${matrix.length} system with O(log n) complexity...`);
             // Call WASM O(log n) solver
             const result = this.solver.solve_sublinear(matrixJson, bArray);
             const solveTime = Date.now() - startTime;
-            console.log(`✅ O(log n) solver completed in ${solveTime}ms`);
+            console.error(`✅ O(log n) solver completed in ${solveTime}ms`);
             return {
                 solution: result.solution || [],
                 complexity_bound: result.complexity_bound || 'Logarithmic',
@@ -142,10 +142,10 @@ export class WasmSublinearSolverTools {
         try {
             const adjacencyJson = JSON.stringify(adjacency);
             const personalizedArray = personalized ? new Float64Array(personalized) : undefined;
-            console.log(`📊 Computing PageRank with O(log n) complexity for ${adjacency.length} nodes...`);
+            console.error(`📊 Computing PageRank with O(log n) complexity for ${adjacency.length} nodes...`);
             const result = this.solver.page_rank_sublinear(adjacencyJson, damping, personalizedArray);
             const solveTime = Date.now() - startTime;
-            console.log(`✅ O(log n) PageRank completed in ${solveTime}ms`);
+            console.error(`✅ O(log n) PageRank completed in ${solveTime}ms`);
             return {
                 pageRankVector: result.pagerank_vector || [],
                 complexity_bound: 'Logarithmic',

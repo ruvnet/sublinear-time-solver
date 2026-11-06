@@ -186,7 +186,7 @@ export class FeedbackLoopSystem {
         this.behaviorModifications.push(modification);
         // Update performance tracking
         this.updateLearningCurve(modification.component, modification.expectedImprovement);
-        console.log(`Applied behavior modification: ${modification.component}.${modification.parameter}
+        console.error(`Applied behavior modification: ${modification.component}.${modification.parameter}
                 ${JSON.stringify(modification.oldValue)} -> ${JSON.stringify(modification.newValue)}`);
     }
     /**

@@ -4,7 +4,64 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased] — targeting v1.8.0 / Rust crate 0.4.0
+## [1.8.0] — 2026-11-05
+
+Releases: `sublinear-time-solver` 1.8.0 (npm), `@ruvnet/sublinear-core` 1.0.0 (npm, new),
+`temporal-lead-solver` 0.1.1 (npm and crates.io), `sublinear` 0.3.4 (crates.io).
+
+### Added
+
+- **`@ruvnet/sublinear-core` 1.0.0**: a new zero-dependency package (`packages/sublinear-core`, ESM + CJS + types).
+  - Solvers: CSR matrices; `solve` (Jacobi, Gauss-Seidel, conjugate gradient, Neumann; `auto` selection); `estimateEntry` (random-walk single entry).
+  - Ranking: `pageRank`, `personalizedPageRank`, `forwardPush`, `backwardPush`.
+  - Helpers: `graphFromEdges` (string or numeric ids), `graphFromAdjacency`, `topK`.
+  - Every input is validated: integer in-range indices, finite values, and caps on dimension, nnz, iterations and pushes.
+- Root and `sublinear-time-solver/core` re-export the core API. `/core` loads no MCP code.
+- Regression tests (`tests/regression-1.8.test.mjs`) check results against a dense solve and measured residuals. They also cover stdout hygiene and hostile MCP arguments.
+- Benchmark and accuracy harness: `npm run bench`.
+  - It includes optional baselines: the 1.7.2 solver (`LEGACY=`) and `@ruvector/graph-transformer` `pprScores` (`GRAPH_TRANSFORMER=`).
+  - Measured results, and guidance on where each tool fits, are in the README.
+  - `forwardPush` starts with sparse maps and switches to dense typed arrays once it has explored n / 8 nodes, which made large explorations 5 to 8 times faster.
+- Ecosystem examples for claude-flow, agentdb and ruvector (`packages/sublinear-core/examples`). Claude Code and Codex skill files (`.claude/skills`, `.agents/skills`).
+
+### Fixed
+
+- **Neumann solver returned wrong solutions.** The series used `+D⁻¹R` instead of `−D⁻¹R`. On a 1,000×1,000 diagonally dominant system, 1.7.2 returned a relative residual of 0.5 and a max error of 0.13. `SublinearSolver` now delegates to the core and meets the requested residual. The same sign bug was independently identified in #64.
+- **Push methods reported false convergence.** `forward-push`, `backward-push` and `bidirectional` claimed convergence at about 5% error. They now run Gauss-Seidel for full solves, and `result.method` reports `gauss-seidel`.
+- **`random-walk` threw.** It now returns a Monte Carlo solution.
+- **`computePageRank` scores did not sum to 1.** Dangling mass was dropped, and `personalized` was used unnormalized. Both are fixed.
+- **MCP `solve` returned approximate or invalid vectors while reporting success.** For COO input it first tried the JL-projection solver (6% residual). For dense input it tried a WASM path (residual above 100%). It now always uses the verified solver. `solveTrueSublinear` additionally reports `verified_relative_residual`.
+- **CLI `solve` returned a zero vector** for dense matrices (0 iterations) through the "optimized" fast path. That path is removed.
+- **stdout corruption of the MCP stdio stream.** Startup banners and solver logs went to stdout. All diagnostics now go to stderr, and library imports print nothing. `SUBLINEAR_DEBUG=1` enables solver diagnostics on stderr.
+- **Duplicate MCP tool names** (66 entries, 60 unique) are deduplicated.
+- The MCP `serverInfo` version and `--version` now report the package version.
+- From #64, with credit: O(1) COO `getEntry`, single-pass dominance and symmetry checks, O(V²) modularity, no stack overflow in `normInf` for large vectors, hardened `server/` HTTP server, `temporal-lead-solver` crate build and Neumann fixes, and wasm bounds checks.
+
+### Security
+
+- **Array prototype pollution through matrix index arrays (medium).** MCP tool arguments such as `rowIndices: ["__proto__"]` passed the `idx < 0 || idx >= rows` range check. They were then used as property keys, which could overwrite `Array.prototype` methods for the lifetime of the server. All matrix arguments are now validated centrally: integer in-range indices, finite values, and `MATRIX_LIMITS`.
+- **Memory exhaustion from tiny inputs (medium/low).** A few bytes of JSON could declare a 40,000×40,000 matrix and OOM the server through dense conversions. Dense allocations are now capped (`assertDenseAllocation`), as are vector lengths, `generateTestVector` size and scheduler iterations.
+- **Dependencies.** `npm audit --omit=dev` went from 13 findings (1 critical, 9 high) to 0. Rust lockfile: `crossbeam-epoch` (RUSTSEC-2026-0204), `anyhow`, `tokio`.
+- **wasm.** `allocate_matrix` and `deallocate_matrix` no longer pass a zero-size layout to the allocator.
+
+### Changed
+
+- **Package diet.**
+  - Runtime dependencies cut from 18 to 4. Unused deps were removed; server-only and build tooling moved to devDependencies.
+  - Tarball: 9.8 MB / 135 files → 1.0 MB / 80 files. Unreachable modules and 7 MB of unused WASM are excluded.
+  - Clean install of `sublinear-time-solver`: 123 MB / 220 packages → 31 MB / 99 packages. `@ruvnet/sublinear-core` alone installs as 1 package, 220 kB.
+- `SublinearSolver.solve` reports non-convergence via `converged: false` instead of throwing. `residual` is always the true ‖A x − b‖₂.
+- `npm run clean` keeps the committed `dist/wasm` assets.
+- `sublinear` 0.3.4 (Rust):
+  - Removed unused `nalgebra`, `fnv`, `log` and `num-traits`.
+  - `approx` is now a dev-dependency.
+  - `nanosecond-scheduler` and `parking_lot` are pulled in only by the `cli` feature, which now compiles. Scheduler iterations are capped.
+- `temporal-lead-solver` 0.1.1:
+  - The npm package drops its unused `chalk`, `commander` and `ora` dependencies.
+  - `TemporalPredictor.solveSublinear` now iterates to its tolerance. 0.1.0 stopped after log2(n) + 1 damped terms: for `[[4,-1],[-1,4]] x = [3,3]` it returned 0.61 where the answer is 1. It also reports `residual`, `iterations` and `converged`, and `queryCount` counts the matrix entries actually read.
+  - The crate builds again, and its Neumann iteration now solves A x = b instead of A x = D b.
+
+## [1.7.2] / sublinear 0.3.3 — 2026-05-23 (ADR-001 phase-2/3)
 
 ADR-001 phase-2/3 release. Closes every open question in the ADR
 (except the hardware-dependent Pi hwmon J/solve), shipping a full

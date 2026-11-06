@@ -230,7 +230,7 @@ export class SelfModificationEngine {
     }
     async rollbackModification(rollbackData) {
         // Restore system to previous state
-        console.log(`Rolling back modification to ${rollbackData.target}`);
+        console.error(`Rolling back modification to ${rollbackData.target}`);
     }
     /**
      * Get modification capabilities

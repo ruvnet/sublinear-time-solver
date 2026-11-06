@@ -1,7 +1,7 @@
 {
   "name": "sublinear-time-solver",
-  "version": "1.7.2",
-  "description": "The Ultimate Mathematical & AI Toolkit: Sublinear algorithms, consciousness exploration, psycho-symbolic reasoning, chaos analysis, and temporal prediction in one unified MCP interface. WASM-accelerated with Lyapunov exponents and attractor dynamics.",
+  "version": "1.8.0",
+  "description": "Sparse linear solvers (Neumann, Jacobi, Gauss-Seidel, conjugate gradient), PageRank, personalized PageRank and local forward/backward push, as an MCP server, CLI and library. The dependency-free core ships separately as @ruvnet/sublinear-core.",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,41 +14,73 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./mcp": {
-      "import": "./dist/mcp/index.js",
-      "types": "./dist/mcp/index.d.ts"
+      "types": "./dist/mcp/index.d.ts",
+      "import": "./dist/mcp/index.js"
     },
     "./core": {
-      "import": "./dist/core/solver.js",
-      "types": "./dist/core/solver.d.ts"
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
     },
     "./tools": {
-      "import": "./dist/mcp/tools/index.js",
-      "types": "./dist/mcp/tools/index.d.ts"
+      "types": "./dist/mcp/tools/index.d.ts",
+      "import": "./dist/mcp/tools/index.js"
     }
   },
   "files": [
     "dist/",
+    "!dist/benchmarks/",
+    "!dist/reasongraph/",
+    "!dist/consciousness/genuine_consciousness_detector.*",
+    "!dist/consciousness/independent_verification_system.*",
+    "!dist/cli/consciousness-simple.*",
+    "!dist/core/high-performance-solver.*",
+    "!dist/core/memory-manager.*",
+    "!dist/core/optimized-matrix.*",
+    "!dist/core/optimized-solver.*",
+    "!dist/core/performance-optimizer.*",
+    "!dist/core/wasm-bridge.*",
+    "!dist/core/wasm-integration.*",
+    "!dist/core/wasm-loader.*",
+    "!dist/mcp/tools/*-backup.*",
+    "!dist/mcp/tools/psycho-symbolic-complete.*",
+    "!dist/mcp/tools/psycho-symbolic-enhanced.*",
+    "!dist/mcp/tools/psycho-symbolic-fixed.*",
+    "!dist/mcp/tools/psycho-symbolic-learning.*",
+    "!dist/mcp/tools/simple-wasm-solver.*",
+    "!dist/mcp/tools/solver-pagerank.*",
+    "!dist/mcp/tools/wasm-sublinear-solver-simple.*",
+    "!dist/wasm/extractors*",
+    "!dist/wasm/planner*",
+    "!dist/wasm/graph_reasoner*",
+    "!dist/wasm/temporal_neural_solver*",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "workspaces": [
+    "packages/sublinear-core",
+    "crates/temporal-lead-solver"
   ],
   "scripts": {
-    "build": "npm run clean && npm run build:ts && npm run build:wasm",
+    "build": "npm run clean && npm run build:core && npm run build:ts && npm run build:wasm",
     "build:ts": "tsc",
     "build:wasm": "node scripts/copy-wasm.js",
     "build:dev": "tsc --watch",
-    "clean": "rm -rf dist/",
-    "test": "npm run build && node --test tests/",
+    "clean": "node -e \"const fs=require('fs');if(fs.existsSync('dist'))for(const e of fs.readdirSync('dist'))if(e!=='wasm')fs.rmSync('dist/'+e,{recursive:true,force:true})\"",
+    "test": "npm run build && node --test tests/regression-1.8.test.mjs tests/mcp-sublinear-wire.test.mjs tests/consciousness/safe-path.test.mjs && npm test -w @ruvnet/sublinear-core",
     "lint": "echo 'Linting would go here'",
     "start": "npm run build && node dist/mcp/server.js",
     "serve": "npm run build && node dist/cli/index.js serve",
     "dev:serve": "tsx src/cli/index.ts serve",
     "solve": "npm run build && node dist/cli/index.js solve",
     "analyze": "npm run build && node dist/cli/index.js analyze",
-    "pagerank": "npm run build && node dist/cli/index.js pagerank"
+    "pagerank": "npm run build && node dist/cli/index.js pagerank",
+    "build:core": "npm run build -w @ruvnet/sublinear-core",
+    "bench": "npm run bench -w @ruvnet/sublinear-core"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",
@@ -67,42 +99,35 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
+    "@ruvnet/sublinear-core": "^1.0.0",
     "commander": "^9.4.1",
-    "temporal-lead-solver": "^0.1.0"
+    "temporal-lead-solver": "^0.1.1"
   },
   "engines": {
     "node": ">=16.0.0"
   },
   "keywords": [
     "linear-algebra",
+    "sparse-matrix",
     "solver",
-    "sublinear-time",
-    "diagonally-dominant",
+    "sublinear",
     "pagerank",
+    "personalized-pagerank",
+    "forward-push",
+    "backward-push",
     "random-walk",
     "neumann-series",
+    "conjugate-gradient",
+    "gauss-seidel",
+    "diagonally-dominant",
+    "graph-algorithms",
     "mcp",
     "model-context-protocol",
-    "typescript",
+    "mcp-server",
+    "claude-code",
+    "codex",
     "cli",
-    "graph-algorithms",
-    "asymmetric-matrices",
-    "consciousness",
-    "enhanced-ai",
-    "dynamic-responses",
-    "information-theory",
-    "emergence",
-    "self-modification",
-    "persistent-learning",
-    "stochastic-exploration",
-    "cross-tool-sharing",
-    "feedback-loops",
-    "emergent-behavior",
-    "johnson-lindenstrauss",
-    "spectral-sparsification",
-    "true-sublinear",
-    "o-log-n",
-    "dimension-reduction"
+    "typescript"
   ],
   "author": "rUv <github.com/ruvnet>",
   "license": "MIT OR Apache-2.0",

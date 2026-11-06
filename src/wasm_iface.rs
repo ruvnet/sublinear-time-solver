@@ -325,6 +325,10 @@ pub fn allocate_matrix(rows: usize, cols: usize) -> *mut f64 {
         Some(s) => s,
         None => return core::ptr::null_mut(),
     };
+    // A zero-size layout passed to `alloc` is undefined behaviour.
+    if size == 0 {
+        return core::ptr::null_mut();
+    }
     let layout = match std::alloc::Layout::array::<f64>(size) {
         Ok(l) => l,
         Err(_) => return core::ptr::null_mut(),
@@ -345,6 +349,9 @@ pub fn deallocate_matrix(ptr: *mut f64, rows: usize, cols: usize) {
         Some(s) => s,
         None => return,
     };
+    if size == 0 {
+        return;
+    }
     let layout = match std::alloc::Layout::array::<f64>(size) {
         Ok(l) => l,
         Err(_) => return,

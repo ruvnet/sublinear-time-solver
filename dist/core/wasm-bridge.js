@@ -152,14 +152,14 @@ export async function initializeAllWasm() {
     ]);
     const hasWasm = !!(temporal || graph);
     if (hasWasm) {
-        console.log('✅ WASM acceleration enabled');
+        console.error('✅ WASM acceleration enabled');
         if (temporal)
-            console.log('  - Temporal Neural Solver');
+            console.error('  - Temporal Neural Solver');
         if (graph)
-            console.log('  - Graph Reasoner');
+            console.error('  - Graph Reasoner');
     }
     else {
-        console.log('⚠️ Running in pure JavaScript mode');
+        console.error('⚠️ Running in pure JavaScript mode');
     }
     return { temporal, graph, hasWasm };
 }

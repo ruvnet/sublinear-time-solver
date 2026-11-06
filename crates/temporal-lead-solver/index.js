@@ -25,50 +25,66 @@ export class TemporalPredictor {
 
         return {
             solution,
+            residual: this.lastResidual,
+            iterations: this.lastIterations,
+            converged: this.lastConverged,
             computeTimeMs,
             lightTravelTimeMs,
             temporalAdvantageMs,
             effectiveVelocityRatio: effectiveVelocity,
-            queryCount: Math.sqrt(vector.length) + 100 // Sublinear queries
+            // Matrix entries read: one dense residual (n^2) per iteration.
+            queryCount: (this.lastIterations + 1) * vector.length * vector.length
         };
     }
 
     /**
-     * Sublinear solving using Neumann series approximation
+     * Jacobi iteration (the Neumann series x = sum_k (I - D^-1 A)^k D^-1 b)
+     * run until ||b - A x||_2 <= tolerance * max(1, ||b||_2) or maxIterations.
+     * Converges for strictly diagonally dominant matrices.
+     *
+     * 0.1.0 stopped after log2(n) + 1 damped terms, which left a large
+     * residual (for a 2x2 system it returned 0.61 where the answer is 1).
      */
     solveSublinear(matrix, b) {
         const n = b.length;
-        const x = new Array(n).fill(0);
-        let residual = [...b];
-
-        // Extract diagonal for preconditioning
-        const diagInv = matrix.map((row, i) => 1 / row[i]);
-
-        // Neumann series (truncated for sublinear time)
-        const maxTerms = Math.min(Math.floor(Math.log2(n)) + 1, 20);
-
-        for (let term = 0; term < maxTerms; term++) {
-            // Apply preconditioner
-            for (let i = 0; i < n; i++) {
-                x[i] += diagInv[i] * residual[i] * 0.5;
-            }
-
-            // Update residual
-            const newResidual = new Array(n).fill(0);
-            for (let i = 0; i < n; i++) {
-                newResidual[i] = b[i];
-                for (let j = 0; j < n; j++) {
-                    newResidual[i] -= matrix[i][j] * x[j];
-                }
-            }
-
-            // Check convergence
-            const norm = Math.sqrt(newResidual.reduce((sum, r) => sum + r * r, 0));
-            if (norm < this.tolerance) break;
-
-            residual = newResidual;
+        if (!Array.isArray(matrix) || matrix.length !== n) {
+            throw new Error(`matrix must have ${n} rows`);
         }
+        const diag = new Array(n);
+        for (let i = 0; i < n; i++) {
+            const row = matrix[i];
+            if (!row || row.length !== n) throw new Error(`row ${i} must have length ${n}`);
+            if (!(Math.abs(row[i]) > 0)) throw new Error(`zero diagonal at row ${i}`);
+            diag[i] = row[i];
+        }
+        let bNorm = 0;
+        for (let i = 0; i < n; i++) bNorm += b[i] * b[i];
+        const target = this.tolerance * Math.max(1, Math.sqrt(bNorm));
 
+        let x = new Array(n).fill(0);
+        const r = new Array(n);
+        const residual = () => {
+            let s2 = 0;
+            for (let i = 0; i < n; i++) {
+                let s = b[i];
+                const row = matrix[i];
+                for (let j = 0; j < n; j++) s -= row[j] * x[j];
+                r[i] = s;
+                s2 += s * s;
+            }
+            return Math.sqrt(s2);
+        };
+        let norm = residual();
+        let it = 0;
+        while (norm > target && it < this.maxIterations) {
+            for (let i = 0; i < n; i++) x[i] += r[i] / diag[i];
+            norm = residual();
+            it++;
+            if (!Number.isFinite(norm)) break;
+        }
+        this.lastIterations = it;
+        this.lastResidual = norm;
+        this.lastConverged = norm <= target;
         return x;
     }
 
@@ -95,7 +111,7 @@ export class TemporalPredictor {
             lightTravelTimeMs: result.lightTravelTimeMs,
             temporalAdvantageMs: result.temporalAdvantageMs,
             effectiveVelocity: `${result.effectiveVelocityRatio.toFixed(0)}x speed of light`,
-            queryComplexity: `O(√n) = ${result.queryCount} queries`,
+            matrixEntriesRead: result.queryCount,
             valid: result.temporalAdvantageMs > 0
         };
     }
