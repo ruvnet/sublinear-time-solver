@@ -71,7 +71,7 @@
     "build:wasm": "node scripts/copy-wasm.js",
     "build:dev": "tsc --watch",
     "clean": "node -e \"const fs=require('fs');if(fs.existsSync('dist'))for(const e of fs.readdirSync('dist'))if(e!=='wasm')fs.rmSync('dist/'+e,{recursive:true,force:true})\"",
-    "test": "npm run build && node --test tests/regression-1.8.test.mjs tests/mcp-sublinear-wire.test.mjs tests/consciousness/safe-path.test.mjs && npm test -w @ruvnet/sublinear-core",
+    "test": "npm run build && node --test tests/regression-1.8.test.mjs tests/regression-1.8.1.test.mjs tests/mcp-sublinear-wire.test.mjs tests/consciousness/safe-path.test.mjs && npm test -w @ruvnet/sublinear-core",
     "lint": "echo 'Linting would go here'",
     "start": "npm run build && node dist/mcp/server.js",
     "serve": "npm run build && node dist/cli/index.js serve",

@@ -69,7 +69,7 @@ const { scores, pushes, residualMass } = forwardPush(g, seed, { epsilon: 1e-5 })
 topK(scores, 10, g); // scores is a sparse Map<index, score>
 ```
 
-Forward push stops once every node u has residual below `epsilon · max(1, outDegree(u))`. The total unpushed mass `residualMass` bounds the L1 error. Each node's error is bounded by its degree-scaled threshold, which keeps the top of the ranking accurate even when the L1 error is large. The `forwardPush` rows in the benchmarks below show this.
+Forward push stops once every node u has residual below `epsilon · max(1, outDegree(u))`. The total unpushed mass `residualMass` bounds the L1 error. That residual threshold does not bound each node's error: on a 3,000-node graph the worst per-node error was 44× `epsilon · outDegree` at `epsilon = 1e-4` and 84× at `epsilon = 1e-6`. Only `residualMass` is a guaranteed bound, so lower `epsilon` until it is small enough for your use.
 
 ### Estimate a single solution entry
 
