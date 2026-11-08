@@ -27,6 +27,7 @@ import { EmergenceTools } from './tools/emergence-tools.js';
 import { SchedulerTools } from './tools/scheduler.js';
 import { CompleteWasmSublinearSolverTools as WasmSublinearSolverTools } from './tools/wasm-sublinear-complete.js';
 import { TrueSublinearSolverTools } from './tools/true-sublinear-solver.js';
+import { checkNumericBounds } from './schema-bounds.js';
 // SECURITY (issue #19, CWE-73): confine attacker-controlled file_path
 // arguments (saveVectorToFile / vector_file) to a dedicated vector dir.
 import {
@@ -55,6 +56,11 @@ const PACKAGE_VERSION: string = (() => {
     return '0.0.0';
   }
 })();
+
+/** Own-property lookup: keys such as "__proto__" or "constructor" must not resolve to inherited members. */
+function ownValue<V>(table: Record<string, V>, key: unknown): V | undefined {
+  return typeof key === 'string' && Object.prototype.hasOwnProperty.call(table, key) ? table[key] : undefined;
+}
 
 function uniqueByName<T extends { name: string }>(tools: T[]): T[] {
   const seen = new Set<string>();
@@ -99,12 +105,16 @@ function validateToolMatrixArgs(args: unknown): void {
       throw new McpError(ErrorCode.InvalidParams, `Invalid ${key}: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
-  const v = (args as Record<string, unknown>).vector;
-  if (Array.isArray(v)) {
-    if (v.length > 10_000_000) throw new McpError(ErrorCode.InvalidParams, 'vector is too long');
+  // `prev_solution` feeds the residual audit and the anomaly ranking; a
+  // non-number there made verifySparseSolution compute NaN residuals and
+  // report ok: true (1.8.0 review).
+  for (const key of ['vector', 'prev_solution'] as const) {
+    const v = (args as Record<string, unknown>)[key];
+    if (!Array.isArray(v)) continue;
+    if (v.length > 10_000_000) throw new McpError(ErrorCode.InvalidParams, `${key} is too long`);
     for (let i = 0; i < v.length; i++) {
       if (typeof v[i] !== 'number' || !Number.isFinite(v[i])) {
-        throw new McpError(ErrorCode.InvalidParams, `vector[${i}] is not a finite number`);
+        throw new McpError(ErrorCode.InvalidParams, `${key}[${i}] is not a finite number`);
       }
     }
   }
@@ -156,9 +166,16 @@ export class SublinearSolverMCPServer {
   }
 
   private setupToolHandlers(): void {
-    this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    this.server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: this.listTools() }));
+
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) => this.callTool(request));
+  }
+
+  private toolSchemas?: Map<string, any>;
+
+  private listTools(): any[] {
       // Several tool groups register the same names; MCP requires unique names, so keep the first.
-      tools: uniqueByName([
+      return uniqueByName([
         {
           name: 'solve',
           description: 'Solve a diagonally dominant linear system Mx = b',
@@ -531,17 +548,20 @@ export class SublinearSolverMCPServer {
               k: {
                 type: 'number',
                 minimum: 1,
+                maximum: 1000000,
                 default: 3,
                 description: 'Number of top anomalies to return.',
               },
               closure_depth: {
                 type: 'number',
                 minimum: 0,
+                maximum: 1000,
                 default: 4,
               },
               max_terms: {
                 type: 'number',
                 minimum: 1,
+                maximum: 10000,
                 default: 32,
               },
               tolerance: {
@@ -588,12 +608,14 @@ export class SublinearSolverMCPServer {
               closure_depth: {
                 type: 'number',
                 minimum: 0,
+                maximum: 1000,
                 default: 4,
                 description: 'Bounded hop depth for the closure. Pick from optimal_neumann_terms(coherence, ...) or 4-8 for typical DD matrices.',
               },
               max_terms: {
                 type: 'number',
                 minimum: 1,
+                maximum: 10000,
                 default: 32,
                 description: 'Maximum Neumann iterations per entry. Pick from optimal_neumann_terms(coherence, ...) or 24-32 for typical DD matrices.',
               },
@@ -789,14 +811,18 @@ export class SublinearSolverMCPServer {
         ...this.emergenceTools.getTools(),
         // Nanosecond scheduler tools
         ...this.schedulerTools.getTools()
-      ])
-    }));
+      ] as any[]);
+  }
 
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  private async callTool(request: any): Promise<any> {
       const { name, arguments: args } = request.params;
 
       try {
         validateToolMatrixArgs(args);
+        // Enforce the numeric bounds each tool schema declares (DoS guard).
+        this.toolSchemas ??= new Map(this.listTools().map((t) => [t.name, t.inputSchema]));
+        const boundsError = checkNumericBounds(this.toolSchemas.get(name), args);
+        if (boundsError) throw new McpError(ErrorCode.InvalidParams, `Invalid arguments for ${name}: ${boundsError}`);
         switch (name) {
           case 'solve':
             return await this.handleSolve(args as any);
@@ -980,7 +1006,6 @@ export class SublinearSolverMCPServer {
           error instanceof Error ? error.message : 'Unknown error'
         );
       }
-    });
   }
 
   private setupErrorHandling(): void {
@@ -1052,7 +1077,7 @@ export class SublinearSolverMCPServer {
    */
   private enforceComplexityBudget(method: string, budget: string | undefined) {
     if (!budget) return; // gate disabled
-    const budgetRank = SublinearSolverMCPServer.COMPLEXITY_RANK[budget];
+    const budgetRank = ownValue(SublinearSolverMCPServer.COMPLEXITY_RANK, budget);
     if (budgetRank === undefined) {
       throw new McpError(
         ErrorCode.InvalidParams,
@@ -1060,9 +1085,9 @@ export class SublinearSolverMCPServer {
         `Known: ${Object.keys(SublinearSolverMCPServer.COMPLEXITY_RANK).join(', ')}.`,
       );
     }
-    const methodClass = SublinearSolverMCPServer.METHOD_WORST_CASE[method];
+    const methodClass = ownValue(SublinearSolverMCPServer.METHOD_WORST_CASE, method);
     if (!methodClass) return; // unknown method — let the existing dispatch handle it
-    const methodRank = SublinearSolverMCPServer.COMPLEXITY_RANK[methodClass];
+    const methodRank = ownValue(SublinearSolverMCPServer.COMPLEXITY_RANK, methodClass) as number;
     if (methodRank > budgetRank) {
       throw new McpError(
         ErrorCode.InvalidRequest,
@@ -1703,7 +1728,7 @@ export class SublinearSolverMCPServer {
       },
     };
 
-    const entry = table[method];
+    const entry = ownValue(table, method);
     if (!entry) {
       throw new McpError(
         ErrorCode.InvalidParams,
@@ -1846,6 +1871,12 @@ export class SublinearSolverMCPServer {
           ax += aij * xAt(j);
         }
         const r = Math.abs(params.vector[e.row] - ax);
+        // A non-finite residual must fail the audit, not slip past `>`.
+        if (!Number.isFinite(r)) {
+          maxResidual = Infinity;
+          worstRow = e.row;
+          break;
+        }
         if (r > maxResidual) {
           maxResidual = r;
           worstRow = e.row;
@@ -2253,53 +2284,81 @@ export class SublinearSolverMCPServer {
       // (2) Per-entry Neumann. For each target ∈ closure, compute
       //     x[target] = Σ_k y_k[target] where y_0[j] = b[j]/A[j,j]
       //     and y_{k+1}[j] = -(1/A[j,j]) · Σ_{m≠j, m∈closure} A[j,m]·y_k[m].
-      const closureSet = new Set<number>(closure);
-      const out: Array<{ row: number; value: number }> = [];
-      for (const target of closure) {
-        // Validate diagonal at every closure row.
-        let bad = false;
-        for (const j of closure) {
-          if (Math.abs(diag[j]) <= 1e-300) {
-            bad = true;
-            break;
-          }
-        }
-        if (bad) {
+      //     The y_k sequence does not depend on the target, so it is computed
+      //     once and shared; each target keeps its own early exit (it stops
+      //     accumulating at the first term with |y_k[target]| < tolerance).
+      //     Before 1.8.1 the whole sequence was recomputed per target
+      //     (O(|closure|^2 · max_terms · deg)), so one request could pin the
+      //     server for hours.
+      for (const j of closure) {
+        if (Math.abs(diag[j]) <= 1e-300) {
           throw new McpError(
             ErrorCode.InvalidParams,
             'matrix has zero diagonal in the closure — not strict-DD',
           );
         }
-        // y_0[j] = b[j] / A[j,j]
-        const y = new Map<number, number>();
-        for (const j of closure) {
-          y.set(j, params.vector[j] / diag[j]);
-        }
-        let xTarget = y.get(target) ?? 0;
-
-        // Iterate up to max_terms times.
-        for (let k = 1; k <= maxTerms; k++) {
-          const yNext = new Map<number, number>();
-          for (const j of closure) {
-            let sum = 0;
-            for (const [m, ajm] of rowEntries[j]) {
-              if (m === j) continue;
-              if (!closureSet.has(m)) continue;
-              const ym = y.get(m);
-              if (ym !== undefined) sum += ajm * ym;
-            }
-            yNext.set(j, -sum / diag[j]);
-          }
-          const delta = yNext.get(target) ?? 0;
-          xTarget += delta;
-          // Early-exit on tolerance.
-          if (Math.abs(delta) < tolerance) break;
-          // Swap y ← y_next.
-          y.clear();
-          for (const [k2, v2] of yNext) y.set(k2, v2);
-        }
-        out.push({ row: target, value: xTarget });
       }
+      const c = closure.length;
+      const pos = new Map<number, number>();
+      closure.forEach((row, p) => pos.set(row, p));
+      const nbrPos: number[][] = [];
+      const nbrVal: number[][] = [];
+      let closureNnz = 0;
+      for (const j of closure) {
+        const ps: number[] = [];
+        const vs: number[] = [];
+        for (const [m, ajm] of rowEntries[j]) {
+          if (m === j) continue;
+          const pm = pos.get(m);
+          if (pm === undefined) continue;
+          ps.push(pm);
+          vs.push(ajm);
+        }
+        nbrPos.push(ps);
+        nbrVal.push(vs);
+        closureNnz += ps.length + 1;
+      }
+      // Hard work cap (multiply-adds), independent of the schema bounds.
+      const WORK_LIMIT = 200_000_000;
+      let y = new Float64Array(c);
+      let yNext = new Float64Array(c);
+      const x = new Float64Array(c);
+      const active = new Uint8Array(c).fill(1);
+      let activeCount = c;
+      for (let p = 0; p < c; p++) {
+        y[p] = params.vector[closure[p]] / diag[closure[p]];
+        x[p] = y[p];
+      }
+      let work = 0;
+      for (let k = 1; k <= maxTerms && activeCount > 0; k++) {
+        work += closureNnz;
+        if (work > WORK_LIMIT) {
+          throw new McpError(
+            ErrorCode.InvalidParams,
+            `work limit exceeded (${WORK_LIMIT} multiply-adds): reduce max_terms, closure_depth or delta_indices`,
+          );
+        }
+        for (let p = 0; p < c; p++) {
+          const ps = nbrPos[p];
+          const vs = nbrVal[p];
+          let sum = 0;
+          for (let q = 0; q < ps.length; q++) sum += vs[q] * y[ps[q]];
+          yNext[p] = -sum / diag[closure[p]];
+        }
+        for (let p = 0; p < c; p++) {
+          if (!active[p]) continue;
+          const delta = yNext[p];
+          x[p] += delta;
+          if (Math.abs(delta) < tolerance) {
+            active[p] = 0;
+            activeCount--;
+          }
+        }
+        const t = y;
+        y = yNext;
+        yNext = t;
+      }
+      const out: Array<{ row: number; value: number }> = closure.map((row, p) => ({ row, value: x[p] }));
 
       return {
         content: [
