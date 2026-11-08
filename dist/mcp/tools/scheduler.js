@@ -272,10 +272,10 @@ export class SchedulerTools {
                     type: 'object',
                     properties: {
                         id: { type: 'string', description: 'Scheduler ID' },
-                        tickRateNs: { type: 'number', description: 'Tick rate in nanoseconds', default: 1000 },
-                        maxTasksPerTick: { type: 'number', description: 'Max tasks per tick', default: 1000 },
+                        tickRateNs: { type: 'number', description: 'Tick rate in nanoseconds', default: 1000, minimum: 1, maximum: 1000000000 },
+                        maxTasksPerTick: { type: 'integer', description: 'Max tasks per tick', default: 1000, minimum: 1, maximum: 100000 },
                         lipschitzConstant: { type: 'number', description: 'Lipschitz constant for strange loop', default: 0.9 },
-                        windowSize: { type: 'number', description: 'Temporal window size', default: 100 }
+                        windowSize: { type: 'integer', description: 'Temporal window size', default: 100, minimum: 1, maximum: 10000 }
                     }
                 }
             },
@@ -321,8 +321,8 @@ export class SchedulerTools {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        numTasks: { type: 'number', description: 'Number of tasks', default: 10000 },
-                        tickRateNs: { type: 'number', description: 'Tick rate in nanoseconds', default: 1000 }
+                        numTasks: { type: 'integer', description: 'Number of tasks', default: 10000, minimum: 1, maximum: 100000 },
+                        tickRateNs: { type: 'number', description: 'Tick rate in nanoseconds', default: 1000, minimum: 1, maximum: 1000000000 }
                     }
                 }
             },
@@ -332,9 +332,9 @@ export class SchedulerTools {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        iterations: { type: 'number', description: 'Iterations', default: 1000 },
+                        iterations: { type: 'integer', description: 'Iterations', default: 1000, minimum: 1, maximum: 10000 },
                         lipschitzConstant: { type: 'number', description: 'Lipschitz constant', default: 0.9 },
-                        windowSize: { type: 'number', description: 'Window size', default: 100 }
+                        windowSize: { type: 'integer', description: 'Window size', default: 100, minimum: 1, maximum: 10000 }
                     }
                 }
             },

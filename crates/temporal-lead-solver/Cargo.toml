@@ -1,6 +1,6 @@
 [package]
 name = "temporal-lead-solver"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["rUv <github.com/ruvnet>"]
 description = "Temporal computational lead via sublinear local solvers for diagonally dominant systems"
@@ -8,6 +8,14 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/ruvnet/sublinear-time-solver"
 keywords = ["sublinear", "solver", "diagonal-dominance", "temporal", "prediction"]
 categories = ["algorithms", "science", "mathematics"]
+# Anchored allow-list: 0.1.1 shipped a 3.9 MB debug ELF (`demo`) and the npm
+# shim because nothing limited the crate contents.
+include = [
+    "/src/**/*.rs",
+    "/examples/*.rs",
+    "/Cargo.toml",
+    "/README.md",
+]
 
 [lib]
 name = "temporal_lead"
@@ -19,39 +27,20 @@ name = "temporal-cli"
 path = "src/bin/cli.rs"
 
 [dependencies]
-# Core dependencies
+# 0.1.2: removed num-complex, serde_json, nalgebra, criterion, chrono,
+# indicatif, statrs, approx, rand_distr, tokio and futures. Nothing in src/
+# or examples/ referenced them.
 ndarray = { version = "0.15", features = ["serde"] }
-num-complex = "0.4"
 rayon = { version = "1.7", optional = true }
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
 clap = { version = "4.4", features = ["derive"] }
 thiserror = "1.0"
 anyhow = "1.0"
-
-# Performance optimization
-nalgebra = "0.32"
-sprs = "0.11"  # Sparse matrix operations
-
-# Timing and benchmarking
-criterion = "0.5"
-chrono = "0.4"
-indicatif = "0.17"
-
-# Mathematical operations
-statrs = "0.16"
-approx = "0.1"
+sprs = "0.11"
 rand = "0.8"
-rand_distr = "0.4"
-
-# Logging
 log = "0.4"
 env_logger = "0.10"
 colored = "2.0"
-
-# Async for network simulations
-tokio = { version = "1.35", features = ["full"] }
-futures = "0.3"
 
 [dev-dependencies]
 proptest = "1.4"

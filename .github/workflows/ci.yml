@@ -51,6 +51,20 @@ jobs:
       - name: cargo build benches + examples
         run: cargo build --locked --benches --examples
 
+  # The `wasm` feature went 19 compile errors deep before anyone noticed
+  # (1.8.0 review). Build and link it for the real target on every PR.
+  wasm-feature:
+    name: wasm feature (wasm32-unknown-unknown)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32
+      - name: cargo build --features wasm
+        run: cargo build --release --target wasm32-unknown-unknown --features wasm --lib
+
   fmt-clippy:
     name: fmt + clippy
     runs-on: ubuntu-latest

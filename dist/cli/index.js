@@ -20,7 +20,6 @@ const VERSION = (() => {
 })();
 program
     .name('sublinear-solver-mcp')
-    .alias('strange-loops')
     .description('Sublinear-time solver for asymmetric diagonally dominant systems with MCP interface')
     .version(VERSION);
 // MCP Server command (with multiple aliases)

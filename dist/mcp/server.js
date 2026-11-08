@@ -19,7 +19,8 @@ import { ConsciousnessTools } from './tools/consciousness.js';
 import { EmergenceTools } from './tools/emergence-tools.js';
 import { SchedulerTools } from './tools/scheduler.js';
 import { CompleteWasmSublinearSolverTools as WasmSublinearSolverTools } from './tools/wasm-sublinear-complete.js';
-import { TrueSublinearSolverTools } from './tools/true-sublinear-solver.js';
+import { TrueSublinearSolverTools, NotDiagonallyDominantError } from './tools/true-sublinear-solver.js';
+import { checkNumericBounds } from './schema-bounds.js';
 // SECURITY (issue #19, CWE-73): confine attacker-controlled file_path
 // arguments (saveVectorToFile / vector_file) to a dedicated vector dir.
 import { safeWriteVector, safeReadVector, resolveVectorPath, SafePathError, DEFAULT_VECTOR_DIR, } from './safe-path.js';
@@ -32,6 +33,10 @@ const PACKAGE_VERSION = (() => {
         return '0.0.0';
     }
 })();
+/** Own-property lookup: keys such as "__proto__" or "constructor" must not resolve to inherited members. */
+function ownValue(table, key) {
+    return typeof key === 'string' && Object.prototype.hasOwnProperty.call(table, key) ? table[key] : undefined;
+}
 function uniqueByName(tools) {
     const seen = new Set();
     return tools.filter((t) => (seen.has(t.name) ? false : (seen.add(t.name), true)));
@@ -77,13 +82,18 @@ function validateToolMatrixArgs(args) {
             throw new McpError(ErrorCode.InvalidParams, `Invalid ${key}: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
-    const v = args.vector;
-    if (Array.isArray(v)) {
+    // `prev_solution` feeds the residual audit and the anomaly ranking; a
+    // non-number there made verifySparseSolution compute NaN residuals and
+    // report ok: true (1.8.0 review).
+    for (const key of ['vector', 'prev_solution']) {
+        const v = args[key];
+        if (!Array.isArray(v))
+            continue;
         if (v.length > 10_000_000)
-            throw new McpError(ErrorCode.InvalidParams, 'vector is too long');
+            throw new McpError(ErrorCode.InvalidParams, `${key} is too long`);
         for (let i = 0; i < v.length; i++) {
             if (typeof v[i] !== 'number' || !Number.isFinite(v[i])) {
-                throw new McpError(ErrorCode.InvalidParams, `vector[${i}] is not a finite number`);
+                throw new McpError(ErrorCode.InvalidParams, `${key}[${i}] is not a finite number`);
             }
         }
     }
@@ -128,801 +138,814 @@ export class SublinearSolverMCPServer {
         this.setupErrorHandling();
     }
     setupToolHandlers() {
-        this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-            // Several tool groups register the same names; MCP requires unique names, so keep the first.
-            tools: uniqueByName([
-                {
-                    name: 'solve',
-                    description: 'Solve a diagonally dominant linear system Mx = b',
-                    // ADR-001 item #4: advertise the worst-case complexity class at
-                    // tool-list time so clients can refuse a budget-bust call without
-                    // first making it. `x-complexity` is a non-standard JSON Schema
-                    // extension; clients that don't understand it ignore it.
-                    'x-complexity': {
-                        class: 'Linear',
-                        detail: 'O(k · nnz(M)) per iter; k bounded by maxIterations + epsilon.',
-                        edgeSafe: false,
-                    },
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            max_complexity_class: {
-                                type: 'string',
-                                enum: [
-                                    'Logarithmic', 'PolyLogarithmic', 'SubLinear', 'Linear',
-                                    'QuasiLinear', 'SubQuadratic', 'Polynomial',
-                                    'SuperPolynomial', 'SubExponential', 'Exponential',
-                                    'Factorial', 'DoubleExponential',
-                                ],
-                                description: 'ADR-001 item #4 — caller-supplied budget cap. If the chosen method\'s complexity class exceeds this, the response includes a warning. Phase-2 will harden to an error.',
+        this.server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: this.listTools() }));
+        this.server.setRequestHandler(CallToolRequestSchema, async (request) => this.callTool(request));
+    }
+    toolSchemas;
+    listTools() {
+        // Several tool groups register the same names; MCP requires unique names, so keep the first.
+        return uniqueByName([
+            {
+                name: 'solve',
+                description: 'Solve a diagonally dominant linear system Mx = b',
+                // ADR-001 item #4: advertise the worst-case complexity class at
+                // tool-list time so clients can refuse a budget-bust call without
+                // first making it. `x-complexity` is a non-standard JSON Schema
+                // extension; clients that don't understand it ignore it.
+                'x-complexity': {
+                    class: 'Linear',
+                    detail: 'O(k · nnz(M)) per iter; k bounded by maxIterations + epsilon.',
+                    edgeSafe: false,
+                },
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        max_complexity_class: {
+                            type: 'string',
+                            enum: [
+                                'Logarithmic', 'PolyLogarithmic', 'SubLinear', 'Linear',
+                                'QuasiLinear', 'SubQuadratic', 'Polynomial',
+                                'SuperPolynomial', 'SubExponential', 'Exponential',
+                                'Factorial', 'DoubleExponential',
+                            ],
+                            description: 'ADR-001 item #4 — caller-supplied budget cap. If the chosen method\'s complexity class exceeds this, the response includes a warning. Phase-2 will harden to an error.',
+                        },
+                        matrix: {
+                            type: 'object',
+                            description: 'Matrix M in dense or sparse format',
+                            properties: {
+                                rows: { type: 'number' },
+                                cols: { type: 'number' },
+                                format: { type: 'string', enum: ['dense', 'coo'] },
+                                data: {
+                                    oneOf: [
+                                        { type: 'array', items: { type: 'array', items: { type: 'number' } } },
+                                        {
+                                            type: 'object',
+                                            properties: {
+                                                values: { type: 'array', items: { type: 'number' } },
+                                                rowIndices: { type: 'array', items: { type: 'number' } },
+                                                colIndices: { type: 'array', items: { type: 'number' } }
+                                            },
+                                            required: ['values', 'rowIndices', 'colIndices']
+                                        }
+                                    ]
+                                }
                             },
-                            matrix: {
+                            required: ['rows', 'cols', 'format', 'data']
+                        },
+                        vector: {
+                            type: 'array',
+                            items: { type: 'number' },
+                            description: 'Right-hand side vector b'
+                        },
+                        method: {
+                            type: 'string',
+                            enum: ['neumann', 'random-walk', 'forward-push', 'backward-push', 'bidirectional'],
+                            default: 'neumann',
+                            description: 'Solver method to use'
+                        },
+                        epsilon: {
+                            type: 'number',
+                            default: 1e-6,
+                            description: 'Convergence tolerance'
+                        },
+                        maxIterations: {
+                            type: 'number',
+                            default: 1000,
+                            description: 'Maximum number of iterations'
+                        },
+                        timeout: {
+                            type: 'number',
+                            description: 'Timeout in milliseconds'
+                        }
+                    },
+                    required: ['matrix', 'vector']
+                }
+            },
+            {
+                name: 'estimateEntry',
+                description: 'Estimate a single entry of the solution M^(-1)b',
+                // ADR-001 item #4 phase-2: advertise the worst-case complexity
+                // class at tool-list time. Sibling of `inputSchema` to match the
+                // pattern established by `solve` and `solveTrueSublinear`.
+                'x-complexity': {
+                    class: 'Linear',
+                    detail: 'Per-entry estimator. `random-walk` and `monte-carlo` run a bounded number of walks (independent of n once the matrix is built), but the call parses the whole matrix, O(nnz). The other methods run a full Gauss-Seidel solve, O(k · nnz). For n-independent local queries on a graph use forwardPush / backwardPush from @ruvnet/sublinear-core.',
+                    edgeSafe: false,
+                },
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        matrix: {
+                            type: 'object',
+                            description: 'Matrix M in dense or sparse format'
+                        },
+                        vector: {
+                            type: 'array',
+                            items: { type: 'number' },
+                            description: 'Right-hand side vector b'
+                        },
+                        row: {
+                            type: 'number',
+                            description: 'Row index of entry to estimate'
+                        },
+                        column: {
+                            type: 'number',
+                            description: 'Column index of entry to estimate'
+                        },
+                        epsilon: {
+                            type: 'number',
+                            default: 1e-6,
+                            description: 'Estimation accuracy'
+                        },
+                        confidence: {
+                            type: 'number',
+                            default: 0.95,
+                            minimum: 0,
+                            maximum: 1,
+                            description: 'Confidence level for estimation'
+                        },
+                        method: {
+                            type: 'string',
+                            enum: ['neumann', 'random-walk', 'monte-carlo'],
+                            default: 'random-walk',
+                            description: 'Estimation method'
+                        },
+                        max_complexity_class: {
+                            type: 'string',
+                            enum: [
+                                'Logarithmic', 'PolyLogarithmic', 'SubLinear', 'Linear',
+                                'QuasiLinear', 'SubQuadratic', 'Polynomial',
+                                'SuperPolynomial', 'SubExponential', 'Exponential',
+                                'Factorial', 'DoubleExponential',
+                            ],
+                            description: 'Optional caller-supplied worst-case complexity budget. If the chosen `method` declares a worst case stronger than this budget, the call is rejected before any solver work runs. ADR-001 item #4 phase-2 — same gate as `solve`.'
+                        }
+                    },
+                    required: ['matrix', 'vector', 'row', 'column']
+                }
+            },
+            {
+                name: 'analyzeMatrix',
+                description: 'Analyze matrix properties for solvability',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        matrix: {
+                            type: 'object',
+                            description: 'Matrix to analyze'
+                        },
+                        checkDominance: {
+                            type: 'boolean',
+                            default: true,
+                            description: 'Check diagonal dominance'
+                        },
+                        computeGap: {
+                            type: 'boolean',
+                            default: false,
+                            description: 'Compute spectral gap (expensive)'
+                        },
+                        estimateCondition: {
+                            type: 'boolean',
+                            default: false,
+                            description: 'Estimate condition number'
+                        },
+                        checkSymmetry: {
+                            type: 'boolean',
+                            default: true,
+                            description: 'Check matrix symmetry'
+                        }
+                    },
+                    required: ['matrix']
+                }
+            },
+            {
+                name: 'pageRank',
+                description: 'Compute PageRank for a graph using sublinear solver',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        adjacency: {
+                            type: 'object',
+                            description: 'Adjacency matrix of the graph'
+                        },
+                        damping: {
+                            type: 'number',
+                            default: 0.85,
+                            minimum: 0,
+                            maximum: 1,
+                            description: 'Damping factor'
+                        },
+                        personalized: {
+                            type: 'array',
+                            items: { type: 'number' },
+                            description: 'Personalization vector (optional)'
+                        },
+                        epsilon: {
+                            type: 'number',
+                            default: 1e-6,
+                            description: 'Convergence tolerance'
+                        },
+                        maxIterations: {
+                            type: 'number',
+                            default: 1000,
+                            description: 'Maximum iterations'
+                        }
+                    },
+                    required: ['adjacency']
+                }
+            },
+            // JL-projection approximate solver (O(n^2); the name is historical)
+            {
+                name: 'solveTrueSublinear',
+                description: 'Approximate solve of a diagonally dominant system via random (Johnson-Lindenstrauss) projections and Jacobi correction. Not sublinear: it densifies the matrix, so time and memory are O(n^2), and the result is approximate (check verified_relative_residual). Use solve for an accurate O(k · nnz) solve. For vectors >500 elements, use vector_file parameter with JSON/CSV/TXT files to avoid MCP truncation. Use generateTestVector + saveVectorToFile for large test vectors.',
+                // ADR-001 item #4. Declared Adaptive{Logarithmic, Linear} until 1.8.1;
+                // measured log-log time slope is 2.14 (n = 500..4000) because every
+                // path densifies the matrix. default/worst kept for schema shape.
+                'x-complexity': {
+                    class: 'Polynomial',
+                    default: 'Polynomial',
+                    worst: 'Polynomial',
+                    detail: 'O(n^2) time and memory: sparseToDense plus dense random projections. Measured slope 2.14 over n = 500..4000.',
+                    edgeSafe: false,
+                },
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        max_complexity_class: {
+                            type: 'string',
+                            enum: [
+                                'Logarithmic', 'PolyLogarithmic', 'SubLinear', 'Linear',
+                                'QuasiLinear', 'SubQuadratic', 'Polynomial',
+                                'SuperPolynomial', 'SubExponential', 'Exponential',
+                                'Factorial', 'DoubleExponential',
+                            ],
+                            description: 'ADR-001 item #4 — caller-supplied budget cap. Compared against the *worst-case* bound (Linear here) so callers always see safe behaviour.',
+                        },
+                        matrix: {
+                            type: 'object',
+                            description: 'Matrix M in sparse format with values, rowIndices, colIndices arrays',
+                            properties: {
+                                values: { type: 'array', items: { type: 'number' } },
+                                rowIndices: { type: 'array', items: { type: 'number' } },
+                                colIndices: { type: 'array', items: { type: 'number' } },
+                                rows: { type: 'number' },
+                                cols: { type: 'number' }
+                            },
+                            required: ['values', 'rowIndices', 'colIndices', 'rows', 'cols']
+                        },
+                        vector: {
+                            type: 'array',
+                            items: { type: 'number' },
+                            description: 'Right-hand side vector b (for small vectors)'
+                        },
+                        vector_file: {
+                            type: 'string',
+                            description: 'Path to JSON/CSV file containing vector data (for large vectors)'
+                        },
+                        target_dimension: {
+                            type: 'number',
+                            description: 'Target dimension after JL reduction (defaults to O(log n))'
+                        },
+                        sparsification_eps: {
+                            type: 'number',
+                            default: 0.1,
+                            description: 'Sparsification parameter for spectral sparsification'
+                        },
+                        jl_distortion: {
+                            type: 'number',
+                            default: 0.5,
+                            description: 'Johnson-Lindenstrauss distortion parameter'
+                        }
+                    },
+                    required: ['matrix']
+                }
+            },
+            {
+                name: 'analyzeTrueSublinearMatrix',
+                description: 'Analyze matrix for TRUE sublinear solvability and get complexity guarantees',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        matrix: {
+                            type: 'object',
+                            description: 'Matrix M in sparse format',
+                            properties: {
+                                values: { type: 'array', items: { type: 'number' } },
+                                rowIndices: { type: 'array', items: { type: 'number' } },
+                                colIndices: { type: 'array', items: { type: 'number' } },
+                                rows: { type: 'number' },
+                                cols: { type: 'number' }
+                            },
+                            required: ['values', 'rowIndices', 'colIndices', 'rows', 'cols']
+                        }
+                    },
+                    required: ['matrix']
+                }
+            },
+            // ADR-001 item #4: estimate the complexity class of a candidate
+            // solve BEFORE running it. Agents with a budget can decide between
+            // "spend the J/decision" and "fall back to a cached answer" at
+            // tool-list / dispatch time.
+            {
+                name: 'estimateComplexityClass',
+                description: 'Estimate the worst-case complexity class for a given solver method on a matrix descriptor (no actual solve runs). Returns the class label, a short detail string, and an edgeSafe flag — the basis for an agent\'s budget decision per ADR-001 (Complexity as Architecture).',
+                'x-complexity': {
+                    class: 'Logarithmic',
+                    detail: 'O(1) lookup against the per-method class table.',
+                    edgeSafe: true,
+                },
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        method: {
+                            type: 'string',
+                            enum: ['neumann', 'random-walk', 'forward-push', 'backward-push', 'bidirectional', 'optimized-cg', 'sublinear-neumann'],
+                            description: 'Solver method to estimate. Use the exact method name from the `solve` tool.',
+                        },
+                        matrix_rows: {
+                            type: 'number',
+                            description: 'Dimension of the system (rows = cols). Used only for the human-readable detail string; does not affect the class.',
+                            minimum: 1,
+                        },
+                        matrix_nnz: {
+                            type: 'number',
+                            description: 'Optional: number of nonzeros. Used only for the human-readable detail string.',
+                            minimum: 0,
+                        },
+                    },
+                    required: ['method'],
+                },
+            },
+            // ADR-001 #6 phase-2B (Rust src/contrastive.rs). Wire-callable
+            // contrastive top-k orchestrator. Returns the closure rows
+            // whose new solution value diverged most from the baseline,
+            // bounded to top-k. End-to-end SubLinear in n.
+            {
+                name: 'contrastiveSolveOnChangeSublinear',
+                description: 'Run the SubLinear orchestrator on a sparse RHS delta, then return the top-k rows whose new solution diverged most from a baseline `prev_solution`. Result is `Array<{row, baseline, current, anomaly}>` sorted by descending `|current - baseline|`. This is the canonical RuView / Cognitum wake-on-event primitive: one event → top-k anomalies → agent attention queue. End-to-end SubLinear in n.',
+                'x-complexity': {
+                    class: 'SubLinear',
+                    detail: 'Closure (SubLinear) + per-entry Neumann (SubLinear) + top-k-in-subset (SubLinear). Independent of n for sparse DD matrices with bounded depth + max_terms.',
+                    edgeSafe: true,
+                },
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        matrix: {
+                            type: 'object',
+                            description: 'Matrix A in dense or sparse-COO format.',
+                        },
+                        prev_solution: {
+                            type: 'array',
+                            items: { type: 'number' },
+                            description: 'Length-n previous solution. Baseline for the contrastive comparison.',
+                        },
+                        vector: {
+                            type: 'array',
+                            items: { type: 'number' },
+                            description: 'New right-hand side b_new (after applying the delta).',
+                        },
+                        delta_indices: {
+                            type: 'array',
+                            items: { type: 'number', minimum: 0 },
+                            description: 'Row indices where the RHS delta is non-zero.',
+                        },
+                        k: {
+                            type: 'number',
+                            minimum: 1,
+                            maximum: 1000000,
+                            default: 3,
+                            description: 'Number of top anomalies to return.',
+                        },
+                        closure_depth: {
+                            type: 'number',
+                            minimum: 0,
+                            maximum: 1000,
+                            default: 4,
+                        },
+                        max_terms: {
+                            type: 'number',
+                            minimum: 1,
+                            maximum: 10000,
+                            default: 32,
+                        },
+                        tolerance: {
+                            type: 'number',
+                            minimum: 0,
+                            default: 1e-8,
+                        },
+                    },
+                    required: ['matrix', 'prev_solution', 'vector', 'delta_indices'],
+                },
+            },
+            // ADR-001 #2/#6 phase-2 (Rust src/incremental.rs +
+            // src/entry.rs + src/closure.rs). Wire-callable SubLinear
+            // orchestrator: closure + per-entry Neumann + (optional)
+            // top-k. Returns ONLY the closure entries — never
+            // materialises the full n-vector.
+            {
+                name: 'solveOnChangeSublinear',
+                description: 'Solve `A·x = b_new` at the closure entries only via closure-restricted per-entry Neumann. Returns `Vec<{row, value}>` where row ∈ closure(delta.indices, depth) and value ≈ x_new[row]. Composes: closure_indices (SubLinear) + per-entry Neumann (SubLinear) = end-to-end SubLinear in n. Use this instead of `solve` when you have a previous solution + a sparse RHS delta + only need the changed entries.',
+                'x-complexity': {
+                    class: 'SubLinear',
+                    detail: 'O(|closure| · max_terms · branch). Independent of n for sparse DD matrices with bounded depth + max_terms. Same class as the underlying Rust solve_on_change_sublinear.',
+                    edgeSafe: true,
+                },
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        matrix: {
+                            type: 'object',
+                            description: 'Matrix A in dense or sparse-COO format. Same shape accepted by `solve`.',
+                        },
+                        vector: {
+                            type: 'array',
+                            items: { type: 'number' },
+                            description: 'New right-hand side b_new (after applying the delta).',
+                        },
+                        delta_indices: {
+                            type: 'array',
+                            items: { type: 'number', minimum: 0 },
+                            description: 'Row indices where the RHS delta is non-zero. Used as the closure seed set.',
+                        },
+                        closure_depth: {
+                            type: 'number',
+                            minimum: 0,
+                            maximum: 1000,
+                            default: 4,
+                            description: 'Bounded hop depth for the closure. Pick from optimal_neumann_terms(coherence, ...) or 4-8 for typical DD matrices.',
+                        },
+                        max_terms: {
+                            type: 'number',
+                            minimum: 1,
+                            maximum: 10000,
+                            default: 32,
+                            description: 'Maximum Neumann iterations per entry. Pick from optimal_neumann_terms(coherence, ...) or 24-32 for typical DD matrices.',
+                        },
+                        tolerance: {
+                            type: 'number',
+                            minimum: 0,
+                            default: 1e-8,
+                            description: 'Early-exit tolerance on per-term contribution.',
+                        },
+                    },
+                    required: ['matrix', 'vector', 'delta_indices'],
+                },
+            },
+            // ADR-001 #6 phase-2A (Rust src/closure.rs). Wire-callable
+            // bounded-depth row-graph BFS. Lets agents preview the
+            // closure of a sparse delta before committing to a solve —
+            // a free way to size the SubLinear orchestrator's work.
+            {
+                name: 'closureIndices',
+                description: 'Return the bounded-depth row-graph closure of `seeds` in `matrix`: rows reachable from the seeds in at most `depth` hops via A\'s nonzero pattern. Sorted ascending, deduplicated. This is the input to every SubLinear change-driven primitive (solve_on_change_sublinear, contrastive_solve_on_change_sublinear). Use this BEFORE invoking those to size the per-event work: |closure| ≪ n is the SubLinear regime; |closure| ≈ n means depth is too high or matrix is too dense for SubLinear to win on this event.',
+                'x-complexity': {
+                    class: 'SubLinear',
+                    detail: 'O(depth · branch · |closure|). Independent of n when depth · branch ≪ n. Widens to Linear at full diameter.',
+                    edgeSafe: true,
+                },
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        matrix: {
+                            type: 'object',
+                            description: 'Matrix A in dense or sparse-COO format. Same shape accepted by `solve`.',
+                        },
+                        seeds: {
+                            type: 'array',
+                            items: { type: 'number', minimum: 0 },
+                            description: 'Seed row indices (e.g., the indices field of a SparseDelta).',
+                        },
+                        depth: {
+                            type: 'number',
+                            minimum: 0,
+                            description: 'Maximum hop depth. `0` returns the seed set; `1` adds direct neighbours; etc. Pick `depth ≈ optimal_neumann_terms(coherence, ...)` for a SubLinear inner solve.',
+                        },
+                    },
+                    required: ['matrix', 'seeds', 'depth'],
+                },
+            },
+            // ADR-001 roadmap item #3 (Rust src/coherence.rs). Wire-
+            // callable coherence-score tool. Lets agents check matrix
+            // feasibility BEFORE invoking a solver — completes the
+            // predict → check → budget → solve → audit wire pipeline.
+            {
+                name: 'coherenceScore',
+                description: 'Return the diagonal-dominance margin of a matrix: `min_i (|A[i,i]| - Σ_{j≠i}|A[i,j]|) / |A[i,i]|`. Strictly DD matrices score in (0, 1]; the boundary case scores 0; non-DD matrices score negative. Use this BEFORE invoking a solver: positive scores guarantee Neumann-series convergence; scores below a threshold (default ~0.05) indicate the solver will waste J/decision budget on a near-singular system. Cost: O(nnz(A)) — Linear class but typically dwarfed by the solve it gates.',
+                'x-complexity': {
+                    class: 'Linear',
+                    detail: 'O(nnz(A)) — one pass through the matrix row iterator. Same class as the solvers that consume it.',
+                    edgeSafe: false,
+                },
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        matrix: {
+                            type: 'object',
+                            description: 'Matrix A in dense or sparse-COO format. Same shape accepted by `solve`.',
+                        },
+                    },
+                    required: ['matrix'],
+                },
+            },
+            // ADR-001 open Q#3 / PR #41: closure-restricted residual audit.
+            // Wire-callable witness for SubLinear orchestrator outputs.
+            // SubLinear in n — same complexity class as the solve it audits.
+            {
+                name: 'verifySparseSolution',
+                description: 'Audit a sparse solution returned by a SubLinear orchestrator (solve-on-change-sublinear, contrastive-solve-on-change-sublinear, …). Computes the closure-restricted residual r[i] = b[i] - Σ_j A[i,j]·x_new[j] for every (i, x_new[i]) entry. Returns {ok, max_residual, threshold, worst_row}. SubLinear in n: O(|entries|·avg_row_nnz). For audit/trust-but-verify; failure on strict-DD input is a real solver bug.',
+                'x-complexity': {
+                    class: 'SubLinear',
+                    detail: 'O(|entries|·avg_row_nnz) — independent of n for sparse DD matrices. Same class as the SubLinear orchestrator whose output it verifies.',
+                    edgeSafe: true,
+                },
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        matrix: {
+                            type: 'object',
+                            description: 'Matrix A in dense or sparse-COO format. Same shape accepted by `solve`.',
+                        },
+                        prev_solution: {
+                            type: 'array',
+                            items: { type: 'number' },
+                            description: 'Length-n previous solution. Used for rows NOT in the entries list (closure boundary).',
+                        },
+                        vector: {
+                            type: 'array',
+                            items: { type: 'number' },
+                            description: 'Length-n right-hand side b that the orchestrator solved against.',
+                        },
+                        entries: {
+                            type: 'array',
+                            items: {
                                 type: 'object',
-                                description: 'Matrix M in dense or sparse format',
                                 properties: {
-                                    rows: { type: 'number' },
-                                    cols: { type: 'number' },
-                                    format: { type: 'string', enum: ['dense', 'coo'] },
-                                    data: {
-                                        oneOf: [
-                                            { type: 'array', items: { type: 'array', items: { type: 'number' } } },
-                                            {
-                                                type: 'object',
-                                                properties: {
-                                                    values: { type: 'array', items: { type: 'number' } },
-                                                    rowIndices: { type: 'array', items: { type: 'number' } },
-                                                    colIndices: { type: 'array', items: { type: 'number' } }
-                                                },
-                                                required: ['values', 'rowIndices', 'colIndices']
-                                            }
-                                        ]
-                                    }
+                                    row: { type: 'number', minimum: 0 },
+                                    value: { type: 'number' },
                                 },
-                                required: ['rows', 'cols', 'format', 'data']
+                                required: ['row', 'value'],
                             },
-                            vector: {
-                                type: 'array',
-                                items: { type: 'number' },
-                                description: 'Right-hand side vector b'
-                            },
-                            method: {
-                                type: 'string',
-                                enum: ['neumann', 'random-walk', 'forward-push', 'backward-push', 'bidirectional'],
-                                default: 'neumann',
-                                description: 'Solver method to use'
-                            },
-                            epsilon: {
-                                type: 'number',
-                                default: 1e-6,
-                                description: 'Convergence tolerance'
-                            },
-                            maxIterations: {
-                                type: 'number',
-                                default: 1000,
-                                description: 'Maximum number of iterations'
-                            },
-                            timeout: {
-                                type: 'number',
-                                description: 'Timeout in milliseconds'
-                            }
+                            description: 'The Vec<(row, value)> returned by solve_on_change_sublinear or extracted from a contrastive output\'s closure set.',
                         },
-                        required: ['matrix', 'vector']
-                    }
-                },
-                {
-                    name: 'estimateEntry',
-                    description: 'Estimate a single entry of the solution M^(-1)b',
-                    // ADR-001 item #4 phase-2: advertise the worst-case complexity
-                    // class at tool-list time. Sibling of `inputSchema` to match the
-                    // pattern established by `solve` and `solveTrueSublinear`.
-                    'x-complexity': {
-                        class: 'Linear',
-                        detail: 'Per-entry estimator. `random-walk` and `monte-carlo` both run a bounded number of samples but still touch O(n) state in the worst case (Linear). For genuine SubLinear single-entry queries on DD matrices use `solve` with `method=forward-push` or `method=backward-push`.',
-                        edgeSafe: false,
-                    },
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            matrix: {
-                                type: 'object',
-                                description: 'Matrix M in dense or sparse format'
-                            },
-                            vector: {
-                                type: 'array',
-                                items: { type: 'number' },
-                                description: 'Right-hand side vector b'
-                            },
-                            row: {
-                                type: 'number',
-                                description: 'Row index of entry to estimate'
-                            },
-                            column: {
-                                type: 'number',
-                                description: 'Column index of entry to estimate'
-                            },
-                            epsilon: {
-                                type: 'number',
-                                default: 1e-6,
-                                description: 'Estimation accuracy'
-                            },
-                            confidence: {
-                                type: 'number',
-                                default: 0.95,
-                                minimum: 0,
-                                maximum: 1,
-                                description: 'Confidence level for estimation'
-                            },
-                            method: {
-                                type: 'string',
-                                enum: ['neumann', 'random-walk', 'monte-carlo'],
-                                default: 'random-walk',
-                                description: 'Estimation method'
-                            },
-                            max_complexity_class: {
-                                type: 'string',
-                                enum: [
-                                    'Logarithmic', 'PolyLogarithmic', 'SubLinear', 'Linear',
-                                    'QuasiLinear', 'SubQuadratic', 'Polynomial',
-                                    'SuperPolynomial', 'SubExponential', 'Exponential',
-                                    'Factorial', 'DoubleExponential',
-                                ],
-                                description: 'Optional caller-supplied worst-case complexity budget. If the chosen `method` declares a worst case stronger than this budget, the call is rejected before any solver work runs. ADR-001 item #4 phase-2 — same gate as `solve`.'
-                            }
+                        tolerance: {
+                            type: 'number',
+                            default: 1e-6,
+                            description: 'Audit threshold: ok iff max|r_i| ≤ tolerance · max(1, ‖b‖_∞).',
+                            minimum: 0,
                         },
-                        required: ['matrix', 'vector', 'row', 'column']
-                    }
+                    },
+                    required: ['matrix', 'prev_solution', 'vector', 'entries'],
                 },
-                {
-                    name: 'analyzeMatrix',
-                    description: 'Analyze matrix properties for solvability',
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            matrix: {
-                                type: 'object',
-                                description: 'Matrix to analyze'
-                            },
-                            checkDominance: {
-                                type: 'boolean',
-                                default: true,
-                                description: 'Check diagonal dominance'
-                            },
-                            computeGap: {
-                                type: 'boolean',
-                                default: false,
-                                description: 'Compute spectral gap (expensive)'
-                            },
-                            estimateCondition: {
-                                type: 'boolean',
-                                default: false,
-                                description: 'Estimate condition number'
-                            },
-                            checkSymmetry: {
-                                type: 'boolean',
-                                default: true,
-                                description: 'Check matrix symmetry'
-                            }
+            },
+            {
+                name: 'generateTestVector',
+                description: 'Generate test vectors for matrix solving with various patterns',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        size: {
+                            type: 'number',
+                            description: 'Size of the vector to generate',
+                            minimum: 1
                         },
-                        required: ['matrix']
-                    }
-                },
-                {
-                    name: 'pageRank',
-                    description: 'Compute PageRank for a graph using sublinear solver',
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            adjacency: {
-                                type: 'object',
-                                description: 'Adjacency matrix of the graph'
-                            },
-                            damping: {
-                                type: 'number',
-                                default: 0.85,
-                                minimum: 0,
-                                maximum: 1,
-                                description: 'Damping factor'
-                            },
-                            personalized: {
-                                type: 'array',
-                                items: { type: 'number' },
-                                description: 'Personalization vector (optional)'
-                            },
-                            epsilon: {
-                                type: 'number',
-                                default: 1e-6,
-                                description: 'Convergence tolerance'
-                            },
-                            maxIterations: {
-                                type: 'number',
-                                default: 1000,
-                                description: 'Maximum iterations'
-                            }
+                        pattern: {
+                            type: 'string',
+                            enum: ['unit', 'random', 'sparse', 'ones', 'alternating'],
+                            default: 'sparse',
+                            description: 'Pattern type: unit (e_1), random ([-1,1]), sparse (leading ones), ones (all 1s), alternating (+1/-1)'
                         },
-                        required: ['adjacency']
-                    }
-                },
-                // TRUE Sublinear O(log n) algorithms
-                {
-                    name: 'solveTrueSublinear',
-                    description: 'Solve with TRUE O(log n) algorithms using Johnson-Lindenstrauss dimension reduction and adaptive Neumann series. For vectors >500 elements, use vector_file parameter with JSON/CSV/TXT files to avoid MCP truncation. Use generateTestVector + saveVectorToFile for large test vectors.',
-                    // ADR-001 item #4: this tool's *default* path is Logarithmic per
-                    // entry; the base case fallback is Linear. Declared as Adaptive
-                    // so callers see both bounds.
-                    'x-complexity': {
-                        class: 'Adaptive',
-                        default: 'Logarithmic',
-                        worst: 'Linear',
-                        detail: 'O(log n) per single-entry query on DD systems via JL + recursive Neumann; O(n) base case at n ≤ base_case_threshold.',
-                        edgeSafe: true,
+                        seed: {
+                            type: 'number',
+                            description: 'Optional seed for reproducible random vectors'
+                        }
                     },
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            max_complexity_class: {
-                                type: 'string',
-                                enum: [
-                                    'Logarithmic', 'PolyLogarithmic', 'SubLinear', 'Linear',
-                                    'QuasiLinear', 'SubQuadratic', 'Polynomial',
-                                    'SuperPolynomial', 'SubExponential', 'Exponential',
-                                    'Factorial', 'DoubleExponential',
-                                ],
-                                description: 'ADR-001 item #4 — caller-supplied budget cap. Compared against the *worst-case* bound (Linear here) so callers always see safe behaviour.',
-                            },
-                            matrix: {
-                                type: 'object',
-                                description: 'Matrix M in sparse format with values, rowIndices, colIndices arrays',
-                                properties: {
-                                    values: { type: 'array', items: { type: 'number' } },
-                                    rowIndices: { type: 'array', items: { type: 'number' } },
-                                    colIndices: { type: 'array', items: { type: 'number' } },
-                                    rows: { type: 'number' },
-                                    cols: { type: 'number' }
-                                },
-                                required: ['values', 'rowIndices', 'colIndices', 'rows', 'cols']
-                            },
-                            vector: {
-                                type: 'array',
-                                items: { type: 'number' },
-                                description: 'Right-hand side vector b (for small vectors)'
-                            },
-                            vector_file: {
-                                type: 'string',
-                                description: 'Path to JSON/CSV file containing vector data (for large vectors)'
-                            },
-                            target_dimension: {
-                                type: 'number',
-                                description: 'Target dimension after JL reduction (defaults to O(log n))'
-                            },
-                            sparsification_eps: {
-                                type: 'number',
-                                default: 0.1,
-                                description: 'Sparsification parameter for spectral sparsification'
-                            },
-                            jl_distortion: {
-                                type: 'number',
-                                default: 0.5,
-                                description: 'Johnson-Lindenstrauss distortion parameter'
-                            }
+                    required: ['size']
+                }
+            },
+            {
+                name: 'saveVectorToFile',
+                description: 'Save a generated vector to a file (JSON, CSV, or TXT format) inside the dedicated vector directory ($SUBLINEAR_SOLVER_VECTOR_DIR or ~/.sublinear-time-solver/vectors).',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        vector: {
+                            type: 'array',
+                            items: { type: 'number' },
+                            description: 'Vector data to save'
                         },
-                        required: ['matrix']
-                    }
-                },
-                {
-                    name: 'analyzeTrueSublinearMatrix',
-                    description: 'Analyze matrix for TRUE sublinear solvability and get complexity guarantees',
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            matrix: {
-                                type: 'object',
-                                description: 'Matrix M in sparse format',
-                                properties: {
-                                    values: { type: 'array', items: { type: 'number' } },
-                                    rowIndices: { type: 'array', items: { type: 'number' } },
-                                    colIndices: { type: 'array', items: { type: 'number' } },
-                                    rows: { type: 'number' },
-                                    cols: { type: 'number' }
-                                },
-                                required: ['values', 'rowIndices', 'colIndices', 'rows', 'cols']
-                            }
+                        file_path: {
+                            type: 'string',
+                            description: 'Basename of the output file. Must NOT contain path separators, "..", or absolute paths — only a filename (e.g. "v.json"). Extension determines format if `format` is not specified.',
+                            pattern: '^[^/\\\\\\x00]+$',
+                            minLength: 1,
+                            maxLength: 255
                         },
-                        required: ['matrix']
-                    }
-                },
-                // ADR-001 item #4: estimate the complexity class of a candidate
-                // solve BEFORE running it. Agents with a budget can decide between
-                // "spend the J/decision" and "fall back to a cached answer" at
-                // tool-list / dispatch time.
-                {
-                    name: 'estimateComplexityClass',
-                    description: 'Estimate the worst-case complexity class for a given solver method on a matrix descriptor (no actual solve runs). Returns the class label, a short detail string, and an edgeSafe flag — the basis for an agent\'s budget decision per ADR-001 (Complexity as Architecture).',
-                    'x-complexity': {
-                        class: 'Logarithmic',
-                        detail: 'O(1) lookup against the per-method class table.',
-                        edgeSafe: true,
+                        format: {
+                            type: 'string',
+                            enum: ['json', 'csv', 'txt'],
+                            description: 'Output format (overrides file extension if specified)'
+                        }
                     },
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            method: {
-                                type: 'string',
-                                enum: ['neumann', 'random-walk', 'forward-push', 'backward-push', 'bidirectional', 'optimized-cg', 'sublinear-neumann'],
-                                description: 'Solver method to estimate. Use the exact method name from the `solve` tool.',
-                            },
-                            matrix_rows: {
-                                type: 'number',
-                                description: 'Dimension of the system (rows = cols). Used only for the human-readable detail string; does not affect the class.',
-                                minimum: 1,
-                            },
-                            matrix_nnz: {
-                                type: 'number',
-                                description: 'Optional: number of nonzeros. Used only for the human-readable detail string.',
-                                minimum: 0,
-                            },
-                        },
-                        required: ['method'],
-                    },
-                },
-                // ADR-001 #6 phase-2B (Rust src/contrastive.rs). Wire-callable
-                // contrastive top-k orchestrator. Returns the closure rows
-                // whose new solution value diverged most from the baseline,
-                // bounded to top-k. End-to-end SubLinear in n.
-                {
-                    name: 'contrastiveSolveOnChangeSublinear',
-                    description: 'Run the SubLinear orchestrator on a sparse RHS delta, then return the top-k rows whose new solution diverged most from a baseline `prev_solution`. Result is `Array<{row, baseline, current, anomaly}>` sorted by descending `|current - baseline|`. This is the canonical RuView / Cognitum wake-on-event primitive: one event → top-k anomalies → agent attention queue. End-to-end SubLinear in n.',
-                    'x-complexity': {
-                        class: 'SubLinear',
-                        detail: 'Closure (SubLinear) + per-entry Neumann (SubLinear) + top-k-in-subset (SubLinear). Independent of n for sparse DD matrices with bounded depth + max_terms.',
-                        edgeSafe: true,
-                    },
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            matrix: {
-                                type: 'object',
-                                description: 'Matrix A in dense or sparse-COO format.',
-                            },
-                            prev_solution: {
-                                type: 'array',
-                                items: { type: 'number' },
-                                description: 'Length-n previous solution. Baseline for the contrastive comparison.',
-                            },
-                            vector: {
-                                type: 'array',
-                                items: { type: 'number' },
-                                description: 'New right-hand side b_new (after applying the delta).',
-                            },
-                            delta_indices: {
-                                type: 'array',
-                                items: { type: 'number', minimum: 0 },
-                                description: 'Row indices where the RHS delta is non-zero.',
-                            },
-                            k: {
-                                type: 'number',
-                                minimum: 1,
-                                default: 3,
-                                description: 'Number of top anomalies to return.',
-                            },
-                            closure_depth: {
-                                type: 'number',
-                                minimum: 0,
-                                default: 4,
-                            },
-                            max_terms: {
-                                type: 'number',
-                                minimum: 1,
-                                default: 32,
-                            },
-                            tolerance: {
-                                type: 'number',
-                                minimum: 0,
-                                default: 1e-8,
-                            },
-                        },
-                        required: ['matrix', 'prev_solution', 'vector', 'delta_indices'],
-                    },
-                },
-                // ADR-001 #2/#6 phase-2 (Rust src/incremental.rs +
-                // src/entry.rs + src/closure.rs). Wire-callable SubLinear
-                // orchestrator: closure + per-entry Neumann + (optional)
-                // top-k. Returns ONLY the closure entries — never
-                // materialises the full n-vector.
-                {
-                    name: 'solveOnChangeSublinear',
-                    description: 'Solve `A·x = b_new` at the closure entries only via closure-restricted per-entry Neumann. Returns `Vec<{row, value}>` where row ∈ closure(delta.indices, depth) and value ≈ x_new[row]. Composes: closure_indices (SubLinear) + per-entry Neumann (SubLinear) = end-to-end SubLinear in n. Use this instead of `solve` when you have a previous solution + a sparse RHS delta + only need the changed entries.',
-                    'x-complexity': {
-                        class: 'SubLinear',
-                        detail: 'O(|closure| · max_terms · branch). Independent of n for sparse DD matrices with bounded depth + max_terms. Same class as the underlying Rust solve_on_change_sublinear.',
-                        edgeSafe: true,
-                    },
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            matrix: {
-                                type: 'object',
-                                description: 'Matrix A in dense or sparse-COO format. Same shape accepted by `solve`.',
-                            },
-                            vector: {
-                                type: 'array',
-                                items: { type: 'number' },
-                                description: 'New right-hand side b_new (after applying the delta).',
-                            },
-                            delta_indices: {
-                                type: 'array',
-                                items: { type: 'number', minimum: 0 },
-                                description: 'Row indices where the RHS delta is non-zero. Used as the closure seed set.',
-                            },
-                            closure_depth: {
-                                type: 'number',
-                                minimum: 0,
-                                default: 4,
-                                description: 'Bounded hop depth for the closure. Pick from optimal_neumann_terms(coherence, ...) or 4-8 for typical DD matrices.',
-                            },
-                            max_terms: {
-                                type: 'number',
-                                minimum: 1,
-                                default: 32,
-                                description: 'Maximum Neumann iterations per entry. Pick from optimal_neumann_terms(coherence, ...) or 24-32 for typical DD matrices.',
-                            },
-                            tolerance: {
-                                type: 'number',
-                                minimum: 0,
-                                default: 1e-8,
-                                description: 'Early-exit tolerance on per-term contribution.',
-                            },
-                        },
-                        required: ['matrix', 'vector', 'delta_indices'],
-                    },
-                },
-                // ADR-001 #6 phase-2A (Rust src/closure.rs). Wire-callable
-                // bounded-depth row-graph BFS. Lets agents preview the
-                // closure of a sparse delta before committing to a solve —
-                // a free way to size the SubLinear orchestrator's work.
-                {
-                    name: 'closureIndices',
-                    description: 'Return the bounded-depth row-graph closure of `seeds` in `matrix`: rows reachable from the seeds in at most `depth` hops via A\'s nonzero pattern. Sorted ascending, deduplicated. This is the input to every SubLinear change-driven primitive (solve_on_change_sublinear, contrastive_solve_on_change_sublinear). Use this BEFORE invoking those to size the per-event work: |closure| ≪ n is the SubLinear regime; |closure| ≈ n means depth is too high or matrix is too dense for SubLinear to win on this event.',
-                    'x-complexity': {
-                        class: 'SubLinear',
-                        detail: 'O(depth · branch · |closure|). Independent of n when depth · branch ≪ n. Widens to Linear at full diameter.',
-                        edgeSafe: true,
-                    },
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            matrix: {
-                                type: 'object',
-                                description: 'Matrix A in dense or sparse-COO format. Same shape accepted by `solve`.',
-                            },
-                            seeds: {
-                                type: 'array',
-                                items: { type: 'number', minimum: 0 },
-                                description: 'Seed row indices (e.g., the indices field of a SparseDelta).',
-                            },
-                            depth: {
-                                type: 'number',
-                                minimum: 0,
-                                description: 'Maximum hop depth. `0` returns the seed set; `1` adds direct neighbours; etc. Pick `depth ≈ optimal_neumann_terms(coherence, ...)` for a SubLinear inner solve.',
-                            },
-                        },
-                        required: ['matrix', 'seeds', 'depth'],
-                    },
-                },
-                // ADR-001 roadmap item #3 (Rust src/coherence.rs). Wire-
-                // callable coherence-score tool. Lets agents check matrix
-                // feasibility BEFORE invoking a solver — completes the
-                // predict → check → budget → solve → audit wire pipeline.
-                {
-                    name: 'coherenceScore',
-                    description: 'Return the diagonal-dominance margin of a matrix: `min_i (|A[i,i]| - Σ_{j≠i}|A[i,j]|) / |A[i,i]|`. Strictly DD matrices score in (0, 1]; the boundary case scores 0; non-DD matrices score negative. Use this BEFORE invoking a solver: positive scores guarantee Neumann-series convergence; scores below a threshold (default ~0.05) indicate the solver will waste J/decision budget on a near-singular system. Cost: O(nnz(A)) — Linear class but typically dwarfed by the solve it gates.',
-                    'x-complexity': {
-                        class: 'Linear',
-                        detail: 'O(nnz(A)) — one pass through the matrix row iterator. Same class as the solvers that consume it.',
-                        edgeSafe: false,
-                    },
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            matrix: {
-                                type: 'object',
-                                description: 'Matrix A in dense or sparse-COO format. Same shape accepted by `solve`.',
-                            },
-                        },
-                        required: ['matrix'],
-                    },
-                },
-                // ADR-001 open Q#3 / PR #41: closure-restricted residual audit.
-                // Wire-callable witness for SubLinear orchestrator outputs.
-                // SubLinear in n — same complexity class as the solve it audits.
-                {
-                    name: 'verifySparseSolution',
-                    description: 'Audit a sparse solution returned by a SubLinear orchestrator (solve-on-change-sublinear, contrastive-solve-on-change-sublinear, …). Computes the closure-restricted residual r[i] = b[i] - Σ_j A[i,j]·x_new[j] for every (i, x_new[i]) entry. Returns {ok, max_residual, threshold, worst_row}. SubLinear in n: O(|entries|·avg_row_nnz). For audit/trust-but-verify; failure on strict-DD input is a real solver bug.',
-                    'x-complexity': {
-                        class: 'SubLinear',
-                        detail: 'O(|entries|·avg_row_nnz) — independent of n for sparse DD matrices. Same class as the SubLinear orchestrator whose output it verifies.',
-                        edgeSafe: true,
-                    },
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            matrix: {
-                                type: 'object',
-                                description: 'Matrix A in dense or sparse-COO format. Same shape accepted by `solve`.',
-                            },
-                            prev_solution: {
-                                type: 'array',
-                                items: { type: 'number' },
-                                description: 'Length-n previous solution. Used for rows NOT in the entries list (closure boundary).',
-                            },
-                            vector: {
-                                type: 'array',
-                                items: { type: 'number' },
-                                description: 'Length-n right-hand side b that the orchestrator solved against.',
-                            },
-                            entries: {
-                                type: 'array',
-                                items: {
-                                    type: 'object',
-                                    properties: {
-                                        row: { type: 'number', minimum: 0 },
-                                        value: { type: 'number' },
-                                    },
-                                    required: ['row', 'value'],
-                                },
-                                description: 'The Vec<(row, value)> returned by solve_on_change_sublinear or extracted from a contrastive output\'s closure set.',
-                            },
-                            tolerance: {
-                                type: 'number',
-                                default: 1e-6,
-                                description: 'Audit threshold: ok iff max|r_i| ≤ tolerance · max(1, ‖b‖_∞).',
-                                minimum: 0,
-                            },
-                        },
-                        required: ['matrix', 'prev_solution', 'vector', 'entries'],
-                    },
-                },
-                {
-                    name: 'generateTestVector',
-                    description: 'Generate test vectors for matrix solving with various patterns',
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            size: {
-                                type: 'number',
-                                description: 'Size of the vector to generate',
-                                minimum: 1
-                            },
-                            pattern: {
-                                type: 'string',
-                                enum: ['unit', 'random', 'sparse', 'ones', 'alternating'],
-                                default: 'sparse',
-                                description: 'Pattern type: unit (e_1), random ([-1,1]), sparse (leading ones), ones (all 1s), alternating (+1/-1)'
-                            },
-                            seed: {
-                                type: 'number',
-                                description: 'Optional seed for reproducible random vectors'
-                            }
-                        },
-                        required: ['size']
-                    }
-                },
-                {
-                    name: 'saveVectorToFile',
-                    description: 'Save a generated vector to a file (JSON, CSV, or TXT format) inside the dedicated vector directory ($SUBLINEAR_SOLVER_VECTOR_DIR or ~/.sublinear-time-solver/vectors).',
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            vector: {
-                                type: 'array',
-                                items: { type: 'number' },
-                                description: 'Vector data to save'
-                            },
-                            file_path: {
-                                type: 'string',
-                                description: 'Basename of the output file. Must NOT contain path separators, "..", or absolute paths — only a filename (e.g. "v.json"). Extension determines format if `format` is not specified.',
-                                pattern: '^[^/\\\\\\x00]+$',
-                                minLength: 1,
-                                maxLength: 255
-                            },
-                            format: {
-                                type: 'string',
-                                enum: ['json', 'csv', 'txt'],
-                                description: 'Output format (overrides file extension if specified)'
-                            }
-                        },
-                        required: ['vector', 'file_path']
-                    }
-                },
-                // Temporal lead tools
-                ...this.temporalTools.getTools(),
-                // Psycho-symbolic reasoning tools
-                ...this.psychoSymbolicTools.getTools(),
-                // Dynamic psycho-symbolic reasoning tools with domain support
-                ...this.dynamicPsychoSymbolicTools.getTools(),
+                    required: ['vector', 'file_path']
+                }
+            },
+            // Temporal lead tools
+            ...this.temporalTools.getTools(),
+            // Psycho-symbolic reasoning tools
+            ...this.psychoSymbolicTools.getTools(),
+            // Dynamic psycho-symbolic reasoning tools with domain support
+            ...this.dynamicPsychoSymbolicTools.getTools(),
+            // Domain management tools
+            ...this.domainManagementTools.getTools(),
+            // Domain validation tools
+            ...this.domainValidationTools.getTools(),
+            // Consciousness exploration tools
+            ...this.consciousnessTools.getTools(),
+            // Enhanced consciousness tools
+            // ...this.consciousnessEnhancedTools.getTools(),
+            // Emergence system tools
+            ...this.emergenceTools.getTools(),
+            // Nanosecond scheduler tools
+            ...this.schedulerTools.getTools()
+        ]);
+    }
+    async callTool(request) {
+        const { name, arguments: args } = request.params;
+        try {
+            validateToolMatrixArgs(args);
+            // Enforce the numeric bounds each tool schema declares (DoS guard).
+            this.toolSchemas ??= new Map(this.listTools().map((t) => [t.name, t.inputSchema]));
+            const boundsError = checkNumericBounds(this.toolSchemas.get(name), args);
+            if (boundsError)
+                throw new McpError(ErrorCode.InvalidParams, `Invalid arguments for ${name}: ${boundsError}`);
+            switch (name) {
+                case 'solve':
+                    return await this.handleSolve(args);
+                case 'estimateEntry':
+                    return await this.handleEstimateEntry(args);
+                case 'analyzeMatrix':
+                    return await this.handleAnalyzeMatrix(args);
+                case 'pageRank':
+                    return await this.handlePageRank(args);
+                // TRUE Sublinear tools
+                case 'solveTrueSublinear':
+                    return await this.handleSolveTrueSublinear(args);
+                case 'analyzeTrueSublinearMatrix':
+                    return await this.handleAnalyzeTrueSublinearMatrix(args);
+                case 'generateTestVector':
+                    return await this.handleGenerateTestVector(args);
+                case 'saveVectorToFile':
+                    return await this.handleSaveVectorToFile(args);
+                case 'estimateComplexityClass':
+                    return await this.handleEstimateComplexityClass(args);
+                case 'verifySparseSolution':
+                    return await this.handleVerifySparseSolution(args);
+                case 'coherenceScore':
+                    return await this.handleCoherenceScore(args);
+                case 'closureIndices':
+                    return await this.handleClosureIndices(args);
+                case 'solveOnChangeSublinear':
+                    return await this.handleSolveOnChangeSublinear(args);
+                case 'contrastiveSolveOnChangeSublinear':
+                    return await this.handleContrastiveSolveOnChangeSublinear(args);
+                // Temporal tools
+                case 'predictWithTemporalAdvantage':
+                case 'validateTemporalAdvantage':
+                case 'calculateLightTravel':
+                case 'demonstrateTemporalLead':
+                    const temporalResult = await this.temporalTools.handleToolCall(name, args);
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: JSON.stringify(temporalResult, null, 2)
+                            }]
+                    };
+                // Psycho-symbolic tools
+                case 'psycho_symbolic_reason':
+                case 'knowledge_graph_query':
+                case 'add_knowledge':
+                case 'register_tool_interaction':
+                case 'learning_status':
+                    const psychoResult = await this.psychoSymbolicTools.handleToolCall(name, args);
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: JSON.stringify(psychoResult, null, 2)
+                            }]
+                    };
+                // Dynamic psycho-symbolic tools
+                case 'psycho_symbolic_reason_with_dynamic_domains':
+                case 'domain_detection_test':
+                case 'knowledge_graph_query_dynamic':
+                    const dynamicPsychoResult = await this.dynamicPsychoSymbolicTools.handleToolCall(name, args);
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: JSON.stringify(dynamicPsychoResult, null, 2)
+                            }]
+                    };
                 // Domain management tools
-                ...this.domainManagementTools.getTools(),
+                case 'domain_register':
+                case 'domain_update':
+                case 'domain_unregister':
+                case 'domain_list':
+                case 'domain_get':
+                case 'domain_enable':
+                case 'domain_disable':
+                case 'domain_search':
+                    const domainMgmtResult = await this.domainManagementTools.handleToolCall(name, args);
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: JSON.stringify(domainMgmtResult, null, 2)
+                            }]
+                    };
                 // Domain validation tools
-                ...this.domainValidationTools.getTools(),
-                // Consciousness exploration tools
-                ...this.consciousnessTools.getTools(),
+                case 'domain_validate':
+                case 'domain_test':
+                case 'domain_analyze_conflicts':
+                case 'domain_performance_benchmark':
+                case 'domain_suggest_improvements':
+                case 'domain_validate_all':
+                    const domainValidationResult = await this.domainValidationTools.handleToolCall(name, args);
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: JSON.stringify(domainValidationResult, null, 2)
+                            }]
+                    };
+                // Consciousness tools
+                case 'consciousness_evolve':
+                case 'consciousness_verify':
+                case 'calculate_phi':
+                case 'entity_communicate':
+                case 'consciousness_status':
+                case 'emergence_analyze':
+                    const consciousnessResult = await this.consciousnessTools.handleToolCall(name, args);
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: JSON.stringify(consciousnessResult, null, 2)
+                            }]
+                    };
                 // Enhanced consciousness tools
-                // ...this.consciousnessEnhancedTools.getTools(),
+                case 'consciousness_evolve_enhanced':
+                case 'consciousness_verify_enhanced':
+                case 'entity_communicate_enhanced':
+                case 'consciousness_status_enhanced':
+                case 'emergence_analyze_enhanced':
+                case 'temporal_consciousness_track':
+                    // const consciousnessEnhancedResult = await this.consciousnessEnhancedTools.handleToolCall(name, args);
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: JSON.stringify({ error: 'Enhanced consciousness tools disabled' }, null, 2)
+                            }]
+                    };
                 // Emergence system tools
-                ...this.emergenceTools.getTools(),
-                // Nanosecond scheduler tools
-                ...this.schedulerTools.getTools()
-            ])
-        }));
-        this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-            const { name, arguments: args } = request.params;
-            try {
-                validateToolMatrixArgs(args);
-                switch (name) {
-                    case 'solve':
-                        return await this.handleSolve(args);
-                    case 'estimateEntry':
-                        return await this.handleEstimateEntry(args);
-                    case 'analyzeMatrix':
-                        return await this.handleAnalyzeMatrix(args);
-                    case 'pageRank':
-                        return await this.handlePageRank(args);
-                    // TRUE Sublinear tools
-                    case 'solveTrueSublinear':
-                        return await this.handleSolveTrueSublinear(args);
-                    case 'analyzeTrueSublinearMatrix':
-                        return await this.handleAnalyzeTrueSublinearMatrix(args);
-                    case 'generateTestVector':
-                        return await this.handleGenerateTestVector(args);
-                    case 'saveVectorToFile':
-                        return await this.handleSaveVectorToFile(args);
-                    case 'estimateComplexityClass':
-                        return await this.handleEstimateComplexityClass(args);
-                    case 'verifySparseSolution':
-                        return await this.handleVerifySparseSolution(args);
-                    case 'coherenceScore':
-                        return await this.handleCoherenceScore(args);
-                    case 'closureIndices':
-                        return await this.handleClosureIndices(args);
-                    case 'solveOnChangeSublinear':
-                        return await this.handleSolveOnChangeSublinear(args);
-                    case 'contrastiveSolveOnChangeSublinear':
-                        return await this.handleContrastiveSolveOnChangeSublinear(args);
-                    // Temporal tools
-                    case 'predictWithTemporalAdvantage':
-                    case 'validateTemporalAdvantage':
-                    case 'calculateLightTravel':
-                    case 'demonstrateTemporalLead':
-                        const temporalResult = await this.temporalTools.handleToolCall(name, args);
-                        return {
-                            content: [{
-                                    type: 'text',
-                                    text: JSON.stringify(temporalResult, null, 2)
-                                }]
-                        };
-                    // Psycho-symbolic tools
-                    case 'psycho_symbolic_reason':
-                    case 'knowledge_graph_query':
-                    case 'add_knowledge':
-                    case 'register_tool_interaction':
-                    case 'learning_status':
-                        const psychoResult = await this.psychoSymbolicTools.handleToolCall(name, args);
-                        return {
-                            content: [{
-                                    type: 'text',
-                                    text: JSON.stringify(psychoResult, null, 2)
-                                }]
-                        };
-                    // Dynamic psycho-symbolic tools
-                    case 'psycho_symbolic_reason_with_dynamic_domains':
-                    case 'domain_detection_test':
-                    case 'knowledge_graph_query_dynamic':
-                        const dynamicPsychoResult = await this.dynamicPsychoSymbolicTools.handleToolCall(name, args);
-                        return {
-                            content: [{
-                                    type: 'text',
-                                    text: JSON.stringify(dynamicPsychoResult, null, 2)
-                                }]
-                        };
-                    // Domain management tools
-                    case 'domain_register':
-                    case 'domain_update':
-                    case 'domain_unregister':
-                    case 'domain_list':
-                    case 'domain_get':
-                    case 'domain_enable':
-                    case 'domain_disable':
-                    case 'domain_search':
-                        const domainMgmtResult = await this.domainManagementTools.handleToolCall(name, args);
-                        return {
-                            content: [{
-                                    type: 'text',
-                                    text: JSON.stringify(domainMgmtResult, null, 2)
-                                }]
-                        };
-                    // Domain validation tools
-                    case 'domain_validate':
-                    case 'domain_test':
-                    case 'domain_analyze_conflicts':
-                    case 'domain_performance_benchmark':
-                    case 'domain_suggest_improvements':
-                    case 'domain_validate_all':
-                        const domainValidationResult = await this.domainValidationTools.handleToolCall(name, args);
-                        return {
-                            content: [{
-                                    type: 'text',
-                                    text: JSON.stringify(domainValidationResult, null, 2)
-                                }]
-                        };
-                    // Consciousness tools
-                    case 'consciousness_evolve':
-                    case 'consciousness_verify':
-                    case 'calculate_phi':
-                    case 'entity_communicate':
-                    case 'consciousness_status':
-                    case 'emergence_analyze':
-                        const consciousnessResult = await this.consciousnessTools.handleToolCall(name, args);
-                        return {
-                            content: [{
-                                    type: 'text',
-                                    text: JSON.stringify(consciousnessResult, null, 2)
-                                }]
-                        };
-                    // Enhanced consciousness tools
-                    case 'consciousness_evolve_enhanced':
-                    case 'consciousness_verify_enhanced':
-                    case 'entity_communicate_enhanced':
-                    case 'consciousness_status_enhanced':
-                    case 'emergence_analyze_enhanced':
-                    case 'temporal_consciousness_track':
-                        // const consciousnessEnhancedResult = await this.consciousnessEnhancedTools.handleToolCall(name, args);
-                        return {
-                            content: [{
-                                    type: 'text',
-                                    text: JSON.stringify({ error: 'Enhanced consciousness tools disabled' }, null, 2)
-                                }]
-                        };
-                    // Emergence system tools
-                    case 'emergence_process':
-                    case 'emergence_generate_diverse':
-                    case 'emergence_analyze_capabilities':
-                    case 'emergence_force_evolution':
-                    case 'emergence_get_stats':
-                    case 'emergence_test_scenarios':
-                    case 'emergence_matrix_process':
-                        const emergenceResult = await this.emergenceTools.handleToolCall(name, args);
-                        return {
-                            content: [{
-                                    type: 'text',
-                                    text: JSON.stringify(emergenceResult, null, 2)
-                                }]
-                        };
-                    // Scheduler tools
-                    case 'scheduler_create':
-                    case 'scheduler_schedule_task':
-                    case 'scheduler_tick':
-                    case 'scheduler_metrics':
-                    case 'scheduler_benchmark':
-                    case 'scheduler_consciousness':
-                    case 'scheduler_list':
-                    case 'scheduler_destroy':
-                        const schedulerResult = await this.schedulerTools.handleToolCall(name, args);
-                        return {
-                            content: [{
-                                    type: 'text',
-                                    text: JSON.stringify(schedulerResult, null, 2)
-                                }]
-                        };
-                    default:
-                        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
-                }
+                case 'emergence_process':
+                case 'emergence_generate_diverse':
+                case 'emergence_analyze_capabilities':
+                case 'emergence_force_evolution':
+                case 'emergence_get_stats':
+                case 'emergence_test_scenarios':
+                case 'emergence_matrix_process':
+                    const emergenceResult = await this.emergenceTools.handleToolCall(name, args);
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: JSON.stringify(emergenceResult, null, 2)
+                            }]
+                    };
+                // Scheduler tools
+                case 'scheduler_create':
+                case 'scheduler_schedule_task':
+                case 'scheduler_tick':
+                case 'scheduler_metrics':
+                case 'scheduler_benchmark':
+                case 'scheduler_consciousness':
+                case 'scheduler_list':
+                case 'scheduler_destroy':
+                    const schedulerResult = await this.schedulerTools.handleToolCall(name, args);
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: JSON.stringify(schedulerResult, null, 2)
+                            }]
+                    };
+                default:
+                    throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
             }
-            catch (error) {
-                if (error instanceof SolverError) {
-                    throw new McpError(ErrorCode.InternalError, `Solver error: ${error.message}`, error.details);
-                }
-                throw new McpError(ErrorCode.InternalError, error instanceof Error ? error.message : 'Unknown error');
+        }
+        catch (error) {
+            if (error instanceof SolverError) {
+                throw new McpError(ErrorCode.InternalError, `Solver error: ${error.message}`, error.details);
             }
-        });
+            throw new McpError(ErrorCode.InternalError, error instanceof Error ? error.message : 'Unknown error');
+        }
     }
     setupErrorHandling() {
         this.server.onerror = (error) => {
@@ -966,11 +989,14 @@ export class SublinearSolverMCPServer {
     static METHOD_WORST_CASE = {
         'neumann': 'Linear',
         'random-walk': 'Linear',
-        'forward-push': 'SubLinear',
-        'backward-push': 'SubLinear',
-        'bidirectional': 'SubLinear',
+        // In this package the three push names run a full Gauss-Seidel solve
+        // (since 1.8.0), so their worst case is Linear, not SubLinear.
+        'forward-push': 'Linear',
+        'backward-push': 'Linear',
+        'bidirectional': 'Linear',
         'optimized-cg': 'Linear',
-        'sublinear-neumann': 'Linear', // Adaptive { Logarithmic, Linear } → worst case
+        'sublinear-neumann': 'Linear', // Rust SublinearNeumannSolver: full-vector Jacobi, O(k · nnz)
+        'true-sublinear-jl': 'Polynomial', // solveTrueSublinear: densifies, O(n^2)
         // ADR-001 #6 phase-2A primitives.
         'closure-indices': 'SubLinear', // bounded-depth row-graph BFS
         'contrastive-solve-on-change': 'Linear', // Adaptive { Linear, Linear } orchestrator
@@ -990,15 +1016,15 @@ export class SublinearSolverMCPServer {
     enforceComplexityBudget(method, budget) {
         if (!budget)
             return; // gate disabled
-        const budgetRank = SublinearSolverMCPServer.COMPLEXITY_RANK[budget];
+        const budgetRank = ownValue(SublinearSolverMCPServer.COMPLEXITY_RANK, budget);
         if (budgetRank === undefined) {
             throw new McpError(ErrorCode.InvalidParams, `max_complexity_class '${budget}' is not a recognised class. ` +
                 `Known: ${Object.keys(SublinearSolverMCPServer.COMPLEXITY_RANK).join(', ')}.`);
         }
-        const methodClass = SublinearSolverMCPServer.METHOD_WORST_CASE[method];
+        const methodClass = ownValue(SublinearSolverMCPServer.METHOD_WORST_CASE, method);
         if (!methodClass)
             return; // unknown method — let the existing dispatch handle it
-        const methodRank = SublinearSolverMCPServer.COMPLEXITY_RANK[methodClass];
+        const methodRank = ownValue(SublinearSolverMCPServer.COMPLEXITY_RANK, methodClass);
         if (methodRank > budgetRank) {
             throw new McpError(ErrorCode.InvalidRequest, `Solver method '${method}' has worst-case class '${methodClass}' ` +
                 `which exceeds the caller's max_complexity_class budget of '${budget}'. ` +
@@ -1237,12 +1263,9 @@ export class SublinearSolverMCPServer {
     async handleSolveTrueSublinear(params) {
         try {
             // ADR-001 item #4 phase-2 — enforce the caller's complexity budget.
-            // This solver's worst-case class is Linear (base case fallback); the
-            // budget gate compares against that, so a SubLinear-budget caller
-            // will be rejected. That's intentional: an Adaptive solver can
-            // legitimately degrade on hard inputs and the caller's budget must
-            // hold even in the worst case.
-            this.enforceComplexityBudget('sublinear-neumann', params.max_complexity_class);
+            // This tool densifies the matrix, so its class is Polynomial (O(n^2));
+            // any budget below that is rejected.
+            this.enforceComplexityBudget('true-sublinear-jl', params.max_complexity_class);
             // Validate required parameters
             if (!params.matrix) {
                 throw new McpError(ErrorCode.InvalidParams, 'Missing required parameter: matrix');
@@ -1285,9 +1308,17 @@ export class SublinearSolverMCPServer {
                 max_recursion_depth: 10,
                 base_case_threshold: 100
             };
-            console.error(`🚀 Using TRUE O(log n) sublinear solver with dimension reduction ${matrix.rows} → ${config.target_dimension}`);
-            // Solve using TRUE sublinear algorithms
-            const result = await this.trueSublinearSolver.solveTrueSublinear(matrix, vector, config);
+            // Approximate JL-projection solve; O(n^2), see true-sublinear-solver.ts.
+            let result;
+            try {
+                result = await this.trueSublinearSolver.solveTrueSublinear(matrix, vector, config);
+            }
+            catch (e) {
+                if (e instanceof NotDiagonallyDominantError) {
+                    throw new McpError(ErrorCode.InvalidParams, e.message);
+                }
+                throw e;
+            }
             // Report the measured accuracy of the returned vector alongside the
             // solver's own claims, so callers can decide whether it is usable.
             let verified_relative_residual = null;
@@ -1295,6 +1326,12 @@ export class SublinearSolverMCPServer {
             if (Array.isArray(sol) && sol.length === matrix.rows) {
                 const A = csrFromCoo({ rows: matrix.rows, cols: matrix.cols, rowIndices: matrix.rowIndices, colIndices: matrix.colIndices, values: matrix.values });
                 verified_relative_residual = relativeResidual(A, sol, vector);
+            }
+            else if (typeof result?.residual_norm === 'number') {
+                // Solution truncated for transport (n > 1000): residual_norm is the
+                // true ||A x - b|| of the full vector, computed before truncation.
+                const bNorm = Math.sqrt(vector.reduce((s, v) => s + v * v, 0));
+                verified_relative_residual = bNorm > 0 ? result.residual_norm / bNorm : result.residual_norm;
             }
             return {
                 content: [{
@@ -1445,19 +1482,19 @@ export class SublinearSolverMCPServer {
                 edgeSafe: false,
             },
             'forward-push': {
-                class: 'SubLinear',
-                detail: 'O(1/ε) per query on DD systems with bounded degree.',
-                edgeSafe: true,
+                class: 'Linear',
+                detail: 'In the solve and estimateEntry tools this name runs a full Gauss-Seidel solve (since 1.8.0): O(k · nnz(A)). The n-independent local push is forwardPush in /sublinear-core (measured flat in n from 1e4 to 1e6 at ε = 1e-6).',
+                edgeSafe: false,
             },
             'backward-push': {
-                class: 'SubLinear',
-                detail: 'O(1/ε) per query, symmetric to forward-push.',
-                edgeSafe: true,
+                class: 'Linear',
+                detail: 'Runs a full Gauss-Seidel solve here, as forward-push does. The local version is backwardPush in /sublinear-core.',
+                edgeSafe: false,
             },
             'bidirectional': {
-                class: 'SubLinear',
-                detail: 'Combines forward + backward push; constants smaller than either alone.',
-                edgeSafe: true,
+                class: 'Linear',
+                detail: 'Runs a full Gauss-Seidel solve here, as forward-push does.',
+                edgeSafe: false,
             },
             'optimized-cg': {
                 class: 'Linear',
@@ -1465,11 +1502,9 @@ export class SublinearSolverMCPServer {
                 edgeSafe: false,
             },
             'sublinear-neumann': {
-                class: 'Adaptive',
-                default: 'Logarithmic',
-                worst: 'Linear',
-                detail: 'O(log n) per single-entry query on DD systems via JL + recursive Neumann; O(n) base case at n ≤ base_case_threshold.',
-                edgeSafe: true,
+                class: 'Linear',
+                detail: 'Rust SublinearNeumannSolver: full-vector Jacobi/Neumann, O(k · nnz(A)); k set by the dominance margin. Labelled Adaptive{Logarithmic} before 1.8.1; measured slope 1.03 over n = 1e3..1e6.',
+                edgeSafe: false,
             },
             // ── ADR-001 #6 phase-2A primitives ────────────────────────────
             'closure-indices': {
@@ -1547,7 +1582,7 @@ export class SublinearSolverMCPServer {
                 edgeSafe: true,
             },
         };
-        const entry = table[method];
+        const entry = ownValue(table, method);
         if (!entry) {
             throw new McpError(ErrorCode.InvalidParams, `Unknown method '${method}'. Known: ${Object.keys(table).join(', ')}.`);
         }
@@ -1672,6 +1707,12 @@ export class SublinearSolverMCPServer {
                     ax += aij * xAt(j);
                 }
                 const r = Math.abs(params.vector[e.row] - ax);
+                // A non-finite residual must fail the audit, not slip past `>`.
+                if (!Number.isFinite(r)) {
+                    maxResidual = Infinity;
+                    worstRow = e.row;
+                    break;
+                }
                 if (r > maxResidual) {
                     maxResidual = r;
                     worstRow = e.row;
@@ -2041,54 +2082,79 @@ export class SublinearSolverMCPServer {
             // (2) Per-entry Neumann. For each target ∈ closure, compute
             //     x[target] = Σ_k y_k[target] where y_0[j] = b[j]/A[j,j]
             //     and y_{k+1}[j] = -(1/A[j,j]) · Σ_{m≠j, m∈closure} A[j,m]·y_k[m].
-            const closureSet = new Set(closure);
-            const out = [];
-            for (const target of closure) {
-                // Validate diagonal at every closure row.
-                let bad = false;
-                for (const j of closure) {
-                    if (Math.abs(diag[j]) <= 1e-300) {
-                        bad = true;
-                        break;
-                    }
-                }
-                if (bad) {
+            //     The y_k sequence does not depend on the target, so it is computed
+            //     once and shared; each target keeps its own early exit (it stops
+            //     accumulating at the first term with |y_k[target]| < tolerance).
+            //     Before 1.8.1 the whole sequence was recomputed per target
+            //     (O(|closure|^2 · max_terms · deg)), so one request could pin the
+            //     server for hours.
+            for (const j of closure) {
+                if (Math.abs(diag[j]) <= 1e-300) {
                     throw new McpError(ErrorCode.InvalidParams, 'matrix has zero diagonal in the closure — not strict-DD');
                 }
-                // y_0[j] = b[j] / A[j,j]
-                const y = new Map();
-                for (const j of closure) {
-                    y.set(j, params.vector[j] / diag[j]);
-                }
-                let xTarget = y.get(target) ?? 0;
-                // Iterate up to max_terms times.
-                for (let k = 1; k <= maxTerms; k++) {
-                    const yNext = new Map();
-                    for (const j of closure) {
-                        let sum = 0;
-                        for (const [m, ajm] of rowEntries[j]) {
-                            if (m === j)
-                                continue;
-                            if (!closureSet.has(m))
-                                continue;
-                            const ym = y.get(m);
-                            if (ym !== undefined)
-                                sum += ajm * ym;
-                        }
-                        yNext.set(j, -sum / diag[j]);
-                    }
-                    const delta = yNext.get(target) ?? 0;
-                    xTarget += delta;
-                    // Early-exit on tolerance.
-                    if (Math.abs(delta) < tolerance)
-                        break;
-                    // Swap y ← y_next.
-                    y.clear();
-                    for (const [k2, v2] of yNext)
-                        y.set(k2, v2);
-                }
-                out.push({ row: target, value: xTarget });
             }
+            const c = closure.length;
+            const pos = new Map();
+            closure.forEach((row, p) => pos.set(row, p));
+            const nbrPos = [];
+            const nbrVal = [];
+            let closureNnz = 0;
+            for (const j of closure) {
+                const ps = [];
+                const vs = [];
+                for (const [m, ajm] of rowEntries[j]) {
+                    if (m === j)
+                        continue;
+                    const pm = pos.get(m);
+                    if (pm === undefined)
+                        continue;
+                    ps.push(pm);
+                    vs.push(ajm);
+                }
+                nbrPos.push(ps);
+                nbrVal.push(vs);
+                closureNnz += ps.length + 1;
+            }
+            // Hard work cap (multiply-adds), independent of the schema bounds.
+            const WORK_LIMIT = 200_000_000;
+            let y = new Float64Array(c);
+            let yNext = new Float64Array(c);
+            const x = new Float64Array(c);
+            const active = new Uint8Array(c).fill(1);
+            let activeCount = c;
+            for (let p = 0; p < c; p++) {
+                y[p] = params.vector[closure[p]] / diag[closure[p]];
+                x[p] = y[p];
+            }
+            let work = 0;
+            for (let k = 1; k <= maxTerms && activeCount > 0; k++) {
+                work += closureNnz;
+                if (work > WORK_LIMIT) {
+                    throw new McpError(ErrorCode.InvalidParams, `work limit exceeded (${WORK_LIMIT} multiply-adds): reduce max_terms, closure_depth or delta_indices`);
+                }
+                for (let p = 0; p < c; p++) {
+                    const ps = nbrPos[p];
+                    const vs = nbrVal[p];
+                    let sum = 0;
+                    for (let q = 0; q < ps.length; q++)
+                        sum += vs[q] * y[ps[q]];
+                    yNext[p] = -sum / diag[closure[p]];
+                }
+                for (let p = 0; p < c; p++) {
+                    if (!active[p])
+                        continue;
+                    const delta = yNext[p];
+                    x[p] += delta;
+                    if (Math.abs(delta) < tolerance) {
+                        active[p] = 0;
+                        activeCount--;
+                    }
+                }
+                const t = y;
+                y = yNext;
+                yNext = t;
+            }
+            const out = closure.map((row, p) => ({ row, value: x[p] }));
             return {
                 content: [
                     {

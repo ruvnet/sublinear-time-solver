@@ -26,7 +26,8 @@ import { ConsciousnessTools } from './tools/consciousness.js';
 import { EmergenceTools } from './tools/emergence-tools.js';
 import { SchedulerTools } from './tools/scheduler.js';
 import { CompleteWasmSublinearSolverTools as WasmSublinearSolverTools } from './tools/wasm-sublinear-complete.js';
-import { TrueSublinearSolverTools } from './tools/true-sublinear-solver.js';
+import { TrueSublinearSolverTools, NotDiagonallyDominantError } from './tools/true-sublinear-solver.js';
+import { checkNumericBounds } from './schema-bounds.js';
 // SECURITY (issue #19, CWE-73): confine attacker-controlled file_path
 // arguments (saveVectorToFile / vector_file) to a dedicated vector dir.
 import {
@@ -55,6 +56,11 @@ const PACKAGE_VERSION: string = (() => {
     return '0.0.0';
   }
 })();
+
+/** Own-property lookup: keys such as "__proto__" or "constructor" must not resolve to inherited members. */
+function ownValue<V>(table: Record<string, V>, key: unknown): V | undefined {
+  return typeof key === 'string' && Object.prototype.hasOwnProperty.call(table, key) ? table[key] : undefined;
+}
 
 function uniqueByName<T extends { name: string }>(tools: T[]): T[] {
   const seen = new Set<string>();
@@ -99,12 +105,16 @@ function validateToolMatrixArgs(args: unknown): void {
       throw new McpError(ErrorCode.InvalidParams, `Invalid ${key}: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
-  const v = (args as Record<string, unknown>).vector;
-  if (Array.isArray(v)) {
-    if (v.length > 10_000_000) throw new McpError(ErrorCode.InvalidParams, 'vector is too long');
+  // `prev_solution` feeds the residual audit and the anomaly ranking; a
+  // non-number there made verifySparseSolution compute NaN residuals and
+  // report ok: true (1.8.0 review).
+  for (const key of ['vector', 'prev_solution'] as const) {
+    const v = (args as Record<string, unknown>)[key];
+    if (!Array.isArray(v)) continue;
+    if (v.length > 10_000_000) throw new McpError(ErrorCode.InvalidParams, `${key} is too long`);
     for (let i = 0; i < v.length; i++) {
       if (typeof v[i] !== 'number' || !Number.isFinite(v[i])) {
-        throw new McpError(ErrorCode.InvalidParams, `vector[${i}] is not a finite number`);
+        throw new McpError(ErrorCode.InvalidParams, `${key}[${i}] is not a finite number`);
       }
     }
   }
@@ -156,9 +166,16 @@ export class SublinearSolverMCPServer {
   }
 
   private setupToolHandlers(): void {
-    this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    this.server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: this.listTools() }));
+
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) => this.callTool(request));
+  }
+
+  private toolSchemas?: Map<string, any>;
+
+  private listTools(): any[] {
       // Several tool groups register the same names; MCP requires unique names, so keep the first.
-      tools: uniqueByName([
+      return uniqueByName([
         {
           name: 'solve',
           description: 'Solve a diagonally dominant linear system Mx = b',
@@ -245,7 +262,7 @@ export class SublinearSolverMCPServer {
           // pattern established by `solve` and `solveTrueSublinear`.
           'x-complexity': {
             class: 'Linear',
-            detail: 'Per-entry estimator. `random-walk` and `monte-carlo` both run a bounded number of samples but still touch O(n) state in the worst case (Linear). For genuine SubLinear single-entry queries on DD matrices use `solve` with `method=forward-push` or `method=backward-push`.',
+            detail: 'Per-entry estimator. `random-walk` and `monte-carlo` run a bounded number of walks (independent of n once the matrix is built), but the call parses the whole matrix, O(nnz). The other methods run a full Gauss-Seidel solve, O(k · nnz). For n-independent local queries on a graph use forwardPush / backwardPush from @ruvnet/sublinear-core.',
             edgeSafe: false,
           },
           inputSchema: {
@@ -370,19 +387,19 @@ export class SublinearSolverMCPServer {
             required: ['adjacency']
           }
         },
-        // TRUE Sublinear O(log n) algorithms
+        // JL-projection approximate solver (O(n^2); the name is historical)
         {
           name: 'solveTrueSublinear',
-          description: 'Solve with TRUE O(log n) algorithms using Johnson-Lindenstrauss dimension reduction and adaptive Neumann series. For vectors >500 elements, use vector_file parameter with JSON/CSV/TXT files to avoid MCP truncation. Use generateTestVector + saveVectorToFile for large test vectors.',
-          // ADR-001 item #4: this tool's *default* path is Logarithmic per
-          // entry; the base case fallback is Linear. Declared as Adaptive
-          // so callers see both bounds.
+          description: 'Approximate solve of a diagonally dominant system via random (Johnson-Lindenstrauss) projections and Jacobi correction. Not sublinear: it densifies the matrix, so time and memory are O(n^2), and the result is approximate (check verified_relative_residual). Use solve for an accurate O(k · nnz) solve. For vectors >500 elements, use vector_file parameter with JSON/CSV/TXT files to avoid MCP truncation. Use generateTestVector + saveVectorToFile for large test vectors.',
+          // ADR-001 item #4. Declared Adaptive{Logarithmic, Linear} until 1.8.1;
+          // measured log-log time slope is 2.14 (n = 500..4000) because every
+          // path densifies the matrix. default/worst kept for schema shape.
           'x-complexity': {
-            class: 'Adaptive',
-            default: 'Logarithmic',
-            worst: 'Linear',
-            detail: 'O(log n) per single-entry query on DD systems via JL + recursive Neumann; O(n) base case at n ≤ base_case_threshold.',
-            edgeSafe: true,
+            class: 'Polynomial',
+            default: 'Polynomial',
+            worst: 'Polynomial',
+            detail: 'O(n^2) time and memory: sparseToDense plus dense random projections. Measured slope 2.14 over n = 500..4000.',
+            edgeSafe: false,
           },
           inputSchema: {
             type: 'object',
@@ -531,17 +548,20 @@ export class SublinearSolverMCPServer {
               k: {
                 type: 'number',
                 minimum: 1,
+                maximum: 1000000,
                 default: 3,
                 description: 'Number of top anomalies to return.',
               },
               closure_depth: {
                 type: 'number',
                 minimum: 0,
+                maximum: 1000,
                 default: 4,
               },
               max_terms: {
                 type: 'number',
                 minimum: 1,
+                maximum: 10000,
                 default: 32,
               },
               tolerance: {
@@ -588,12 +608,14 @@ export class SublinearSolverMCPServer {
               closure_depth: {
                 type: 'number',
                 minimum: 0,
+                maximum: 1000,
                 default: 4,
                 description: 'Bounded hop depth for the closure. Pick from optimal_neumann_terms(coherence, ...) or 4-8 for typical DD matrices.',
               },
               max_terms: {
                 type: 'number',
                 minimum: 1,
+                maximum: 10000,
                 default: 32,
                 description: 'Maximum Neumann iterations per entry. Pick from optimal_neumann_terms(coherence, ...) or 24-32 for typical DD matrices.',
               },
@@ -789,14 +811,18 @@ export class SublinearSolverMCPServer {
         ...this.emergenceTools.getTools(),
         // Nanosecond scheduler tools
         ...this.schedulerTools.getTools()
-      ])
-    }));
+      ] as any[]);
+  }
 
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  private async callTool(request: any): Promise<any> {
       const { name, arguments: args } = request.params;
 
       try {
         validateToolMatrixArgs(args);
+        // Enforce the numeric bounds each tool schema declares (DoS guard).
+        this.toolSchemas ??= new Map(this.listTools().map((t) => [t.name, t.inputSchema]));
+        const boundsError = checkNumericBounds(this.toolSchemas.get(name), args);
+        if (boundsError) throw new McpError(ErrorCode.InvalidParams, `Invalid arguments for ${name}: ${boundsError}`);
         switch (name) {
           case 'solve':
             return await this.handleSolve(args as any);
@@ -980,7 +1006,6 @@ export class SublinearSolverMCPServer {
           error instanceof Error ? error.message : 'Unknown error'
         );
       }
-    });
   }
 
   private setupErrorHandling(): void {
@@ -1028,11 +1053,14 @@ export class SublinearSolverMCPServer {
   private static readonly METHOD_WORST_CASE: Record<string, string> = {
     'neumann':                              'Linear',
     'random-walk':                          'Linear',
-    'forward-push':                         'SubLinear',
-    'backward-push':                        'SubLinear',
-    'bidirectional':                        'SubLinear',
+    // In this package the three push names run a full Gauss-Seidel solve
+    // (since 1.8.0), so their worst case is Linear, not SubLinear.
+    'forward-push':                         'Linear',
+    'backward-push':                        'Linear',
+    'bidirectional':                        'Linear',
     'optimized-cg':                         'Linear',
-    'sublinear-neumann':                    'Linear', // Adaptive { Logarithmic, Linear } → worst case
+    'sublinear-neumann':                    'Linear', // Rust SublinearNeumannSolver: full-vector Jacobi, O(k · nnz)
+    'true-sublinear-jl':                    'Polynomial', // solveTrueSublinear: densifies, O(n^2)
     // ADR-001 #6 phase-2A primitives.
     'closure-indices':                      'SubLinear', // bounded-depth row-graph BFS
     'contrastive-solve-on-change':          'Linear',    // Adaptive { Linear, Linear } orchestrator
@@ -1052,7 +1080,7 @@ export class SublinearSolverMCPServer {
    */
   private enforceComplexityBudget(method: string, budget: string | undefined) {
     if (!budget) return; // gate disabled
-    const budgetRank = SublinearSolverMCPServer.COMPLEXITY_RANK[budget];
+    const budgetRank = ownValue(SublinearSolverMCPServer.COMPLEXITY_RANK, budget);
     if (budgetRank === undefined) {
       throw new McpError(
         ErrorCode.InvalidParams,
@@ -1060,9 +1088,9 @@ export class SublinearSolverMCPServer {
         `Known: ${Object.keys(SublinearSolverMCPServer.COMPLEXITY_RANK).join(', ')}.`,
       );
     }
-    const methodClass = SublinearSolverMCPServer.METHOD_WORST_CASE[method];
+    const methodClass = ownValue(SublinearSolverMCPServer.METHOD_WORST_CASE, method);
     if (!methodClass) return; // unknown method — let the existing dispatch handle it
-    const methodRank = SublinearSolverMCPServer.COMPLEXITY_RANK[methodClass];
+    const methodRank = ownValue(SublinearSolverMCPServer.COMPLEXITY_RANK, methodClass) as number;
     if (methodRank > budgetRank) {
       throw new McpError(
         ErrorCode.InvalidRequest,
@@ -1360,12 +1388,9 @@ export class SublinearSolverMCPServer {
   private async handleSolveTrueSublinear(params: any) {
     try {
       // ADR-001 item #4 phase-2 — enforce the caller's complexity budget.
-      // This solver's worst-case class is Linear (base case fallback); the
-      // budget gate compares against that, so a SubLinear-budget caller
-      // will be rejected. That's intentional: an Adaptive solver can
-      // legitimately degrade on hard inputs and the caller's budget must
-      // hold even in the worst case.
-      this.enforceComplexityBudget('sublinear-neumann', params.max_complexity_class);
+      // This tool densifies the matrix, so its class is Polynomial (O(n^2));
+      // any budget below that is rejected.
+      this.enforceComplexityBudget('true-sublinear-jl', params.max_complexity_class);
 
       // Validate required parameters
       if (!params.matrix) {
@@ -1416,10 +1441,16 @@ export class SublinearSolverMCPServer {
         base_case_threshold: 100
       };
 
-      console.error(`🚀 Using TRUE O(log n) sublinear solver with dimension reduction ${matrix.rows} → ${config.target_dimension}`);
-
-      // Solve using TRUE sublinear algorithms
-      const result = await this.trueSublinearSolver.solveTrueSublinear(matrix, vector, config);
+      // Approximate JL-projection solve; O(n^2), see true-sublinear-solver.ts.
+      let result;
+      try {
+        result = await this.trueSublinearSolver.solveTrueSublinear(matrix, vector, config);
+      } catch (e) {
+        if (e instanceof NotDiagonallyDominantError) {
+          throw new McpError(ErrorCode.InvalidParams, e.message);
+        }
+        throw e;
+      }
 
       // Report the measured accuracy of the returned vector alongside the
       // solver's own claims, so callers can decide whether it is usable.
@@ -1428,6 +1459,11 @@ export class SublinearSolverMCPServer {
       if (Array.isArray(sol) && sol.length === matrix.rows) {
         const A = csrFromCoo({ rows: matrix.rows, cols: matrix.cols, rowIndices: matrix.rowIndices, colIndices: matrix.colIndices, values: matrix.values });
         verified_relative_residual = relativeResidual(A, sol, vector);
+      } else if (typeof (result as any)?.residual_norm === 'number') {
+        // Solution truncated for transport (n > 1000): residual_norm is the
+        // true ||A x - b|| of the full vector, computed before truncation.
+        const bNorm = Math.sqrt(vector.reduce((s: number, v: number) => s + v * v, 0));
+        verified_relative_residual = bNorm > 0 ? (result as any).residual_norm / bNorm : (result as any).residual_norm;
       }
 
       return {
@@ -1600,19 +1636,19 @@ export class SublinearSolverMCPServer {
         edgeSafe: false,
       },
       'forward-push': {
-        class: 'SubLinear',
-        detail: 'O(1/ε) per query on DD systems with bounded degree.',
-        edgeSafe: true,
+        class: 'Linear',
+        detail: 'In the solve and estimateEntry tools this name runs a full Gauss-Seidel solve (since 1.8.0): O(k · nnz(A)). The n-independent local push is forwardPush in /sublinear-core (measured flat in n from 1e4 to 1e6 at ε = 1e-6).',
+        edgeSafe: false,
       },
       'backward-push': {
-        class: 'SubLinear',
-        detail: 'O(1/ε) per query, symmetric to forward-push.',
-        edgeSafe: true,
+        class: 'Linear',
+        detail: 'Runs a full Gauss-Seidel solve here, as forward-push does. The local version is backwardPush in /sublinear-core.',
+        edgeSafe: false,
       },
       'bidirectional': {
-        class: 'SubLinear',
-        detail: 'Combines forward + backward push; constants smaller than either alone.',
-        edgeSafe: true,
+        class: 'Linear',
+        detail: 'Runs a full Gauss-Seidel solve here, as forward-push does.',
+        edgeSafe: false,
       },
       'optimized-cg': {
         class: 'Linear',
@@ -1620,11 +1656,9 @@ export class SublinearSolverMCPServer {
         edgeSafe: false,
       },
       'sublinear-neumann': {
-        class: 'Adaptive',
-        default: 'Logarithmic',
-        worst: 'Linear',
-        detail: 'O(log n) per single-entry query on DD systems via JL + recursive Neumann; O(n) base case at n ≤ base_case_threshold.',
-        edgeSafe: true,
+        class: 'Linear',
+        detail: 'Rust SublinearNeumannSolver: full-vector Jacobi/Neumann, O(k · nnz(A)); k set by the dominance margin. Labelled Adaptive{Logarithmic} before 1.8.1; measured slope 1.03 over n = 1e3..1e6.',
+        edgeSafe: false,
       },
       // ── ADR-001 #6 phase-2A primitives ────────────────────────────
       'closure-indices': {
@@ -1703,7 +1737,7 @@ export class SublinearSolverMCPServer {
       },
     };
 
-    const entry = table[method];
+    const entry = ownValue(table, method);
     if (!entry) {
       throw new McpError(
         ErrorCode.InvalidParams,
@@ -1846,6 +1880,12 @@ export class SublinearSolverMCPServer {
           ax += aij * xAt(j);
         }
         const r = Math.abs(params.vector[e.row] - ax);
+        // A non-finite residual must fail the audit, not slip past `>`.
+        if (!Number.isFinite(r)) {
+          maxResidual = Infinity;
+          worstRow = e.row;
+          break;
+        }
         if (r > maxResidual) {
           maxResidual = r;
           worstRow = e.row;
@@ -2253,53 +2293,81 @@ export class SublinearSolverMCPServer {
       // (2) Per-entry Neumann. For each target ∈ closure, compute
       //     x[target] = Σ_k y_k[target] where y_0[j] = b[j]/A[j,j]
       //     and y_{k+1}[j] = -(1/A[j,j]) · Σ_{m≠j, m∈closure} A[j,m]·y_k[m].
-      const closureSet = new Set<number>(closure);
-      const out: Array<{ row: number; value: number }> = [];
-      for (const target of closure) {
-        // Validate diagonal at every closure row.
-        let bad = false;
-        for (const j of closure) {
-          if (Math.abs(diag[j]) <= 1e-300) {
-            bad = true;
-            break;
-          }
-        }
-        if (bad) {
+      //     The y_k sequence does not depend on the target, so it is computed
+      //     once and shared; each target keeps its own early exit (it stops
+      //     accumulating at the first term with |y_k[target]| < tolerance).
+      //     Before 1.8.1 the whole sequence was recomputed per target
+      //     (O(|closure|^2 · max_terms · deg)), so one request could pin the
+      //     server for hours.
+      for (const j of closure) {
+        if (Math.abs(diag[j]) <= 1e-300) {
           throw new McpError(
             ErrorCode.InvalidParams,
             'matrix has zero diagonal in the closure — not strict-DD',
           );
         }
-        // y_0[j] = b[j] / A[j,j]
-        const y = new Map<number, number>();
-        for (const j of closure) {
-          y.set(j, params.vector[j] / diag[j]);
-        }
-        let xTarget = y.get(target) ?? 0;
-
-        // Iterate up to max_terms times.
-        for (let k = 1; k <= maxTerms; k++) {
-          const yNext = new Map<number, number>();
-          for (const j of closure) {
-            let sum = 0;
-            for (const [m, ajm] of rowEntries[j]) {
-              if (m === j) continue;
-              if (!closureSet.has(m)) continue;
-              const ym = y.get(m);
-              if (ym !== undefined) sum += ajm * ym;
-            }
-            yNext.set(j, -sum / diag[j]);
-          }
-          const delta = yNext.get(target) ?? 0;
-          xTarget += delta;
-          // Early-exit on tolerance.
-          if (Math.abs(delta) < tolerance) break;
-          // Swap y ← y_next.
-          y.clear();
-          for (const [k2, v2] of yNext) y.set(k2, v2);
-        }
-        out.push({ row: target, value: xTarget });
       }
+      const c = closure.length;
+      const pos = new Map<number, number>();
+      closure.forEach((row, p) => pos.set(row, p));
+      const nbrPos: number[][] = [];
+      const nbrVal: number[][] = [];
+      let closureNnz = 0;
+      for (const j of closure) {
+        const ps: number[] = [];
+        const vs: number[] = [];
+        for (const [m, ajm] of rowEntries[j]) {
+          if (m === j) continue;
+          const pm = pos.get(m);
+          if (pm === undefined) continue;
+          ps.push(pm);
+          vs.push(ajm);
+        }
+        nbrPos.push(ps);
+        nbrVal.push(vs);
+        closureNnz += ps.length + 1;
+      }
+      // Hard work cap (multiply-adds), independent of the schema bounds.
+      const WORK_LIMIT = 200_000_000;
+      let y = new Float64Array(c);
+      let yNext = new Float64Array(c);
+      const x = new Float64Array(c);
+      const active = new Uint8Array(c).fill(1);
+      let activeCount = c;
+      for (let p = 0; p < c; p++) {
+        y[p] = params.vector[closure[p]] / diag[closure[p]];
+        x[p] = y[p];
+      }
+      let work = 0;
+      for (let k = 1; k <= maxTerms && activeCount > 0; k++) {
+        work += closureNnz;
+        if (work > WORK_LIMIT) {
+          throw new McpError(
+            ErrorCode.InvalidParams,
+            `work limit exceeded (${WORK_LIMIT} multiply-adds): reduce max_terms, closure_depth or delta_indices`,
+          );
+        }
+        for (let p = 0; p < c; p++) {
+          const ps = nbrPos[p];
+          const vs = nbrVal[p];
+          let sum = 0;
+          for (let q = 0; q < ps.length; q++) sum += vs[q] * y[ps[q]];
+          yNext[p] = -sum / diag[closure[p]];
+        }
+        for (let p = 0; p < c; p++) {
+          if (!active[p]) continue;
+          const delta = yNext[p];
+          x[p] += delta;
+          if (Math.abs(delta) < tolerance) {
+            active[p] = 0;
+            activeCount--;
+          }
+        }
+        const t = y;
+        y = yNext;
+        yNext = t;
+      }
+      const out: Array<{ row: number; value: number }> = closure.map((row, p) => ({ row, value: x[p] }));
 
       return {
         content: [

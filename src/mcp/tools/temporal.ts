@@ -77,7 +77,7 @@ export class TemporalTools {
               description: 'Matrix size to test',
               default: 1000,
               minimum: 10,
-              maximum: 100000
+              maximum: 5000
             },
             distanceKm: {
               type: 'number',

@@ -1,5 +1,4 @@
 use crate::math_wasm::{Matrix, Vector};
-use crate::optimized_solver::OptimizedConjugateGradientSolver;
 use crate::solver_core::{ConjugateGradientSolver, SolverConfig};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -45,7 +44,7 @@ pub struct MemoryUsage {
 #[wasm_bindgen]
 pub struct WasmSublinearSolver {
     config: WasmSolverConfig,
-    solver: OptimizedConjugateGradientSolver,
+    solver: ConjugateGradientSolver,
     callbacks: HashMap<String, js_sys::Function>,
     memory_usage: usize,
 }
@@ -68,14 +67,7 @@ impl WasmSublinearSolver {
             tolerance: config.tolerance,
         };
 
-        #[cfg(feature = "std")]
-        let solver = if config.simd_enabled {
-            OptimizedConjugateGradientSolver::new_parallel(solver_config)
-        } else {
-            OptimizedConjugateGradientSolver::new(solver_config)
-        };
-        #[cfg(not(feature = "std"))]
-        let solver = OptimizedConjugateGradientSolver::new(solver_config);
+        let solver = ConjugateGradientSolver::new(solver_config);
 
         Ok(WasmSublinearSolver {
             config,
