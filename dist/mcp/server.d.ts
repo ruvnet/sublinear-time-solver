@@ -23,6 +23,9 @@ export declare class SublinearSolverMCPServer {
     private trueSublinearSolver;
     constructor();
     private setupToolHandlers;
+    private toolSchemas?;
+    private listTools;
+    private callTool;
     private setupErrorHandling;
     /**
      * Twelve-tier complexity-class ranking, matched to the Rust

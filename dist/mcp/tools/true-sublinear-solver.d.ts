@@ -1,13 +1,14 @@
 /**
- * TRUE Sublinear Solver - O(log n) Algorithms
+ * Approximate solver behind the `solveTrueSublinear` MCP tool: random (JL)
+ * projections of the system, a small reduced solve, reconstruction, then a
+ * few Jacobi correction sweeps.
  *
- * This connects to the mathematically rigorous sublinear algorithms
- * in src/sublinear/ that achieve genuine O(log n) complexity through:
- *
- * 1. Johnson-Lindenstrauss dimension reduction: n → O(log n)
- * 2. Spectral sparsification with effective resistances
- * 3. Adaptive Neumann series with O(log k) terms
- * 4. Solution reconstruction with error correction
+ * Despite the tool name this is NOT sublinear. It densifies the matrix and
+ * builds dense projection matrices, so time and memory are O(n^2) (measured
+ * log-log time slope 2.14 for n = 500..4000), and the result is approximate
+ * (relative residual ~1e-2 on well-conditioned DD systems). The reported
+ * complexity_bound says so since 1.8.1. Use the `solve` tool for an accurate
+ * O(k nnz) solve.
  */
 interface SublinearConfig {
     /** Target dimension after JL reduction */
@@ -23,8 +24,11 @@ interface SublinearConfig {
     /** Base case threshold for recursion */
     base_case_threshold: number;
 }
+export declare class NotDiagonallyDominantError extends Error {
+    constructor();
+}
 interface ComplexityBound {
-    type: 'logarithmic' | 'square_root' | 'sublinear';
+    type: 'logarithmic' | 'square_root' | 'sublinear' | 'linear' | 'polynomial';
     n: number;
     eps?: number;
     description: string;

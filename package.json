@@ -1,6 +1,6 @@
 {
   "name": "sublinear-time-solver",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Sparse linear solvers (Neumann, Jacobi, Gauss-Seidel, conjugate gradient), PageRank, personalized PageRank and local forward/backward push, as an MCP server, CLI and library. The dependency-free core ships separately as @ruvnet/sublinear-core.",
   "main": "dist/index.js",
   "module": "dist/index.js",

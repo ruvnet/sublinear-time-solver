@@ -4,6 +4,39 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.9.0] — 2026-11-08
+
+Releases: `sublinear-time-solver` 1.9.0 (npm), `@ruvnet/sublinear-core` 1.0.1 (npm, README only),
+`sublinear` 0.4.0 (crates.io), `temporal-lead-solver` 0.1.2 (crates.io).
+
+### Fixed
+
+- **Rust `SublinearNeumannSolver` panicked for every n above 100** (`base_case_threshold`): index out of bounds at `sublinear_neumann.rs:148`, which aborts release builds and was reachable from the wasm `solveSublinear`. It is now one residual-form Jacobi loop that reports the true residual. Regression tests cover n = 101, 200 and 5000. At n = 100 a solve takes 0.020 ms instead of 2.135 ms; time scales with n (log-log slope 1.03 from n = 1e3 to 1e6, 250 ms at 1e6).
+- **Complexity labels now match what runs.**
+  - `SublinearNeumannSolver` and `sublinear-neumann` are Linear, not Logarithmic: any method that returns a full solution vector costs at least O(n).
+  - `forward-push`, `backward-push` and `bidirectional` in the `solve`/`estimateEntry` tools run a full Gauss-Seidel solve. They are now Linear, so a `SubLinear` `max_complexity_class` budget rejects them.
+  - `solveTrueSublinear` is labelled O(n²) (measured slope 2.14, n = 500 to 4000).
+  - `ComplexityBound` gains a `Linear(n)` variant (hence crate 0.4.0).
+- **`solveTrueSublinear` rejects input that is not diagonally dominant.** Before, it returned a vector with relative residual 0.64 to 29 and no error.
+- **MCP tools enforce the numeric bounds their schemas declare.** Each of these requests crashed or hung the server before:
+  - out of memory: `validateTemporalAdvantage` `size: 1e9`, `scheduler_benchmark` `numTasks: 1e10`, `consciousness_evolve` `iterations: 1e12`;
+  - blocked stdio loop: `scheduler_consciousness` and `emergence_generate_diverse`.
+  New caps include `size` ≤ 5000, `numTasks` ≤ 1e5 and `max_terms` ≤ 1e4.
+- **The on-change sublinear solvers share one iteration** across closure rows instead of repeating it once per row, with a cap of 2e8 multiply-adds. Results are bit-identical. n = 300 at depth 6 went from 403 ms to 2 ms.
+- **`verifySparseSolution` no longer reports `ok: true` for a NaN residual.** `prev_solution` is validated like `vector`.
+- Method and budget-class lookups use own properties only, so `"__proto__"` no longer resolves.
+- Core README: forward push bounds the total L1 error by `residualMass`. It does not bound each node's error by ε × outDegree; that was measured 44× over on a 3,000-node graph.
+- The `wasm` feature builds for `wasm32-unknown-unknown` again: it had 19 errors, and CI now builds it.
+
+### Removed
+
+- The `strange-loops` bin and CLI alias. They collided with the `strange-loops` package: installing this package globally made a later `npm i -g strange-loops` fail with EEXIST. Use `sublinear-time-solver`, `sublinear-solver` or `sublinear`.
+- temporal-lead-solver 0.1.2: a tracked 3.9 MB debug binary and 11 unused dependencies. The crate is 29 kB instead of 1.16 MB, with 76 unique dependency crates instead of 158.
+
+### Restored
+
+- `crates/nanosecond-scheduler` source (published 0.1.1), with a CI job (#72). `strange-loop` 0.3.0 was not restored: its own suite fails (20 of 98 lib tests, plus one segfault in unsafe SIMD code).
+
 ## sublinear 0.3.5 (crates.io) — 2026-11-05
 
 - Fixed: the crate's `include` patterns were unanchored, so 0.3.4 also packaged every `README.md`, `LICENSE` and `CHANGELOG.md` found under `node_modules/`, `.claude/`, `plans/` and similar directories. That made 441 files, 820 kB. The patterns are now anchored to the crate root, giving 99 files. 0.3.4 is yanked. The code is unchanged.

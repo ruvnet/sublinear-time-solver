@@ -1,6 +1,6 @@
 {
   "name": "@ruvnet/sublinear-core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Zero-dependency sparse linear solvers (Jacobi, Gauss-Seidel, conjugate gradient, Neumann), PageRank, personalized PageRank and local push (forward/backward) for JavaScript and TypeScript. The embeddable core of sublinear-time-solver.",
   "type": "module",
   "main": "./dist/cjs/index.js",
