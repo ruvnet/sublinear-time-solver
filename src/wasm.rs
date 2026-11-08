@@ -313,7 +313,7 @@ impl PerformanceMetrics {
     }
 }
 
-/// Sublinear solver with O(log n) complexity for WASM
+/// Neumann-series (Jacobi) solver for WASM. Full-vector solve: O(k · nnz(A)).
 #[wasm_bindgen]
 pub struct SublinearNeumannWasm {
     config: SublinearConfig,
@@ -338,7 +338,7 @@ impl SublinearNeumannWasm {
         Self { config }
     }
 
-    /// Solve system with guaranteed O(log n) complexity
+    /// Solve a diagonally dominant system. Cost O(k · nnz(A)); returns the true residual.
     #[wasm_bindgen(js_name = solveSublinear)]
     pub fn solve_sublinear(&self, matrix_triplets: &str, b: Vec<f64>) -> Result<String, JsValue> {
         // Parse matrix triplets from JSON
@@ -414,7 +414,7 @@ impl SublinearNeumannWasm {
                 let result = serde_json::json!({
                     "conditions_satisfied": true,
                     "complexity_bound": format!("{:?}", complexity_bound),
-                    "message": "Matrix satisfies conditions for O(log n) complexity"
+                    "message": "Matrix satisfies conditions for the Neumann series to converge (cost O(k · nnz(A)))"
                 });
                 serde_json::to_string(&result)
                     .map_err(|e| JsValue::from_str(&format!("Serialization failed: {}", e)))

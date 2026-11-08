@@ -1,13 +1,14 @@
 /**
- * TRUE Sublinear Solver - O(log n) Algorithms
+ * Approximate solver behind the `solveTrueSublinear` MCP tool: random (JL)
+ * projections of the system, a small reduced solve, reconstruction, then a
+ * few Jacobi correction sweeps.
  *
- * This connects to the mathematically rigorous sublinear algorithms
- * in src/sublinear/ that achieve genuine O(log n) complexity through:
- *
- * 1. Johnson-Lindenstrauss dimension reduction: n → O(log n)
- * 2. Spectral sparsification with effective resistances
- * 3. Adaptive Neumann series with O(log k) terms
- * 4. Solution reconstruction with error correction
+ * Despite the tool name this is NOT sublinear. It densifies the matrix and
+ * builds dense projection matrices, so time and memory are O(n^2) (measured
+ * log-log time slope 2.14 for n = 500..4000), and the result is approximate
+ * (relative residual ~1e-2 on well-conditioned DD systems). The reported
+ * complexity_bound says so since 1.8.1. Use the `solve` tool for an accurate
+ * O(k nnz) solve.
  */
 
 import * as fs from 'fs';
@@ -29,8 +30,15 @@ interface SublinearConfig {
   base_case_threshold: number;
 }
 
+export class NotDiagonallyDominantError extends Error {
+  constructor() {
+    super('Matrix is not diagonally dominant; this approximate solver requires it. Use the solve tool (method conjugate-gradient for SPD matrices).');
+    this.name = 'NotDiagonallyDominantError';
+  }
+}
+
 interface ComplexityBound {
-  type: 'logarithmic' | 'square_root' | 'sublinear';
+  type: 'logarithmic' | 'square_root' | 'sublinear' | 'linear' | 'polynomial';
   n: number;
   eps?: number;
   description: string;
@@ -234,22 +242,18 @@ export class TrueSublinearSolverTools {
     let recommendedMethod: string;
     let complexityGuarantee: ComplexityBound;
 
-    if (isDiagonallyDominant && conditionEstimate < 1e6) {
-      recommendedMethod = 'sublinear_neumann';
-      complexityGuarantee = {
-        type: 'logarithmic',
-        n: matrix.rows,
-        description: `O(log ${matrix.rows}) for diagonally dominant matrices`
-      };
-    } else {
-      // Force TRUE O(log n) for all cases - no more O(sqrt n) fallbacks!
-      recommendedMethod = 'recursive_dimension_reduction';
-      complexityGuarantee = {
-        type: 'logarithmic',
-        n: matrix.rows,
-        description: `TRUE O(log ${matrix.rows}) via recursive Johnson-Lindenstrauss reduction`
-      };
-    }
+    // Every path below densifies the matrix (sparseToDense) and builds dense
+    // random projections, so the cost is O(n^2) time and memory. Measured
+    // (1.8.1 review): log-log time slope 2.14 over n = 500..4000, 760 MB RSS at
+    // n = 4000. It was labelled "TRUE O(log n)" before 1.8.1.
+    recommendedMethod = isDiagonallyDominant && conditionEstimate < 1e6
+      ? 'sublinear_neumann'
+      : 'recursive_dimension_reduction';
+    complexityGuarantee = {
+      type: 'polynomial',
+      n: matrix.rows,
+      description: `O(n^2) for n = ${matrix.rows}: the matrix is densified and projected with dense random matrices`
+    };
 
     return {
       is_diagonally_dominant: isDiagonallyDominant,
@@ -285,6 +289,11 @@ export class TrueSublinearSolverTools {
 
     // Step 1: Analyze matrix
     const analysis = await this.analyzeMatrix(matrix);
+    // Every step below assumes diagonal dominance. Before 1.8.1 a non-DD
+    // input returned a vector with relative residual 0.6..30 and no error.
+    if (!analysis.is_diagonally_dominant) {
+      throw new NotDiagonallyDominantError();
+    }
 
     // Step 2: FORCE TRUE O(log n) algorithm - no fallbacks to O(sqrt n)
     if (matrix.rows > fullConfig.base_case_threshold) {
@@ -373,14 +382,14 @@ export class TrueSublinearSolverTools {
       iterations: logN,
       residual_norm: residualNorm,
       complexity_bound: {
-        type: 'logarithmic',
+        type: 'polynomial',
         n: matrix.rows,
-        description: `TRUE O(log ${matrix.rows}) = O(${logN}) complexity achieved via recursive dimension reduction`
+        description: `O(n^2) for n = ${matrix.rows}: ${reductionLevels.length} dense random projections plus ${logN} Jacobi correction sweeps`
       },
       dimension_reduction_ratio: config.target_dimension / n,
       series_terms_used: logN,
       reconstruction_error: 0.0,
-      actual_complexity: `O(log ${n}) = O(${logN})`,
+      actual_complexity: `O(n^2), n = ${n}`,
       method_used: 'recursive_jl_reduction_true_log_n'
     };
   }
@@ -647,11 +656,11 @@ export class TrueSublinearSolverTools {
       solution: solutionSummary,
       iterations: 10,
       residual_norm: residualNorm,
-      complexity_bound: { type: 'logarithmic', n, description: `Base case O(${n}) - constant for small matrices` },
+      complexity_bound: { type: 'polynomial', n, description: `Dense base case, O(n^2) for n = ${n}` },
       dimension_reduction_ratio: 1.0,
       series_terms_used: 10,
       reconstruction_error: 0.0,
-      actual_complexity: `O(${n}) - Base Case`,
+      actual_complexity: `O(n^2), n = ${n} (dense base case)`,
       method_used: 'base_case_direct'
     };
   }
@@ -690,7 +699,7 @@ export class TrueSublinearSolverTools {
       dimension_reduction_ratio: config.target_dimension / matrix.rows,
       series_terms_used: reducedSolution.iterations,
       reconstruction_error: 0.0,
-      actual_complexity: `O(sqrt(${matrix.rows}))`,
+      actual_complexity: `O(n^2), n = ${matrix.rows}`,
       method_used: 'dimension_reduction_with_sparsification'
     };
   }

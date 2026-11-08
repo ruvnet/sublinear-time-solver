@@ -231,15 +231,12 @@ impl Complexity for crate::optimized_solver::OptimizedConjugateGradientSolver {
 }
 
 impl Complexity for crate::sublinear::sublinear_neumann::SublinearNeumannSolver {
-    // Adaptive: O(log n) on the per-entry sublinear-guaranteed path,
-    // degrades to O(n) on the base-case path when n ≤ base_case_threshold.
-    const CLASS: ComplexityClass = ComplexityClass::Adaptive {
-        default: &ComplexityClass::Logarithmic,
-        worst: &ComplexityClass::Linear,
-    };
+    // Returns the full solution vector, so it cannot be sublinear: each
+    // iteration is one sparse mat-vec. (Labelled Adaptive{Logarithmic} until
+    // 1.8.1; the large-n "JL" path it described panicked for n > 100.)
+    const CLASS: ComplexityClass = ComplexityClass::Linear;
     const DETAIL: &'static str =
-        "O(log n) per single-entry query on diagonally-dominant systems via JL + recursive Neumann; \
-         O(n) base case at n ≤ base_case_threshold.";
+        "O(k · nnz(A)); k = Jacobi iterations to the residual tolerance, set by the diagonal-dominance margin, not n.";
 }
 
 impl Complexity for crate::sublinear::johnson_lindenstrauss::JLEmbedding {

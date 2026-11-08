@@ -26,7 +26,7 @@ import { ConsciousnessTools } from './tools/consciousness.js';
 import { EmergenceTools } from './tools/emergence-tools.js';
 import { SchedulerTools } from './tools/scheduler.js';
 import { CompleteWasmSublinearSolverTools as WasmSublinearSolverTools } from './tools/wasm-sublinear-complete.js';
-import { TrueSublinearSolverTools } from './tools/true-sublinear-solver.js';
+import { TrueSublinearSolverTools, NotDiagonallyDominantError } from './tools/true-sublinear-solver.js';
 // SECURITY (issue #19, CWE-73): confine attacker-controlled file_path
 // arguments (saveVectorToFile / vector_file) to a dedicated vector dir.
 import {
@@ -245,7 +245,7 @@ export class SublinearSolverMCPServer {
           // pattern established by `solve` and `solveTrueSublinear`.
           'x-complexity': {
             class: 'Linear',
-            detail: 'Per-entry estimator. `random-walk` and `monte-carlo` both run a bounded number of samples but still touch O(n) state in the worst case (Linear). For genuine SubLinear single-entry queries on DD matrices use `solve` with `method=forward-push` or `method=backward-push`.',
+            detail: 'Per-entry estimator. `random-walk` and `monte-carlo` run a bounded number of walks (independent of n once the matrix is built), but the call parses the whole matrix, O(nnz). The other methods run a full Gauss-Seidel solve, O(k · nnz). For n-independent local queries on a graph use forwardPush / backwardPush from @ruvnet/sublinear-core.',
             edgeSafe: false,
           },
           inputSchema: {
@@ -370,19 +370,19 @@ export class SublinearSolverMCPServer {
             required: ['adjacency']
           }
         },
-        // TRUE Sublinear O(log n) algorithms
+        // JL-projection approximate solver (O(n^2); the name is historical)
         {
           name: 'solveTrueSublinear',
-          description: 'Solve with TRUE O(log n) algorithms using Johnson-Lindenstrauss dimension reduction and adaptive Neumann series. For vectors >500 elements, use vector_file parameter with JSON/CSV/TXT files to avoid MCP truncation. Use generateTestVector + saveVectorToFile for large test vectors.',
-          // ADR-001 item #4: this tool's *default* path is Logarithmic per
-          // entry; the base case fallback is Linear. Declared as Adaptive
-          // so callers see both bounds.
+          description: 'Approximate solve of a diagonally dominant system via random (Johnson-Lindenstrauss) projections and Jacobi correction. Not sublinear: it densifies the matrix, so time and memory are O(n^2), and the result is approximate (check verified_relative_residual). Use solve for an accurate O(k · nnz) solve. For vectors >500 elements, use vector_file parameter with JSON/CSV/TXT files to avoid MCP truncation. Use generateTestVector + saveVectorToFile for large test vectors.',
+          // ADR-001 item #4. Declared Adaptive{Logarithmic, Linear} until 1.8.1;
+          // measured log-log time slope is 2.14 (n = 500..4000) because every
+          // path densifies the matrix. default/worst kept for schema shape.
           'x-complexity': {
-            class: 'Adaptive',
-            default: 'Logarithmic',
-            worst: 'Linear',
-            detail: 'O(log n) per single-entry query on DD systems via JL + recursive Neumann; O(n) base case at n ≤ base_case_threshold.',
-            edgeSafe: true,
+            class: 'Polynomial',
+            default: 'Polynomial',
+            worst: 'Polynomial',
+            detail: 'O(n^2) time and memory: sparseToDense plus dense random projections. Measured slope 2.14 over n = 500..4000.',
+            edgeSafe: false,
           },
           inputSchema: {
             type: 'object',
@@ -1028,11 +1028,14 @@ export class SublinearSolverMCPServer {
   private static readonly METHOD_WORST_CASE: Record<string, string> = {
     'neumann':                              'Linear',
     'random-walk':                          'Linear',
-    'forward-push':                         'SubLinear',
-    'backward-push':                        'SubLinear',
-    'bidirectional':                        'SubLinear',
+    // In this package the three push names run a full Gauss-Seidel solve
+    // (since 1.8.0), so their worst case is Linear, not SubLinear.
+    'forward-push':                         'Linear',
+    'backward-push':                        'Linear',
+    'bidirectional':                        'Linear',
     'optimized-cg':                         'Linear',
-    'sublinear-neumann':                    'Linear', // Adaptive { Logarithmic, Linear } → worst case
+    'sublinear-neumann':                    'Linear', // Rust SublinearNeumannSolver: full-vector Jacobi, O(k · nnz)
+    'true-sublinear-jl':                    'Polynomial', // solveTrueSublinear: densifies, O(n^2)
     // ADR-001 #6 phase-2A primitives.
     'closure-indices':                      'SubLinear', // bounded-depth row-graph BFS
     'contrastive-solve-on-change':          'Linear',    // Adaptive { Linear, Linear } orchestrator
@@ -1360,12 +1363,9 @@ export class SublinearSolverMCPServer {
   private async handleSolveTrueSublinear(params: any) {
     try {
       // ADR-001 item #4 phase-2 — enforce the caller's complexity budget.
-      // This solver's worst-case class is Linear (base case fallback); the
-      // budget gate compares against that, so a SubLinear-budget caller
-      // will be rejected. That's intentional: an Adaptive solver can
-      // legitimately degrade on hard inputs and the caller's budget must
-      // hold even in the worst case.
-      this.enforceComplexityBudget('sublinear-neumann', params.max_complexity_class);
+      // This tool densifies the matrix, so its class is Polynomial (O(n^2));
+      // any budget below that is rejected.
+      this.enforceComplexityBudget('true-sublinear-jl', params.max_complexity_class);
 
       // Validate required parameters
       if (!params.matrix) {
@@ -1416,10 +1416,16 @@ export class SublinearSolverMCPServer {
         base_case_threshold: 100
       };
 
-      console.error(`🚀 Using TRUE O(log n) sublinear solver with dimension reduction ${matrix.rows} → ${config.target_dimension}`);
-
-      // Solve using TRUE sublinear algorithms
-      const result = await this.trueSublinearSolver.solveTrueSublinear(matrix, vector, config);
+      // Approximate JL-projection solve; O(n^2), see true-sublinear-solver.ts.
+      let result;
+      try {
+        result = await this.trueSublinearSolver.solveTrueSublinear(matrix, vector, config);
+      } catch (e) {
+        if (e instanceof NotDiagonallyDominantError) {
+          throw new McpError(ErrorCode.InvalidParams, e.message);
+        }
+        throw e;
+      }
 
       // Report the measured accuracy of the returned vector alongside the
       // solver's own claims, so callers can decide whether it is usable.
@@ -1428,6 +1434,11 @@ export class SublinearSolverMCPServer {
       if (Array.isArray(sol) && sol.length === matrix.rows) {
         const A = csrFromCoo({ rows: matrix.rows, cols: matrix.cols, rowIndices: matrix.rowIndices, colIndices: matrix.colIndices, values: matrix.values });
         verified_relative_residual = relativeResidual(A, sol, vector);
+      } else if (typeof (result as any)?.residual_norm === 'number') {
+        // Solution truncated for transport (n > 1000): residual_norm is the
+        // true ||A x - b|| of the full vector, computed before truncation.
+        const bNorm = Math.sqrt(vector.reduce((s: number, v: number) => s + v * v, 0));
+        verified_relative_residual = bNorm > 0 ? (result as any).residual_norm / bNorm : (result as any).residual_norm;
       }
 
       return {
@@ -1600,19 +1611,19 @@ export class SublinearSolverMCPServer {
         edgeSafe: false,
       },
       'forward-push': {
-        class: 'SubLinear',
-        detail: 'O(1/ε) per query on DD systems with bounded degree.',
-        edgeSafe: true,
+        class: 'Linear',
+        detail: 'In the solve and estimateEntry tools this name runs a full Gauss-Seidel solve (since 1.8.0): O(k · nnz(A)). The n-independent local push is forwardPush in /sublinear-core (measured flat in n from 1e4 to 1e6 at ε = 1e-6).',
+        edgeSafe: false,
       },
       'backward-push': {
-        class: 'SubLinear',
-        detail: 'O(1/ε) per query, symmetric to forward-push.',
-        edgeSafe: true,
+        class: 'Linear',
+        detail: 'Runs a full Gauss-Seidel solve here, as forward-push does. The local version is backwardPush in /sublinear-core.',
+        edgeSafe: false,
       },
       'bidirectional': {
-        class: 'SubLinear',
-        detail: 'Combines forward + backward push; constants smaller than either alone.',
-        edgeSafe: true,
+        class: 'Linear',
+        detail: 'Runs a full Gauss-Seidel solve here, as forward-push does.',
+        edgeSafe: false,
       },
       'optimized-cg': {
         class: 'Linear',
@@ -1620,11 +1631,9 @@ export class SublinearSolverMCPServer {
         edgeSafe: false,
       },
       'sublinear-neumann': {
-        class: 'Adaptive',
-        default: 'Logarithmic',
-        worst: 'Linear',
-        detail: 'O(log n) per single-entry query on DD systems via JL + recursive Neumann; O(n) base case at n ≤ base_case_threshold.',
-        edgeSafe: true,
+        class: 'Linear',
+        detail: 'Rust SublinearNeumannSolver: full-vector Jacobi/Neumann, O(k · nnz(A)); k set by the dominance margin. Labelled Adaptive{Logarithmic} before 1.8.1; measured slope 1.03 over n = 1e3..1e6.',
+        edgeSafe: false,
       },
       // ── ADR-001 #6 phase-2A primitives ────────────────────────────
       'closure-indices': {

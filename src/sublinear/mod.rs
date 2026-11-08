@@ -47,8 +47,11 @@ impl Default for SublinearConfig {
 /// Sublinear complexity bounds for different matrix types
 #[derive(Debug, Clone)]
 pub enum ComplexityBound {
-    /// O(log n) for diagonally dominant matrices
+    /// O(log n). Only a single-entry estimate can be this cheap; any method
+    /// that returns a length-n solution vector is at least `Linear`.
     Logarithmic(usize),
+    /// O(n) or more: full-vector solves (each iteration is O(nnz)).
+    Linear(usize),
     /// O(sqrt(n)) for well-conditioned matrices
     SquareRoot(usize),
     /// O(n^eps) for general sparse matrices
