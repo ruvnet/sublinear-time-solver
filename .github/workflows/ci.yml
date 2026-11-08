@@ -29,6 +29,28 @@ jobs:
       - name: cargo test --doc
         run: cargo test --doc
 
+  # crates/nanosecond-scheduler is a standalone crate (own [workspace]) that the
+  # root build never touches. It was published from this repo and then deleted
+  # from the tree; this job keeps the restored source building.
+  nanosecond-scheduler:
+    name: cargo test (crates/nanosecond-scheduler)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: crates/nanosecond-scheduler
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32
+        with:
+          workspaces: crates/nanosecond-scheduler
+      - name: cargo test (default features)
+        run: cargo test --locked --lib --tests
+      - name: cargo test --no-default-features (no_std)
+        run: cargo test --locked --lib --tests --no-default-features
+      - name: cargo build benches + examples
+        run: cargo build --locked --benches --examples
+
   fmt-clippy:
     name: fmt + clippy
     runs-on: ubuntu-latest
