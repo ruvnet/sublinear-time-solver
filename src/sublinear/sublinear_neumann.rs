@@ -1,30 +1,32 @@
-//! True sublinear Neumann series solver with O(log n) complexity
+//! Neumann-series (Jacobi) solver behind the `SublinearSolver` trait.
 //!
-//! This implements a mathematically rigorous sublinear Neumann solver
-//! that achieves O(log n) complexity through:
-//! 1. Johnson-Lindenstrauss dimension reduction
-//! 2. Spectral sparsification
-//! 3. Adaptive sampling with concentration bounds
+//! It returns the full solution vector, so its cost is at least linear in n:
+//! each iteration is one sparse matrix-vector product, O(nnz(A)), and the
+//! number of iterations depends on the diagonal-dominance margin, not on n.
+//! Earlier versions labelled this solver O(log n). That label was wrong: the
+//! large-n path densified the matrix (O(n^2) time and memory) and then
+//! panicked with an out-of-bounds index for every n above
+//! `base_case_threshold`, and the base case read the matrix through
+//! `get(i, j)` for every pair (O(n^2) per iteration).
 
-#![allow(clippy::needless_range_loop)] // Matrix[i][j] loops need both indices
 #![allow(missing_docs)] // Sublinear Neumann module — docs TBD
 
 use crate::error::{Result, SolverError};
 use crate::matrix::Matrix;
-use crate::sublinear::johnson_lindenstrauss::JLEmbedding;
 use crate::sublinear::{ComplexityBound, SublinearConfig, SublinearSolver};
 use crate::types::Precision;
 use alloc::vec::Vec;
-use core::cmp;
 
-/// Sublinear Neumann series solver
+/// Neumann-series solver: x = sum_k (I - D^-1 A)^k D^-1 b, computed as
+/// Jacobi iterations in residual form.
 #[derive(Debug, Clone)]
 pub struct SublinearNeumannSolver {
     /// Base configuration
     config: SublinearConfig,
-    /// Maximum series terms (much smaller than linear version)
+    /// Retained for API compatibility; the iteration cap is derived from
+    /// `config.max_recursion_depth` (see `max_iterations`).
     max_terms: usize,
-    /// Series convergence tolerance
+    /// Stop when ||b - A x||_2 / ||b||_2 falls below this value.
     series_tolerance: Precision,
     /// Complexity bound verification (reserved for future use)
     #[allow(dead_code)]
@@ -32,12 +34,11 @@ pub struct SublinearNeumannSolver {
 }
 
 impl SublinearNeumannSolver {
-    /// Create a new sublinear Neumann solver
+    /// Create a new solver.
     pub fn new(config: SublinearConfig) -> Self {
         Self {
-            // For true O(log n) complexity, max_terms = O(log n)
             max_terms: (config.target_dimension as f64).log2().ceil() as usize + 5,
-            series_tolerance: 1e-10,
+            series_tolerance: 1e-12,
             verify_bounds: true,
             config,
         }
@@ -49,293 +50,89 @@ impl SublinearNeumannSolver {
         self
     }
 
-    /// Solve with guaranteed O(log n) complexity
+    /// Iteration cap: proportional to `max_recursion_depth` (so callers can
+    /// still tune it down), with a floor of 64.
+    fn max_iterations(&self) -> usize {
+        (self.config.max_recursion_depth * 16).max(64)
+    }
+
+    /// Solve A x = b for a diagonally dominant A.
     ///
-    /// Algorithm:
-    /// 1. Verify matrix is diagonally dominant (required for convergence)
-    /// 2. Apply Johnson-Lindenstrauss dimension reduction: n → k = O(log n)
-    /// 3. Solve reduced system: (I - M_k)x_k = D_k^{-1}b_k using O(log k) terms
-    /// 4. Reconstruct solution in original space
-    /// 5. Apply Richardson extrapolation for accuracy
-    ///
-    /// Total complexity: O(log n) matrix operations + O(n) dimension reduction = O(n)
-    /// But for well-conditioned matrices, can achieve O(log n) through adaptive sampling
+    /// Cost: O(iterations · nnz(A)) time, O(n) extra memory. The returned
+    /// `residual_norm` is the true ||A x - b||_2 of the returned vector.
     pub fn solve_sublinear_guaranteed(
         &self,
         matrix: &dyn Matrix,
         b: &[Precision],
     ) -> Result<SublinearNeumannResult> {
-        let n = matrix.rows();
-
-        // Step 1: Verify sublinear conditions
         let complexity_bound = self.verify_sublinear_conditions(matrix)?;
-
-        // Step 2: Check if problem is small enough for direct solution
-        if n <= self.config.base_case_threshold {
-            return self.solve_base_case(matrix, b);
-        }
-
-        // Step 3: Apply Johnson-Lindenstrauss dimension reduction
-        let jl_embedding = JLEmbedding::new(
-            n,
-            self.config.jl_distortion,
-            Some(42), // Fixed seed for reproducibility
-        )?;
-
-        // Step 4: Create reduced problem
-        let (reduced_matrix, reduced_b) = self.create_reduced_problem(matrix, b, &jl_embedding)?;
-
-        // Step 5: Solve reduced system with provably O(log k) complexity
-        let reduced_solution = self.solve_reduced_system(&reduced_matrix, &reduced_b)?;
-
-        // Step 6: Reconstruct solution in original space
-        let reconstructed = jl_embedding.reconstruct_vector(&reduced_solution.solution)?;
-
-        // Step 7: Apply error correction if needed
-        let final_solution = self.apply_error_correction(matrix, b, &reconstructed)?;
-
-        Ok(SublinearNeumannResult {
-            solution: final_solution,
-            iterations: reduced_solution.iterations,
-            residual_norm: reduced_solution.residual_norm,
-            complexity_bound,
-            dimension_reduction_ratio: jl_embedding.compression_ratio(),
-            series_terms_used: reduced_solution.series_terms_used,
-            reconstruction_error: reduced_solution.reconstruction_error,
-        })
-    }
-
-    /// Create reduced problem using dimension reduction
-    fn create_reduced_problem(
-        &self,
-        matrix: &dyn Matrix,
-        b: &[Precision],
-        jl_embedding: &JLEmbedding,
-    ) -> Result<(Vec<Vec<Precision>>, Vec<Precision>)> {
         let n = matrix.rows();
-
-        // Extract matrix rows
-        let mut matrix_rows = Vec::new();
-        for i in 0..n {
-            let mut row = vec![0.0; n];
-            for j in 0..n {
-                if let Some(val) = matrix.get(i, j) {
-                    row[j] = val;
-                }
-            }
-            matrix_rows.push(row);
+        if b.len() != n {
+            return Err(SolverError::DimensionMismatch {
+                expected: n,
+                actual: b.len(),
+                operation: "sublinear_neumann_solve".to_string(),
+            });
         }
 
-        // Project matrix and RHS vector
-        let reduced_matrix = jl_embedding.project_matrix(&matrix_rows)?;
-        let reduced_b = jl_embedding.project_vector(b)?;
-
-        Ok((reduced_matrix, reduced_b))
-    }
-
-    /// Solve the reduced system with O(log k) complexity
-    fn solve_reduced_system(
-        &self,
-        matrix: &[Vec<Precision>],
-        b: &[Precision],
-    ) -> Result<ReducedSolutionResult> {
-        let k = matrix.len();
-
-        // Extract diagonal for Neumann iteration: x = (I - M)^{-1} D^{-1} b
-        let mut diagonal_inv = vec![0.0; k];
-        #[allow(clippy::needless_range_loop)] // i used for 2-D matrix[i][i] indexing
-        for i in 0..k {
-            if matrix[i][i].abs() < 1e-14 {
-                return Err(SolverError::InvalidInput {
-                    message: format!("Near-zero diagonal element at position {}", i),
-                    parameter: Some("matrix_diagonal".to_string()),
-                });
-            }
-            diagonal_inv[i] = 1.0 / matrix[i][i];
-        }
-
-        // Scaled RHS: D^{-1}b
-        let scaled_b: Vec<Precision> = b
-            .iter()
-            .zip(&diagonal_inv)
-            .map(|(&b_val, &d_inv)| b_val * d_inv)
-            .collect();
-
-        // Neumann series: x = sum_{j=0}^{T-1} M^j D^{-1} b
-        let mut solution = scaled_b.clone(); // Start with j=0 term
-        let mut current_term = scaled_b.clone();
-        let mut series_terms_used = 1;
-
-        // Adaptive series truncation with O(log k) terms
-        let max_terms = cmp::min(self.max_terms, (k as f64).log2().ceil() as usize + 3);
-
-        for _term_idx in 1..max_terms {
-            // Compute M * current_term = current_term - D^{-1} * A * current_term
-            let mut temp = vec![0.0; k];
-
-            // Matrix-vector multiplication: A * current_term
-            for (t_i, row) in temp.iter_mut().zip(matrix.iter()) {
-                for (&m_ij, &ct_j) in row.iter().zip(current_term.iter()) {
-                    *t_i += m_ij * ct_j;
+        let mut inv_diag = vec![0.0; n];
+        for (i, d) in inv_diag.iter_mut().enumerate() {
+            match matrix.get(i, i) {
+                Some(v) if v.abs() > 1e-14 => *d = 1.0 / v,
+                _ => {
+                    return Err(SolverError::InvalidInput {
+                        message: format!("Near-zero diagonal element at position {}", i),
+                        parameter: Some("matrix_diagonal".to_string()),
+                    })
                 }
             }
+        }
 
-            // Apply diagonal scaling: D^{-1} * temp and update current_term
-            for ((ct, t), &d_inv) in current_term
-                .iter_mut()
-                .zip(temp.iter_mut())
-                .zip(diagonal_inv.iter())
-            {
-                *t *= d_inv;
-                *ct -= *t;
+        let b_norm = b.iter().map(|v| v * v).sum::<Precision>().sqrt();
+        let scale = if b_norm > 0.0 { b_norm } else { 1.0 };
+        let mut x = vec![0.0; n];
+        let mut ax = vec![0.0; n];
+        let mut r: Vec<Precision> = b.to_vec();
+        let mut r_norm = b_norm;
+        let mut iterations = 0usize;
+        let max_iters = self.max_iterations();
+
+        while r_norm / scale > self.series_tolerance && iterations < max_iters {
+            for i in 0..n {
+                x[i] += r[i] * inv_diag[i];
             }
-
-            // Add term to solution
-            for (s, &ct) in solution.iter_mut().zip(current_term.iter()) {
-                *s += ct;
+            matrix.multiply_vector(&x, &mut ax)?;
+            let mut s2 = 0.0;
+            for i in 0..n {
+                r[i] = b[i] - ax[i];
+                s2 += r[i] * r[i];
             }
-
-            series_terms_used += 1;
-
-            // Check series convergence
-            let term_norm = current_term.iter().map(|x| x * x).sum::<Precision>().sqrt();
-
-            if term_norm < self.series_tolerance {
+            r_norm = s2.sqrt();
+            iterations += 1;
+            if !r_norm.is_finite() {
                 break;
             }
         }
 
-        // Compute residual for error estimation
-        let mut residual = vec![0.0; k];
-        for i in 0..k {
-            for j in 0..k {
-                residual[i] += matrix[i][j] * solution[j];
-            }
-            residual[i] -= b[i];
-        }
-
-        let residual_norm = residual.iter().map(|x| x * x).sum::<Precision>().sqrt();
-
-        Ok(ReducedSolutionResult {
-            solution,
-            iterations: series_terms_used,
-            residual_norm,
-            series_terms_used,
-            reconstruction_error: 0.0, // Computed later
+        Ok(SublinearNeumannResult {
+            solution: x,
+            iterations,
+            residual_norm: r_norm,
+            complexity_bound,
+            dimension_reduction_ratio: 1.0,
+            series_terms_used: iterations,
+            reconstruction_error: 0.0,
         })
     }
 
-    /// Solve base case directly (for small problems)
+    /// Kept for the existing unit test: identical to the full solve.
+    #[cfg(test)]
     fn solve_base_case(
         &self,
         matrix: &dyn Matrix,
         b: &[Precision],
     ) -> Result<SublinearNeumannResult> {
-        // For small problems, use Jacobi iteration. The previous version
-        // hard-capped at 10 iterations, which for the standard 2x2 test
-        // matrix (A=[[3,1],[1,3]], b=[4,4]) gives a residual of ~1e-5,
-        // well above the 1e-10 the test asserts. Bump the cap to
-        // `max_iterations` so the convergence step-size check actually
-        // controls termination on small diagonally dominant systems.
-        let n = matrix.rows();
-        let mut solution = vec![0.0; n];
-        // Bump to a value that lets convergence step-size actually drive
-        // termination on small diagonally dominant systems. Picks a cap
-        // proportional to `max_recursion_depth` (so callers can still tune
-        // it down) with a hard floor of 64 — enough for (1/3)^64 ≪ 1e-30.
-        let max_iters = (self.config.max_recursion_depth * 16).max(64);
-        let mut iterations_used = 0usize;
-
-        for _ in 0..max_iters {
-            iterations_used += 1;
-            let mut new_solution = vec![0.0; n];
-
-            // One Jacobi step: new[i] = (b[i] - Σ_{j≠i} A[i,j]·x[j]) / A[i,i]
-            for i in 0..n {
-                if let Some(diag) = matrix.get(i, i) {
-                    if diag.abs() > 1e-14 {
-                        new_solution[i] = b[i] / diag;
-                        for j in 0..n {
-                            if i != j {
-                                if let Some(off_diag) = matrix.get(i, j) {
-                                    new_solution[i] -= off_diag * solution[j] / diag;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Check convergence on step size.
-            let diff: Precision = solution
-                .iter()
-                .zip(&new_solution)
-                .map(|(old, new)| (old - new).powi(2))
-                .sum::<Precision>()
-                .sqrt();
-
-            solution = new_solution;
-
-            if diff < 1e-14 {
-                break;
-            }
-        }
-
-        // Compute residual
-        let mut residual_norm = 0.0;
-        for i in 0..n {
-            let mut res = -b[i];
-            for j in 0..n {
-                if let Some(val) = matrix.get(i, j) {
-                    res += val * solution[j];
-                }
-            }
-            residual_norm += res * res;
-        }
-        residual_norm = residual_norm.sqrt();
-
-        Ok(SublinearNeumannResult {
-            solution,
-            iterations: iterations_used,
-            residual_norm,
-            complexity_bound: ComplexityBound::Logarithmic(n),
-            dimension_reduction_ratio: 1.0,
-            series_terms_used: iterations_used,
-            reconstruction_error: 0.0,
-        })
-    }
-
-    /// Apply error correction to improve solution accuracy
-    fn apply_error_correction(
-        &self,
-        matrix: &dyn Matrix,
-        b: &[Precision],
-        initial_solution: &[Precision],
-    ) -> Result<Vec<Precision>> {
-        // Simple Richardson iteration for error correction
-        let mut solution = initial_solution.to_vec();
-
-        // One correction step
-        let mut residual = vec![0.0; matrix.rows()];
-        for i in 0..matrix.rows() {
-            residual[i] = -b[i];
-            for j in 0..matrix.cols() {
-                if let Some(val) = matrix.get(i, j) {
-                    residual[i] += val * solution[j];
-                }
-            }
-        }
-
-        // Apply correction: x_new = x_old - D^{-1} * residual
-        for i in 0..solution.len() {
-            if let Some(diag) = matrix.get(i, i) {
-                if diag.abs() > 1e-14 {
-                    solution[i] -= residual[i] / diag;
-                }
-            }
-        }
-
-        Ok(solution)
+        self.solve_sublinear_guaranteed(matrix, b)
     }
 }
 
@@ -344,19 +141,10 @@ impl SublinearNeumannSolver {
 pub struct SublinearNeumannResult {
     pub solution: Vec<Precision>,
     pub iterations: usize,
+    /// True ||A x - b||_2 of `solution`.
     pub residual_norm: Precision,
     pub complexity_bound: ComplexityBound,
     pub dimension_reduction_ratio: Precision,
-    pub series_terms_used: usize,
-    pub reconstruction_error: Precision,
-}
-
-/// Result from reduced system solve
-#[derive(Debug, Clone)]
-struct ReducedSolutionResult {
-    pub solution: Vec<Precision>,
-    pub iterations: usize,
-    pub residual_norm: Precision,
     pub series_terms_used: usize,
     pub reconstruction_error: Precision,
 }
@@ -371,9 +159,8 @@ impl SublinearSolver for SublinearNeumannSolver {
                 off_diagonal_sum: 0.0,
             });
         }
-
-        // For diagonally dominant matrices, we can achieve O(log n) complexity
-        Ok(ComplexityBound::Logarithmic(matrix.rows()))
+        // A full solution vector costs at least O(n); each iteration is O(nnz).
+        Ok(ComplexityBound::Linear(matrix.rows()))
     }
 
     fn solve_sublinear(
@@ -387,7 +174,8 @@ impl SublinearSolver for SublinearNeumannSolver {
     }
 
     fn complexity_bound(&self) -> ComplexityBound {
-        ComplexityBound::Logarithmic(self.config.target_dimension)
+        // Dimension is unknown until a matrix is given; 0 means "unspecified n".
+        ComplexityBound::Linear(0)
     }
 }
 
@@ -420,5 +208,68 @@ mod tests {
         let result = solver.solve_base_case(&matrix, &b).unwrap();
         assert_eq!(result.solution.len(), 2);
         assert!(result.residual_norm < 1e-10);
+    }
+}
+
+#[cfg(test)]
+mod regression_1_8_1 {
+    use super::*;
+    use crate::matrix::SparseMatrix;
+
+    fn tridiag(n: usize, d: f64) -> SparseMatrix {
+        let mut t = Vec::new();
+        for i in 0..n {
+            t.push((i, i, d));
+            if i + 1 < n {
+                t.push((i, i + 1, 1.0));
+                t.push((i + 1, i, 1.0));
+            }
+        }
+        SparseMatrix::from_triplets(t, n, n).unwrap()
+    }
+
+    fn true_residual(m: &SparseMatrix, x: &[f64], b: &[f64]) -> f64 {
+        let mut ax = vec![0.0; b.len()];
+        m.multiply_vector(x, &mut ax).unwrap();
+        ax.iter().zip(b).map(|(a, b)| (a - b) * (a - b)).sum::<f64>().sqrt()
+    }
+
+    /// 1.8.0 panicked (index out of bounds in the JL-reduced path) for every
+    /// n above `base_case_threshold` (default 100).
+    #[test]
+    fn large_n_does_not_panic_and_converges() {
+        for &n in &[101usize, 200, 5_000] {
+            let m = tridiag(n, 4.0);
+            let b: Vec<f64> = (0..n).map(|i| 1.0 + (i % 7) as f64).collect();
+            let s = SublinearNeumannSolver::new(SublinearConfig::default());
+            let r = s.solve_sublinear_guaranteed(&m, &b).unwrap();
+            let res = true_residual(&m, &r.solution, &b);
+            let bn = b.iter().map(|v| v * v).sum::<f64>().sqrt();
+            assert!(res / bn < 1e-9, "n={n}: relative residual {}", res / bn);
+            // Reported residual must be the true one.
+            assert!((r.residual_norm - res).abs() <= 1e-9 * bn.max(1.0));
+        }
+    }
+
+    /// A full-vector solve can't be O(log n).
+    #[test]
+    fn full_vector_solve_is_not_labelled_logarithmic() {
+        let s = SublinearNeumannSolver::new(SublinearConfig::default());
+        assert!(!matches!(s.complexity_bound(), ComplexityBound::Logarithmic(_)));
+        let m = tridiag(10, 4.0);
+        let bound = s.verify_sublinear_conditions(&m).unwrap();
+        assert!(matches!(bound, ComplexityBound::Linear(10)));
+        assert_eq!(
+            <SublinearNeumannSolver as crate::complexity::Complexity>::CLASS,
+            crate::complexity::ComplexityClass::Linear
+        );
+    }
+
+    #[test]
+    fn non_dd_is_rejected() {
+        let t = vec![(0, 0, 1.0), (0, 1, 3.0), (1, 0, 3.0), (1, 1, 1.0)];
+        let m = SparseMatrix::from_triplets(t, 2, 2).unwrap();
+        let s = SublinearNeumannSolver::new(SublinearConfig::default());
+        assert!(s.solve_sublinear_guaranteed(&m, &[1.0, 1.0]).is_err());
     }
 }
