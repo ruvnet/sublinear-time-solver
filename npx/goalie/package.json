@@ -1,7 +1,7 @@
 {
   "name": "goalie",
-  "version": "1.3.1",
-  "description": "AI-powered research assistant with REAL Ed25519 cryptographic signatures, GOAP planning, and Perplexity API integration",
+  "version": "1.3.2",
+  "description": "Goal-oriented (GOAP) research assistant CLI and MCP server: plans multi-step Perplexity searches, tracks citations and can sign results with Ed25519.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -18,35 +18,40 @@
     "postpublish": "echo 'Successfully published goalie to npm!'"
   },
   "keywords": [
-    "mcp",
     "goap",
-    "planning",
-    "ai",
-    "search",
+    "goal-oriented-action-planning",
+    "research-assistant",
+    "deep-research",
     "perplexity",
-    "ed25519",
-    "cryptography",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "citations",
     "anti-hallucination",
-    "strange-loops"
+    "ed25519",
+    "a-star",
+    "planning",
+    "cli",
+    "ai-agents"
   ],
   "author": "rUv <hello@ruv.net> (https://github.com/ruvnet)",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ruvnet/goalie.git"
+    "url": "git+https://github.com/ruvnet/sublinear-time-solver.git",
+    "directory": "npx/goalie"
   },
   "bugs": {
-    "url": "https://github.com/ruvnet/goalie/issues"
+    "url": "https://github.com/ruvnet/sublinear-time-solver/issues"
   },
-  "homepage": "https://github.com/ruvnet/goalie#readme",
+  "homepage": "https://ruv.io",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@noble/ed25519": "^3.0.0",
-    "axios": "^1.6.0",
+    "axios": "^1.21.0",
     "commander": "^11.0.0",
     "dotenv": "^16.3.0",
-    "winston": "^3.11.0",
-    "zod": "^3.22.0"
+    "winston": "^3.11.0"
   },
   "devDependencies": {
     "@types/jest": "^29.0.0",
