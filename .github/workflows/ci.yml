@@ -132,7 +132,8 @@ jobs:
       - run: npm run build
       - run: npm audit --omit=dev --audit-level=high
       - name: quick start smoke (offline)
-        run: node dist/cli.js explain "How do I get a food truck permit in Austin?" | grep -q '"stepCount": 4'
+        run: |
+          node dist/cli.js explain "How do I get a food truck permit in Austin?" | grep -q '"stepCount": 4'
 
   bench-smoke:
     name: cargo bench --quick (smoke)
