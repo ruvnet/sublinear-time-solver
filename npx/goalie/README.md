@@ -13,20 +13,40 @@
 
 ## 🚀 Quick Start
 
+![Goalie turns a question into a four-step GOAP plan](https://raw.githubusercontent.com/ruvnet/sublinear-time-solver/main/npx/goalie/assets/goalie-plan.svg)
+
+**Supported environments:** Node.js ≥ 18 on Linux, macOS or Windows. `explain`, `test`, `info` and `plugins` run offline. `search`, `raw`, `query` and the MCP research tools need a `PERPLEXITY_API_KEY`.
+
+See the plan Goalie would run before you spend any API calls. This needs no key:
+
 ```bash
-# Install and run in under 30 seconds
-npx goalie
+npx goalie explain "How do I get a food truck permit in Austin?"
+```
 
-# Or install globally
-npm install -g goalie
+After the plugin start-up log lines, it prints the plan as JSON. Excerpt from goalie 1.3.2 on Node 22:
 
-# Set your Perplexity API key (get one at https://perplexity.ai/settings/api)
+```text
+📋 Plan Explanation:
+{
+  "query": "How do I get a food truck permit in Austin?",
+  "planId": "plan_1",
+  "totalCost": 11,
+  "stepCount": 4,
+  "steps": [ compose_queries (cost 1), search_information (cost 3),
+             synthesize_results (cost 5), verify_answer (cost 2) ],
+  ...
+}
+```
+
+Then add a key and run the plan for real:
+
+```bash
+# Get a key at https://perplexity.ai/settings/api
 export PERPLEXITY_API_KEY="pplx-your-key-here"
-# Or add to .env file:
+# Or add it to a .env file:
 echo 'PERPLEXITY_API_KEY="pplx-your-key-here"' >> .env
 
-# Start researching immediately
-goalie search "Your research question here"
+npx goalie search "Your research question here"
 ```
 
 ## 🔌 MCP (Model Context Protocol) Integration

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 150" width="720" height="150" role="img" aria-label="Goalie plans a query as four GOAP steps: compose queries, search, synthesize, verify">
+  <style>
+    .bg{fill:#0f172a}.box{fill:#1e293b;stroke:#334155;stroke-width:1.5}
+    .t{font:600 14px ui-sans-serif,system-ui,sans-serif;fill:#e2e8f0}
+    .s{font:12px ui-monospace,monospace;fill:#94a3b8}
+    .h{font:600 13px ui-sans-serif,system-ui,sans-serif;fill:#38bdf8}
+    .step{opacity:.35;animation:on 6s infinite}
+    .a2{animation-delay:1.2s}.a3{animation-delay:2.4s}.a4{animation-delay:3.6s}
+    @keyframes on{0%,8%{opacity:.35}12%,70%{opacity:1}85%,100%{opacity:.35}}
+    @media (prefers-reduced-motion:reduce){.step{animation:none;opacity:1}}
+  </style>
+  <rect class="bg" width="720" height="150" rx="12"/>
+  <text class="h" x="24" y="30">goalie explain "How do I get a food truck permit in Austin?"  →  A* plan, total cost 11</text>
+  <g class="step"><rect class="box" x="24" y="52" width="150" height="70" rx="8"/><text class="t" x="40" y="82">compose_queries</text><text class="s" x="40" y="104">cost 1</text></g>
+  <g class="step a2"><rect class="box" x="198" y="52" width="150" height="70" rx="8"/><text class="t" x="214" y="82">search_information</text><text class="s" x="214" y="104">cost 3 · Perplexity</text></g>
+  <g class="step a3"><rect class="box" x="372" y="52" width="150" height="70" rx="8"/><text class="t" x="388" y="82">synthesize_results</text><text class="s" x="388" y="104">cost 5 · citations</text></g>
+  <g class="step a4"><rect class="box" x="546" y="52" width="150" height="70" rx="8"/><text class="t" x="562" y="82">verify_answer</text><text class="s" x="562" y="104">cost 2</text></g>
+</svg>

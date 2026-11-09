@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.2] - 2026-11-09
+
+### Security
+- Dropped the unused `zod` dependency. Nothing in `src/` imports it. A clean install now resolves the MCP SDK’s zod to a patched 4.x. `npm audit --omit=dev`: 0 critical / 2 high → 0 / 0.
+- Raised floors: `@modelcontextprotocol/sdk` ^1.32.2, `axios` ^1.21.0.
+
+### Changed
+- `repository`/`bugs` now point at the real source, `ruvnet/sublinear-time-solver` (`npx/goalie`). The old `ruvnet/goalie` repo does not exist. Homepage is https://ruv.io.
+- README quick start begins with an offline `goalie explain` run and shows its real output, plus supported environments.
+
 ## [1.0.4] - 2025-09-29
 
 ### Fixed

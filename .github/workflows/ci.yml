@@ -114,6 +114,27 @@ jobs:
       - run: npm ci
       - run: npm test
 
+  # npx/goalie ships to npm as `goalie` but had no CI. Build it, gate its
+  # production dependency tree on npm audit, and smoke-test the offline
+  # `explain` path that the README quick start documents.
+  goalie:
+    name: goalie (npx/goalie)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: npx/goalie
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: npm install --no-fund
+      - run: npm run build
+      - run: npm audit --omit=dev --audit-level=high
+      - name: quick start smoke (offline)
+        run: |
+          node dist/cli.js explain "How do I get a food truck permit in Austin?" | grep -q '"stepCount": 4'
+
   bench-smoke:
     name: cargo bench --quick (smoke)
     runs-on: ubuntu-latest
