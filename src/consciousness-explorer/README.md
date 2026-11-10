@@ -8,8 +8,8 @@
 
 [![NPM Version](https://img.shields.io/npm/v/consciousness-explorer?style=for-the-badge&logo=npm&color=red)](https://www.npmjs.com/package/consciousness-explorer)
 [![Downloads](https://img.shields.io/npm/dt/consciousness-explorer?style=for-the-badge&color=green)](https://www.npmjs.com/package/consciousness-explorer)
-[![License](https://img.shields.io/npm/l/consciousness-explorer?style=for-the-badge&color=blue)](LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/ruvnet/consciousness-explorer?style=for-the-badge&logo=github&color=yellow)](https://github.com/ruvnet/consciousness-explorer)
+[![License](https://img.shields.io/npm/l/consciousness-explorer?style=for-the-badge&color=blue)](https://github.com/ruvnet/sublinear-time-solver/blob/main/LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/ruvnet/sublinear-time-solver?style=for-the-badge&logo=github&color=yellow)](https://github.com/ruvnet/sublinear-time-solver/tree/main/src/consciousness-explorer)
 [![Node Version](https://img.shields.io/node/v/consciousness-explorer?style=for-the-badge&logo=node.js&color=green)](package.json)
 [![WASM](https://img.shields.io/badge/WASM-Accelerated-orange?style=for-the-badge&logo=webassembly)](https://webassembly.org/)
 

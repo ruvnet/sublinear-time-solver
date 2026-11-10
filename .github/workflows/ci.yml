@@ -96,6 +96,30 @@ jobs:
       - name: node --test tests/consciousness/safe-path.test.mjs
         run: node --test tests/consciousness/safe-path.test.mjs
 
+  # consciousness-explorer ships to npm from src/consciousness-explorer.
+  # 1.1.2 declared blessed/blessed-contrib without importing them (3 high +
+  # 2 moderate advisories in every install) and pointed `repository` at a
+  # repo that does not exist. Gate the production tree and the metadata.
+  consciousness-explorer:
+    name: consciousness-explorer (src/consciousness-explorer)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: install production deps
+        working-directory: src/consciousness-explorer
+        run: npm install --omit=dev --ignore-scripts --no-fund
+      - name: npm audit (production)
+        working-directory: src/consciousness-explorer
+        run: npm audit --omit=dev --audit-level=moderate
+      - name: dependency + metadata tests
+        run: node --test tests/consciousness/dependencies.test.mjs
+      - name: quick start smoke
+        working-directory: src/consciousness-explorer
+        run: node bin/cli.js phi --elements 100 --connections 500 | grep -q 'overall'
+
   # npm side: builds @ruvnet/sublinear-core and the package, then runs the
   # 1.8 regression suite (results checked against dense solves), the MCP wire
   # tests and the core unit tests on the supported Node lines.
