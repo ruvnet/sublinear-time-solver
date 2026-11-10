@@ -100,7 +100,7 @@
     "@modelcontextprotocol/sdk": "^1.32.2",
     "@ruvnet/sublinear-core": "^1.0.0",
     "commander": "^9.4.1",
-    "temporal-lead-solver": "^0.1.1"
+    "temporal-lead-solver": "0.1.1"
   },
   "engines": {
     "node": ">=16.0.0"
