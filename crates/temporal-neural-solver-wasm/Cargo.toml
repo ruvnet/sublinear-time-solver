@@ -1,10 +1,18 @@
 [package]
 name = "temporal-neural-solver-wasm"
-version = "0.1.0"
+# Kept equal to the npm package version (npm/package.json): version() reports it.
+version = "0.1.4"
 edition = "2021"
-authors = ["Temporal Neural Solver Team"]
-description = "Ultra-fast neural network inference in WebAssembly"
+authors = ["rUv <ruv@ruv.net>"]
+description = "WebAssembly source of the temporal-neural-solver npm package: a 128-32-4 MLP with Kalman smoothing"
 license = "MIT"
+repository = "https://github.com/ruvnet/sublinear-time-solver"
+homepage = "https://ruv.io"
+# Ships to npm only (crates/temporal-neural-solver-wasm/npm), never to crates.io.
+publish = false
+
+# Standalone: the repo root is a single package, not a workspace.
+[workspace]
 
 [package.metadata.wasm-pack]
 wasm-opt = false

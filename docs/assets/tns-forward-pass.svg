@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 260" width="800" height="260" role="img" aria-labelledby="t d">
+  <title id="t">temporal-neural-solver forward pass</title>
+  <desc id="d">A pulse moves from 128 inputs through 32 hidden units to 4 outputs, then through a Kalman smoothing step that blends each output with the previous state.</desc>
+  <style>
+    .bg { fill: #0f172a; }
+    .lbl { font: 600 15px system-ui, -apple-system, Segoe UI, sans-serif; fill: #e2e8f0; }
+    .sub { font: 13px system-ui, -apple-system, Segoe UI, sans-serif; fill: #94a3b8; }
+    .node { fill: #1e293b; stroke: #64748b; stroke-width: 1.5; }
+    .edge { stroke: #334155; stroke-width: 1; }
+    .pulse { fill: #38bdf8; }
+    .kal { fill: #1e293b; stroke: #f59e0b; stroke-width: 2; }
+    .lit { animation: lit 3s ease-in-out infinite; }
+    .l1 { animation-delay: 0s; } .l2 { animation-delay: .9s; } .l3 { animation-delay: 1.6s; } .l4 { animation-delay: 2.2s; }
+    @keyframes lit { 0%, 100% { fill: #1e293b; } 15% { fill: #0ea5e9; } 35% { fill: #1e293b; } }
+    @media (prefers-reduced-motion: reduce) { .lit, .pulse { animation: none; } .pulse { display: none; } }
+  </style>
+  <rect class="bg" width="800" height="260" rx="14"/>
+  <g class="edge">
+    <line x1="110" y1="70" x2="300" y2="90"/><line x1="110" y1="130" x2="300" y2="130"/><line x1="110" y1="190" x2="300" y2="170"/>
+    <line x1="110" y1="70" x2="300" y2="170"/><line x1="110" y1="190" x2="300" y2="90"/>
+    <line x1="320" y1="90" x2="500" y2="110"/><line x1="320" y1="130" x2="500" y2="150"/><line x1="320" y1="170" x2="500" y2="150"/><line x1="320" y1="90" x2="500" y2="150"/>
+    <line x1="520" y1="130" x2="640" y2="130"/>
+  </g>
+  <g>
+    <circle class="node lit l1" cx="100" cy="70" r="11"/><circle class="node lit l1" cx="100" cy="100" r="11"/><circle class="node lit l1" cx="100" cy="130" r="11"/><circle class="node lit l1" cx="100" cy="160" r="11"/><circle class="node lit l1" cx="100" cy="190" r="11"/>
+    <circle class="node lit l2" cx="310" cy="90" r="11"/><circle class="node lit l2" cx="310" cy="130" r="11"/><circle class="node lit l2" cx="310" cy="170" r="11"/>
+    <circle class="node lit l3" cx="510" cy="110" r="11"/><circle class="node lit l3" cx="510" cy="150" r="11"/>
+    <rect class="kal lit l4" x="640" y="105" width="110" height="50" rx="10"/>
+  </g>
+  <circle class="pulse" r="6" cx="100" cy="130">
+    <animate attributeName="cx" values="100;310;510;695;695" keyTimes="0;.3;.55;.8;1" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;1;1;1;0" keyTimes="0;.3;.55;.8;1" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  <text class="lbl" x="100" y="232" text-anchor="middle">128 inputs</text>
+  <text class="lbl" x="310" y="232" text-anchor="middle">32 hidden (ReLU)</text>
+  <text class="lbl" x="510" y="232" text-anchor="middle">4 outputs</text>
+  <text class="lbl" x="695" y="135" text-anchor="middle">Kalman</text>
+  <text class="sub" x="695" y="185" text-anchor="middle">blends with last state</text>
+  <text class="sub" x="24" y="30">temporal-neural-solver: one predict() call, WebAssembly in Node.js</text>
+</svg>
