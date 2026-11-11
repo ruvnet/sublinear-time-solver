@@ -51,6 +51,34 @@ jobs:
       - name: cargo build benches + examples
         run: cargo build --locked --benches --examples
 
+  # crates/strange-loop-rs is the source of the `strange-loop` crate
+  # (restored from the published 0.3.0 tarball; the tree had dropped it). 0.3.0's SIMD paths
+  # used aligned AVX/SSE loads on 4-byte-aligned buffers and segfaulted. Run the
+  # fixed module's tests natively and under Miri with symbolic alignment checks.
+  # (Other modules in the crate carry 19 failing tests inherited from 0.3.0.)
+  strange-loop-simd:
+    name: strange-loop SIMD (crates/strange-loop-rs)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: crates/strange-loop-rs
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4
+        with:
+          toolchain: nightly-2026-08-21   # rustc 8925ea358; tested locally
+          components: miri
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32
+        with:
+          workspaces: crates/strange-loop-rs
+      - name: cargo test nano_agent::optimization
+        run: cargo test --locked --lib nano_agent::optimization
+      - name: Miri (symbolic alignment check, AVX2 enabled)
+        env:
+          MIRIFLAGS: -Zmiri-symbolic-alignment-check
+          RUSTFLAGS: -C target-feature=+avx2
+        run: cargo miri test --locked --lib nano_agent::optimization
+
   # The `wasm` feature went 19 compile errors deep before anyone noticed
   # (1.8.0 review). Build and link it for the real target on every PR.
   wasm-feature:

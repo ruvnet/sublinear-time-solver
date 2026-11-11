@@ -387,18 +387,18 @@ export class SublinearSolverMCPServer {
             required: ['adjacency']
           }
         },
-        // JL-projection approximate solver (O(n^2); the name is historical)
+        // Deprecated alias: runs the core sparse solve since 1.10.0 (the name is historical)
         {
           name: 'solveTrueSublinear',
-          description: 'Approximate solve of a diagonally dominant system via random (Johnson-Lindenstrauss) projections and Jacobi correction. Not sublinear: it densifies the matrix, so time and memory are O(n^2), and the result is approximate (check verified_relative_residual). Use solve for an accurate O(k · nnz) solve. For vectors >500 elements, use vector_file parameter with JSON/CSV/TXT files to avoid MCP truncation. Use generateTestVector + saveVectorToFile for large test vectors.',
-          // ADR-001 item #4. Declared Adaptive{Logarithmic, Linear} until 1.8.1;
-          // measured log-log time slope is 2.14 (n = 500..4000) because every
-          // path densifies the matrix. default/worst kept for schema shape.
+          description: 'Deprecated: use solve. Solves a strictly diagonally dominant system with the sparse solver from @ruvnet/sublinear-core (the same as solve): O(k · nnz) time, O(nnz) memory, relative residual 1e-10. Until 1.9.0 this ran an O(n^2) Johnson-Lindenstrauss projection solver accurate to about 1e-2. target_dimension, sparsification_eps and jl_distortion are accepted and ignored. For vectors >500 elements, use vector_file parameter with JSON/CSV/TXT files to avoid MCP truncation. Use generateTestVector + saveVectorToFile for large test vectors.',
+          // ADR-001 item #4. Declared Adaptive{Logarithmic, Linear} until 1.8.1,
+          // Polynomial (measured slope 2.14, densified) in 1.8.1..1.9.0. Since
+          // 1.10.0 it delegates to the core sparse solve: O(k · nnz).
           'x-complexity': {
-            class: 'Polynomial',
-            default: 'Polynomial',
-            worst: 'Polynomial',
-            detail: 'O(n^2) time and memory: sparseToDense plus dense random projections. Measured slope 2.14 over n = 500..4000.',
+            class: 'Linear',
+            default: 'Linear',
+            worst: 'Linear',
+            detail: 'O(k · nnz) time, O(nnz) memory: the @ruvnet/sublinear-core sparse solve (conjugate gradient for symmetric input, otherwise Gauss-Seidel), as in the solve tool.',
             edgeSafe: false,
           },
           inputSchema: {
@@ -994,6 +994,9 @@ export class SublinearSolverMCPServer {
             );
         }
       } catch (error) {
+        // Errors that are already MCP errors (InvalidParams, MethodNotFound, ...)
+        // keep their code. Before 1.10.0 they were re-wrapped as -32603.
+        if (error instanceof McpError) throw error;
         if (error instanceof SolverError) {
           throw new McpError(
             ErrorCode.InternalError,
@@ -1060,7 +1063,7 @@ export class SublinearSolverMCPServer {
     'bidirectional':                        'Linear',
     'optimized-cg':                         'Linear',
     'sublinear-neumann':                    'Linear', // Rust SublinearNeumannSolver: full-vector Jacobi, O(k · nnz)
-    'true-sublinear-jl':                    'Polynomial', // solveTrueSublinear: densifies, O(n^2)
+    'true-sublinear-jl':                    'Linear', // solveTrueSublinear: core sparse solve since 1.10.0, O(k · nnz)
     // ADR-001 #6 phase-2A primitives.
     'closure-indices':                      'SubLinear', // bounded-depth row-graph BFS
     'contrastive-solve-on-change':          'Linear',    // Adaptive { Linear, Linear } orchestrator
@@ -1472,7 +1475,7 @@ export class SublinearSolverMCPServer {
           text: JSON.stringify({
             ...result,
             verified_relative_residual,
-            accuracy_note: 'Approximate: this solver works in a randomly projected space. Use the solve tool when an accurate full solution is required.',
+            accuracy_note: 'Deprecated tool: since 1.10.0 this runs the same sparse solver as solve; check verified_relative_residual. Call solve directly.',
             metadata: {
               solver_type: 'TRUE_SUBLINEAR',
               original_dimension: matrix.rows,

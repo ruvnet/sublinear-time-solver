@@ -49,16 +49,19 @@ jobs:
   # Layer 1: PR-time dependency review (GitHub native)
   #
   # Requires the repo's "Dependency graph" feature to be enabled in
-  # Settings → Code security and analysis. If it's off, the action
-  # exits with "Dependency review is not supported on this repository".
-  # We `continue-on-error: true` so this layer is informational until
-  # the setting is flipped — the other 4 layers still gate.
+  # Settings → Code security and analysis. It is currently OFF, so the
+  # action failed on every PR ("Dependency review is not supported on
+  # this repository") and showed a red check even with
+  # continue-on-error. The job is skipped until the owner enables the
+  # dependency graph AND sets the repository variable
+  # DEPENDENCY_GRAPH_ENABLED=true (Settings → Secrets and variables →
+  # Actions → Variables). The other 4 layers still gate.
   # ─────────────────────────────────────────────────────────────────
   dependency-review:
     name: dependency-review (PRs only)
     runs-on: ubuntu-latest
     # Schedule + push runs have no PR diff to review; skip cleanly.
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && vars.DEPENDENCY_GRAPH_ENABLED == 'true'
     continue-on-error: true
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262

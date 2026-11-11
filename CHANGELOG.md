@@ -4,6 +4,31 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.10.0] — 2026-11-11
+
+Releases: `sublinear-time-solver` 1.10.0 (npm), `strange-loop` 0.3.1 (crates.io).
+
+### Fixed
+
+- **MCP errors keep their JSON-RPC code.** The tool dispatcher re-wrapped every `McpError` as `-32603` (internal error), so clients saw invalid arguments and unknown tools as server faults. `InvalidParams` now reaches the client as `-32602` and an unknown tool as `-32601`.
+- **`strange-loop` 0.3.1 (crate): SIMD code segfaulted.** `nano_agent::optimization` used aligned AVX/SSE loads and stores on `Vec<f32>` buffers and `[f32; N]` stack arrays that are only 4-byte aligned. `test_simd_operations` died with SIGSEGV, and the safe `AgentState::simd_update` was undefined behaviour (Miri: "alignment 16 is required"). Every access was in bounds, so the result was a crash, not memory corruption. All loads and stores are now unaligned, and the regression tests pass under Miri with `-Zmiri-symbolic-alignment-check`. The wasm build (`@ruvnet/strange-loop` on npm) compiles the scalar fallbacks and was never affected.
+
+### Changed
+
+- **`solveTrueSublinear` is deprecated and now runs the core sparse solver.** It used to densify the matrix and solve a randomly projected system: O(n²) time (measured slope 2.14), 760 MB RSS at n = 4000, and about 1e-2 relative accuracy. It now calls `solve` from `@ruvnet/sublinear-core`, the same solver as the `solve` tool: O(k · nnz), relative residual 1e-10. On a tridiagonal test system n = 4000 now takes 22 ms with 60 MB process RSS, and n = 200000 takes 118 ms. The output keeps its shape. `x-complexity` is now `Linear`. Non-diagonally-dominant input is still rejected with `InvalidParams`. The first call prints one deprecation line to stderr.
+
+### Removed
+
+- `dist/wasm/strange_loop_bg.wasm` and `strange_loop.js` (88 KB) are no longer shipped. Nothing instantiated them. Their only use was an `existsSync` check in the "complete" solver, which is plain TypeScript and now runs without the file.
+
+### Restored
+
+- `crates/strange-loop-rs`: source of the `strange-loop` crate, taken from the published 0.3.0 tarball. A CI job runs the fixed module natively and under Miri. 19 tests in other modules fail, as they did in 0.3.0.
+
+### CI
+
+- `dependency-review` is skipped unless the repository variable `DEPENDENCY_GRAPH_ENABLED` is `true`. Dependency graph is disabled in the repo settings, so the job failed on every PR.
+
 ## [1.9.0] — 2026-11-08
 
 Releases: `sublinear-time-solver` 1.9.0 (npm), `@ruvnet/sublinear-core` 1.0.1 (npm, README only),
