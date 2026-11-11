@@ -1,0 +1,55 @@
+{
+  "name": "temporal-neural-solver",
+  "version": "0.1.4",
+  "description": "Small WebAssembly neural network (128-32-4 MLP, Kalman-smoothed output) for Node.js with a CLI. Single predictions take a few microseconds.",
+  "main": "temporal-neural-solver.js",
+  "types": "temporal-neural-solver.d.ts",
+  "bin": {
+    "temporal-neural-solver": "./cli.js"
+  },
+  "scripts": {
+    "build": "../build-npm.sh",
+    "test": "node test.js",
+    "benchmark": "node benchmark.js"
+  },
+  "keywords": [
+    "neural-network",
+    "mlp",
+    "inference",
+    "wasm",
+    "webassembly",
+    "kalman-filter",
+    "temporal",
+    "rust",
+    "cli",
+    "nodejs"
+  ],
+  "author": "rUv <ruv@ruv.net> (https://ruv.io)",
+  "license": "MIT",
+  "homepage": "https://ruv.io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ruvnet/sublinear-time-solver.git",
+    "directory": "crates/temporal-neural-solver-wasm/npm"
+  },
+  "bugs": {
+    "url": "https://github.com/ruvnet/sublinear-time-solver/issues"
+  },
+  "files": [
+    "temporal-neural-solver_bg.wasm",
+    "temporal-neural-solver.js",
+    "temporal-neural-solver.d.ts",
+    "temporal-neural-solver_bg.wasm.d.ts",
+    "cli.js",
+    "benchmark.js",
+    "test.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

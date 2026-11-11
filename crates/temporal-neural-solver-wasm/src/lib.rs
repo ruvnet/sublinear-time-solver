@@ -3,17 +3,14 @@
 
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
-use std::sync::Arc;
 
-// Enable console.log for debugging
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
-
-macro_rules! console_log {
-    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+/// Serialize to plain JS objects and arrays. The default serde-wasm-bindgen
+/// serializer turns maps (including every `serde_json::json!` value) into JS
+/// `Map`s, so `info().name` and `benchmark(n).iterations` read as undefined.
+fn to_js<T: Serialize + ?Sized>(value: &T) -> Result<JsValue, JsValue> {
+    value
+        .serialize(&serde_wasm_bindgen::Serializer::json_compatible())
+        .map_err(|e| js_sys::Error::new(&e.to_string()).into())
 }
 
 #[derive(Serialize, Deserialize)]
@@ -76,11 +73,11 @@ impl TemporalNeuralSolver {
         }
     }
 
-    /// Single prediction with sub-microsecond target latency
+    /// Single prediction (128 inputs -> 4 outputs)
     #[wasm_bindgen]
     pub fn predict(&mut self, input: &[f32]) -> Result<JsValue, JsValue> {
         if input.len() != 128 {
-            return Err(JsValue::from_str("Input must be exactly 128 elements"));
+            return Err(js_sys::Error::new("Input must be exactly 128 elements").into());
         }
 
         let start = web_time::Instant::now();
@@ -142,14 +139,14 @@ impl TemporalNeuralSolver {
             latency_ns: elapsed_nanos,
         };
 
-        Ok(serde_wasm_bindgen::to_value(&result)?)
+        to_js(&result)
     }
 
     /// Batch prediction for high throughput
     #[wasm_bindgen]
     pub fn predict_batch(&mut self, inputs_flat: &[f32]) -> Result<JsValue, JsValue> {
         if inputs_flat.len() % 128 != 0 {
-            return Err(JsValue::from_str("Input length must be multiple of 128"));
+            return Err(js_sys::Error::new("Input length must be multiple of 128").into());
         }
 
         let batch_size = inputs_flat.len() / 128;
@@ -197,7 +194,7 @@ impl TemporalNeuralSolver {
             throughput_ops_sec: 1.0 / avg_latency,
         };
 
-        Ok(serde_wasm_bindgen::to_value(&result)?)
+        to_js(&result)
     }
 
     /// Reset temporal state
@@ -232,7 +229,7 @@ impl TemporalNeuralSolver {
             }
         });
 
-        serde_wasm_bindgen::to_value(&info).unwrap()
+        to_js(&info).unwrap_or(JsValue::NULL)
     }
 }
 
@@ -258,7 +255,7 @@ pub fn benchmark(iterations: u32) -> JsValue {
         "throughput_ops_sec": 1.0 / avg_latency,
     });
 
-    serde_wasm_bindgen::to_value(&result).unwrap()
+    to_js(&result).unwrap_or(JsValue::NULL)
 }
 
 /// Get version
@@ -267,9 +264,9 @@ pub fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
-/// Initialize module
+/// Initialize module (installs the panic hook; prints nothing, so importing
+/// the package does not write to stdout).
 #[wasm_bindgen(start)]
 pub fn main() {
     console_error_panic_hook::set_once();
-    console_log!("⚡ Temporal Neural Solver WASM v{} initialized", env!("CARGO_PKG_VERSION"));
 }
