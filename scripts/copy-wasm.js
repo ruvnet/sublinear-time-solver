@@ -25,11 +25,6 @@ if (!fs.existsSync(distWasmTemporalDir)) {
 // WASM files to copy and their source locations
 const wasmFiles = [
   {
-    source: 'crates/strange-loop/wasm/strange_loop_bg.wasm',
-    dest: 'dist/wasm/strange_loop_bg.wasm',
-    js: 'crates/strange-loop/wasm/strange_loop.js'
-  },
-  {
     source: 'crates/psycho-symbolic-reasoner/wasm-dist/extractors_bg.wasm',
     dest: 'dist/wasm/extractors_bg.wasm',
     js: 'crates/psycho-symbolic-reasoner/wasm-dist/extractors.js'

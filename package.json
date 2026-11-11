@@ -1,7 +1,7 @@
 {
   "name": "sublinear-time-solver",
-  "version": "1.9.0",
-  "description": "Sparse linear solvers (Neumann, Jacobi, Gauss-Seidel, conjugate gradient), PageRank, personalized PageRank and local forward/backward push, as an MCP server, CLI and library. The dependency-free core ships separately as @ruvnet/sublinear-core.",
+  "version": "1.10.0",
+  "description": "Sparse linear solvers (Neumann, Jacobi, Gauss-Seidel, conjugate gradient), PageRank and local push as an MCP server, CLI and library. Zero-dependency core: @ruvnet/sublinear-core.",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -56,6 +56,7 @@
     "!dist/wasm/planner*",
     "!dist/wasm/graph_reasoner*",
     "!dist/wasm/temporal_neural_solver*",
+    "!dist/wasm/strange_loop*",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
@@ -70,7 +71,7 @@
     "build:wasm": "node scripts/copy-wasm.js",
     "build:dev": "tsc --watch",
     "clean": "node -e \"const fs=require('fs');if(fs.existsSync('dist'))for(const e of fs.readdirSync('dist'))if(e!=='wasm')fs.rmSync('dist/'+e,{recursive:true,force:true})\"",
-    "test": "npm run build && node --test tests/regression-1.8.test.mjs tests/regression-1.8.1.test.mjs tests/security-1.8.1.test.mjs tests/mcp-sublinear-wire.test.mjs tests/consciousness/safe-path.test.mjs && npm test -w @ruvnet/sublinear-core",
+    "test": "npm run build && node --test tests/regression-1.8.test.mjs tests/regression-1.8.1.test.mjs tests/security-1.8.1.test.mjs tests/regression-1.10.test.mjs tests/mcp-sublinear-wire.test.mjs tests/consciousness/safe-path.test.mjs && npm test -w @ruvnet/sublinear-core",
     "lint": "echo 'Linting would go here'",
     "start": "npm run build && node dist/mcp/server.js",
     "serve": "npm run build && node dist/cli/index.js serve",
@@ -125,8 +126,7 @@
     "mcp-server",
     "claude-code",
     "codex",
-    "cli",
-    "typescript"
+    "cli"
   ],
   "author": "rUv <github.com/ruvnet>",
   "license": "MIT OR Apache-2.0",
@@ -137,5 +137,5 @@
   "bugs": {
     "url": "https://github.com/ruvnet/sublinear-time-solver/issues"
   },
-  "homepage": "https://github.com/ruvnet/sublinear-time-solver#readme"
+  "homepage": "https://ruv.io"
 }

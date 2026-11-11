@@ -9,8 +9,6 @@
  * - Method Auto-Selection
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
 
 interface WasmModule {
   initialized: boolean;
@@ -53,23 +51,10 @@ export class CompleteWasmSublinearSolverTools {
     if (this.wasmModule) return; // Already initialized
 
     try {
-      // Simple path resolution - handle both CommonJS and ES modules
-      let currentDir: string;
-      if (typeof __dirname !== 'undefined') {
-        currentDir = __dirname; // CommonJS
-      } else {
-        // ES modules - get current file directory
-        currentDir = path.dirname(new URL(import.meta.url).pathname);
-      }
-      const wasmBinaryPath = path.join(currentDir, '..', '..', 'wasm', 'strange_loop_bg.wasm');
-
-      console.error('🔍 Attempting to load Complete WASM from:', wasmBinaryPath);
-
-      if (!fs.existsSync(wasmBinaryPath)) {
-        throw new Error('WASM file not found. Expected at: ' + wasmBinaryPath);
-      }
-
-      console.error('✅ WASM binary found, initializing complete sublinear solver...');
+      // The "complete" solver below is plain TypeScript. Until 1.9.0 it was
+      // gated on dist/wasm/strange_loop_bg.wasm existing, although that
+      // binary was never instantiated; the binary is no longer shipped.
+      console.error('Initializing complete sublinear solver (TypeScript)...');
 
       // Complete WASM module with all 4 algorithms from plans
       this.wasmModule = {

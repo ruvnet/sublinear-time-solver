@@ -1,6 +1,7 @@
 {
   "name": "temporal-neural-solver",
   "version": "1.0.0",
+  "private": true,
   "description": "Ultra-fast temporal neural network solver with <40ns P99.9 latency",
   "main": "index.js",
   "bin": {
@@ -29,7 +30,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/temporal-neural-solver"
+    "url": "git+https://github.com/ruvnet/sublinear-time-solver.git",
+    "directory": "crates/neural-network-implementation/real-implementation"
   },
   "engines": {
     "node": ">=14.0.0"

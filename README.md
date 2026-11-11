@@ -190,7 +190,7 @@ The name refers to algorithms whose cost is bounded by the query, not by the pro
 
 Computing the full solution vector, or full PageRank, is linear in nnz per iteration. No algorithm can produce all n entries in less than n time.
 
-The `solveTrueSublinear` MCP tool, a Johnson-Lindenstrauss projection solver, returns an approximation. In a 100×100 diagonally dominant test its relative residual was about 6%. The tool now reports a `verified_relative_residual` with every answer. Use `solve` when you need an accurate vector.
+The `solveTrueSublinear` MCP tool is deprecated. Until 1.9.0 it ran a Johnson-Lindenstrauss projection solver that densified the matrix (O(n²) time and memory) and was accurate to about 1e-2. Since 1.10.0 it runs the same sparse solver as `solve` and keeps its old output shape. Call `solve` instead.
 
 ## MCP tools
 
@@ -208,8 +208,8 @@ The `solveTrueSublinear` MCP tool, a Johnson-Lindenstrauss projection solver, re
 - `generateTestVector`
 - `saveVectorToFile`: basename-only, confined to a state directory
 
-**Approximate:**
-- `solveTrueSublinear`
+**Deprecated:**
+- `solveTrueSublinear`: alias of the `solve` solver since 1.10.0
 - `analyzeTrueSublinearMatrix`
 
 **Experimental research tools:** temporal-lead calculators, psycho-symbolic reasoning, domain management, consciousness and emergence simulations, and the nanosecond scheduler. They ship for compatibility and exploration. Their outputs are simulations, not validated scientific measurements.
@@ -229,7 +229,7 @@ Every matrix argument is validated before a handler runs:
 - **`random-walk`** returns a Monte Carlo solution instead of throwing.
 - **`computePageRank`** scores sum to 1: dangling-node mass is redistributed, and `personalized` vectors are normalized.
 - **Output streams.** Nothing is written to stdout on import or during solves, and the MCP server routes all logs to stderr. Set `SUBLINEAR_DEBUG=1` for solver diagnostics on stderr.
-- **MCP `solve`** always uses the verified solvers. The projection solver is still available as `solveTrueSublinear`.
+- **MCP `solve`** always uses the verified solvers. Since 1.10.0 `solveTrueSublinear` does too; the projection solver is gone.
 
 ## More resources
 

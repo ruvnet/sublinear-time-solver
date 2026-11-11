@@ -1,14 +1,12 @@
 /**
- * Approximate solver behind the `solveTrueSublinear` MCP tool: random (JL)
- * projections of the system, a small reduced solve, reconstruction, then a
- * few Jacobi correction sweeps.
+ * Backing class for the `solveTrueSublinear`, `analyzeTrueSublinearMatrix`
+ * and `generateTestVector` MCP tools.
  *
- * Despite the tool name this is NOT sublinear. It densifies the matrix and
- * builds dense projection matrices, so time and memory are O(n^2) (measured
- * log-log time slope 2.14 for n = 500..4000), and the result is approximate
- * (relative residual ~1e-2 on well-conditioned DD systems). The reported
- * complexity_bound says so since 1.8.1. Use the `solve` tool for an accurate
- * O(k nnz) solve.
+ * `solveTrueSublinear` is deprecated. Since 1.10.0 it runs the sparse solver
+ * from @ruvnet/sublinear-core (O(k · nnz), accurate), the same one behind the
+ * `solve` tool. Until 1.9.0 it ran a Johnson-Lindenstrauss projection solver
+ * that densified the matrix: O(n^2) time and memory (log-log slope 2.14,
+ * 760 MB RSS at n = 4000) and only ~1e-2 relative accuracy.
  */
 interface SublinearConfig {
     /** Target dimension after JL reduction */
@@ -88,7 +86,14 @@ export declare class TrueSublinearSolverTools {
         cols: number;
     }): Promise<MatrixAnalysis>;
     /**
-     * Solve with TRUE O(log n) algorithms
+     * Solve A x = b for the `solveTrueSublinear` MCP tool.
+     *
+     * Deprecated since 1.10.0: this now delegates to the sparse solver in
+     * @ruvnet/sublinear-core (the same one the `solve` tool uses), O(k · nnz)
+     * time and O(nnz) memory, accurate to a 1e-10 relative residual. The JL
+     * projection solver it replaced densified the matrix (measured log-log time
+     * slope 2.14, 760 MB RSS at n = 4000) and was only accurate to about 1e-2.
+     * The result keeps its old shape; `config` is accepted and ignored.
      */
     solveTrueSublinear(matrix: {
         values: number[];
@@ -96,58 +101,10 @@ export declare class TrueSublinearSolverTools {
         colIndices: number[];
         rows: number;
         cols: number;
-    }, vector: number[], config?: Partial<SublinearConfig>): Promise<TrueSublinearResult>;
-    /**
-     * TRUE O(log n) Algorithm - Genuine Sublinear Complexity
-     */
-    private solveWithTrueOLogN;
-    /**
-     * DEPRECATED: Old method that was incorrectly returning O(sqrt n)
-     */
-    private solveWithSublinearNeumann;
-    /**
-     * Apply Johnson-Lindenstrauss dimension reduction
-     */
-    private applyJohnsonLindenstrauss;
-    /**
-     * Solve reduced system with O(log k) Neumann terms
-     */
-    private solveReducedNeumann;
-    /**
-     * Reconstruct solution in original space
-     */
-    private reconstructSolution;
-    /**
-     * Apply error correction using Richardson iteration
-     */
-    private applyErrorCorrection;
-    /**
-     * Solve base case directly for small matrices
-     */
-    private solveBaseCaseDirect;
-    /**
-     * Solve using dimension reduction for non-diagonally-dominant matrices
-     */
-    private solveWithDimensionReduction;
+    }, vector: number[], _config?: Partial<SublinearConfig>): Promise<TrueSublinearResult>;
     private checkDiagonalDominance;
     private estimateConditionNumber;
     private estimateSpectralRadius;
     private sparseToDense;
-    private applySpectralSparsification;
-    private solveReducedIterative;
-    private computeResidual;
-    /**
-     * Convert dense matrix to sparse format for recursive reduction
-     */
-    private sparseToSparseReduction;
-    /**
-     * Solve base case with O(log k) complexity where k = O(log n)
-     */
-    private solveBaseWithLogComplexity;
-    /**
-     * Apply O(log n) error correction - each iteration improves by constant factor
-     */
-    private applyLogNErrorCorrection;
-    private gaussianRandom;
 }
 export {};
